@@ -1,0 +1,5 @@
+# GitHub Copilot Instructions
+
+Follow the canonical repository workflow in `AGENTS.md`.
+
+Before changing code, read `.harness/config.json`, `.harness/features.json`, `.harness/progress.md`, `.harness/handoff.md`, and the task-relevant routes in `.harness/docs-map.md`. Run `node .harness/run.mjs doctor`, `status`, and `next`. Use `.harness/run.mjs` for state changes and require successful `verify` evidence before calling a feature complete.

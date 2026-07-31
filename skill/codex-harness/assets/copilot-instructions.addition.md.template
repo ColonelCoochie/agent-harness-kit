@@ -1,0 +1,3 @@
+## Project Harness for GitHub Copilot
+
+Follow `AGENTS.md` as the canonical repository workflow. Before changing code, read the small `.harness/` state files and run `node .harness/run.mjs doctor`, `status`, and `next`. Use the checked-in runtime for feature transitions and require successful `verify` evidence before completion.

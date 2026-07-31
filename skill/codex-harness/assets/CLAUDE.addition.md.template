@@ -1,0 +1,3 @@
+## Project Harness for Claude Code
+
+Import `@AGENTS.md` so Claude Code follows the same checked-in workflow as the other coding agents. Use `.harness/run.mjs` for feature state and verification, and keep only Claude-specific exceptions in `CLAUDE.md`.

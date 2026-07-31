@@ -1,0 +1,5 @@
+@AGENTS.md
+
+## Claude Code
+
+Use the checked-in `.harness/run.mjs` controller for feature state and verification. Keep project-wide workflow in `AGENTS.md`; add only Claude-specific guidance here so the two instruction surfaces cannot drift.

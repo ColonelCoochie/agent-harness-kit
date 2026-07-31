@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Harness"
+  short_description: "Initialize reliable multi-agent project harnesses"
+  default_prompt: "Use $codex-harness to initialize, audit, or operate the shared Codex, Claude Code, and GitHub Copilot harness for this repository."

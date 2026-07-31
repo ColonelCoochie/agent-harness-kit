@@ -1,0 +1,28 @@
+# Documentation Map
+
+Project: {{PROJECT_NAME}}
+
+Use this as a router, not a manual. Load only the documents relevant to the active feature.
+
+| Need | Source | Status |
+|---|---|---|
+| Product purpose and user behavior | `README.md` or project product docs | Confirm for this project |
+| Architecture and boundaries | `docs/ARCHITECTURE.md` or equivalent | Confirm for this project |
+| Reliability and operations | `docs/RELIABILITY.md` or equivalent | Add when material |
+| Security constraints | `docs/SECURITY.md` or equivalent | Add when material |
+| Product, legal/data-rights, provider, or deployment gates | Project ADRs or decision records | Confirm when applicable |
+| Current scope and state | `.harness/features.json` | Authoritative |
+| Verification commands | `.harness/config.json` | Authoritative |
+| Session continuity | `.harness/progress.md`, `.harness/handoff.md` | Authoritative |
+| Objective evidence | `.harness/evidence/` | Machine-written |
+
+## Fresh-session test
+
+A new Codex session should be able to answer from repository contents:
+
+1. What does this project do?
+2. How is it structured?
+3. What is the active work item and its scope?
+4. Which recorded gates constrain implementation or delivery?
+5. Which commands prove completion?
+6. What should happen next?

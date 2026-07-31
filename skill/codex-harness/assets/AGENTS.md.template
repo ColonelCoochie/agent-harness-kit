@@ -1,0 +1,66 @@
+# AGENTS.md
+
+{{PROJECT_PURPOSE}}
+
+## Start Here
+
+Before changing code:
+
+1. Confirm the repository root.
+2. Read `.harness/config.json`, `.harness/features.json`, `.harness/progress.md`, and `.harness/handoff.md`.
+3. Use `.harness/docs-map.md` to load only relevant project documentation.
+4. Run `node .harness/run.mjs doctor`.
+5. Run `node .harness/run.mjs status`.
+6. Run `node .harness/run.mjs next` to identify dependency-ready work.
+
+If the baseline is unhealthy, record the failure before adding feature scope.
+
+## Working Invariants
+
+- Work on one active feature unless `.harness/config.json` explicitly allows more.
+- Start work with `node .harness/run.mjs start <feature-id>`.
+- Stay inside the feature's allow/deny scope.
+- Do not refactor unrelated code while completing a feature.
+- Treat `.harness/features.json` as the source of truth for work state.
+- Never hand-edit a feature to `passing`.
+- Run `node .harness/run.mjs verify <feature-id>` to create evidence and pass a feature.
+- Consult project docs before making architecture or product decisions.
+- Ask the user when a required decision is not established in repository state.
+
+## Project Gates
+
+- Before implementation, identify applicable product, architecture, security, legal/data-rights, external-service, and deployment gates in routed project docs.
+- Treat a gate as passed only when repository state records the decision or measured evidence.
+- Do not broaden users, networks, data semantics, deployment, or external side effects beyond the accepted contract.
+- When a required gate is undecided, record the blocker and ask the user instead of inferring authority.
+
+## Verification
+
+Verification levels and commands live in `.harness/config.json`:
+
+- `quick`: fast implementation feedback
+- `full`: required completion gate
+- `e2e`: full user-visible pipeline
+- `architecture`: structural invariants
+- `clean`: restartability and stale-artifact checks
+
+Command success and captured evidence—not model confidence—determine completion.
+
+## End of Session
+
+1. Run the widest relevant verification.
+2. Update `.harness/progress.md` with facts, blockers, and the next executable step.
+3. Run `node .harness/run.mjs handoff --summary "<current state and next action>"`.
+4. Leave the repository restartable through the standard startup path.
+
+If clean handoff requires a commit and committing is not authorized, record that exact blocker in `.harness/progress.md`; do not weaken the policy or commit implicitly.
+
+## Detailed Guidance
+
+- Project profile: `.harness/config.json`
+- Feature and scope state: `.harness/features.json`
+- Documentation routes: `.harness/docs-map.md`
+- Continuity: `.harness/progress.md` and `.harness/handoff.md`
+- Quality ledger: `.harness/quality.md`
+- Loop templates: `.harness/loops/`
+- Verification evidence: `.harness/evidence/`
