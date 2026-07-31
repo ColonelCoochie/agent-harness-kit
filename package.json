@@ -23,7 +23,7 @@
     "codex-harness": "bin/codex-harness.mjs"
   },
   "scripts": {
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/harness.test.mjs"
   },
   "engines": {
     "node": ">=20"

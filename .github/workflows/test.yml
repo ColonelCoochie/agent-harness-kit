@@ -22,4 +22,4 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: node --check skill/codex-harness/scripts/lib/core.mjs
       - run: node --check skill/codex-harness/assets/project-runtime.mjs
-      - run: node --test tests/*.test.mjs
+      - run: node --test tests/harness.test.mjs
