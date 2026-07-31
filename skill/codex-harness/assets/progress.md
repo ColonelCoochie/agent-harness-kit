@@ -1,32 +1,41 @@
 # Progress
 
-Last updated: not yet updated
+Generated: not yet generated
+
+This is a bounded current-state snapshot. Use Git history, `.harness/events.jsonl`, `.harness/history/progress/`, and evidence files for older history.
 
 ## Current state
 
-- Active feature: none
+- Continuity: working generation 1
+- Feature revision: 0
+- Active features: 0
+- Passing features: 0
 - Baseline health: unknown
-- Current objective: initialize the project profile and add the first concrete feature
+- Project worktree: not yet captured
 
-## Completed
+## Current summary
 
-- Harness scaffold created.
+Harness initialized; replace placeholder project facts and add the first concrete feature.
 
-## In progress
+## Active feature
 
-- Replace placeholder project facts and verification commands.
+None.
 
 ## Blockers and risks
 
 - None recorded.
 
-## Decisions
+## Decisions to preserve
 
 - Keep reusable harness logic outside project-specific configuration.
 
 ## Next executable step
 
 Run `node .harness/run.mjs doctor`, then add a concrete feature.
+
+## Changed project files
+
+Not yet captured. Run `checkpoint` or terminal `handoff` to record the current worktree.
 
 ## Latest evidence
 

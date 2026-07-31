@@ -1,6 +1,6 @@
 {
   "name": "agent-harness-kit",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "An evidence-gated project harness for Codex, Claude Code, and GitHub Copilot",
   "keywords": [
     "codex",

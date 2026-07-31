@@ -2,4 +2,6 @@
 
 Follow the canonical repository workflow in `AGENTS.md`.
 
-Before changing code, read `.harness/config.json`, `.harness/features.json`, `.harness/progress.md`, `.harness/handoff.md`, and the task-relevant routes in `.harness/docs-map.md`. Run `node .harness/run.mjs doctor`, `status`, and `next`. Use `.harness/run.mjs` for state changes and require successful `verify` evidence before calling a feature complete.
+Before changing files, run `node .harness/run.mjs session` and inspect `.harness/continuity.json`. If a handoff is pending, run the exact `node .harness/run.mjs resume <handoff-id>` command only in a genuinely fresh Copilot chat or coding-agent task. Then read `.harness/config.json`, `.harness/features.json`, `.harness/progress.md`, `.harness/handoff.md`, and task-relevant routes in `.harness/docs-map.md`; run `doctor`, `status`, and `next`. Use `.harness/run.mjs` for state changes and require successful `verify` evidence before completion.
+
+Use bounded `checkpoint` snapshots during work. `handoff` is dirty-safe and terminal: after `STOP_CURRENT_CHAT`, do not edit, call `resume` in the same chat, continue the transcript, or use compaction as a substitute. The runtime parks its own mutations and prints a bootstrap; Copilot must open the fresh chat or task through its platform controls.

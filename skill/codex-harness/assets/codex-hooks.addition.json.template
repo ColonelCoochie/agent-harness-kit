@@ -1,0 +1,19 @@
+{
+  "description": "Merge this PreCompact group into the existing project .codex/hooks.json after review.",
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "^auto$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.harness/hooks/precompact-handoff.mjs\" --platform codex",
+            "commandWindows": "powershell -NoProfile -Command \"$projectRoot = git rev-parse --show-toplevel; node (Join-Path $projectRoot '.harness/hooks/precompact-handoff.mjs') --platform codex\"",
+            "timeout": 30,
+            "statusMessage": "Writing a fresh-task handoff before compaction"
+          }
+        ]
+      }
+    ]
+  }
+}

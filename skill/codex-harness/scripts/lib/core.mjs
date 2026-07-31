@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const SKILL_DIR = path.resolve(SCRIPT_DIR, '..', '..');
 export const ASSET_DIR = path.join(SKILL_DIR, 'assets');
-export const HARNESS_VERSION = 3;
+export const HARNESS_VERSION = 4;
 export const STATE_SCHEMA_VERSION = 1;
 export const STATES = ['not_started', 'active', 'blocked', 'passing'];
 const DEFAULT_ENVIRONMENT_ALLOW = [
@@ -33,7 +33,10 @@ const AGENT_SURFACES = [
     path: 'AGENTS.md',
     template: 'AGENTS.md.template',
     addition: 'AGENTS.addition.md.template',
-    routed: (content) => content.includes('.harness/config.json') && content.includes('.harness/features.json')
+    routed: (content) => content.includes('.harness/config.json')
+      && content.includes('.harness/features.json')
+      && content.includes('.harness/continuity.json')
+      && content.includes('.harness/run.mjs resume')
   },
   {
     id: 'claude',
@@ -50,6 +53,12 @@ const AGENT_SURFACES = [
     routed: (content) => content.includes('AGENTS.md') || (content.includes('.harness/config.json') && content.includes('.harness/features.json'))
   }
 ];
+const CODEX_HOOK_SURFACE = {
+  path: '.codex/hooks.json',
+  template: 'codex-hooks.json.template',
+  addition: 'codex-hooks.addition.json.template',
+  routed: (content) => content.includes('.harness/hooks/precompact-handoff.mjs') && content.includes('PreCompact')
+};
 
 export function parseArgs(argv) {
   const parsed = { _: [] };
@@ -133,6 +142,39 @@ function stableHash(value) {
   return createHash('sha256').update(JSON.stringify(normalize(value))).digest('hex');
 }
 
+function initialContinuity() {
+  return {
+    version: 1,
+    phase: 'working',
+    generation: 1,
+    startedAt: new Date().toISOString(),
+    resumedAt: null,
+    checkpoint: null,
+    handoff: null,
+    lastHandoff: null
+  };
+}
+
+function migrateContinuity(value) {
+  const baseline = initialContinuity();
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return baseline;
+  if (value.version !== undefined && value.version !== 1) throw new Error(`Unsupported continuity schema version: ${value.version}.`);
+  if (value.phase !== undefined && !['working', 'awaiting_resume'].includes(value.phase)) throw new Error(`Unsupported continuity phase: ${value.phase}.`);
+  if (value.phase === 'awaiting_resume' && !value.handoff?.id) {
+    throw new Error('Refusing to clear an awaiting-resume barrier whose handoff capsule is missing. Repair continuity.json explicitly.');
+  }
+  const phase = value.phase ?? 'working';
+  const handoff = phase === 'awaiting_resume' && value.handoff?.id ? value.handoff : null;
+  return {
+    ...baseline,
+    ...value,
+    version: 1,
+    phase: handoff ? 'awaiting_resume' : 'working',
+    generation: Number.isInteger(value.generation) && value.generation > 0 ? value.generation : 1,
+    handoff
+  };
+}
+
 function featureContract(feature) {
   return {
     id: feature.id,
@@ -181,6 +223,22 @@ async function ensureAgentSurfaces(target, harnessDir, results, replacements = {
     }
     results.push({ path: destination, status: 'preserved' });
   }
+}
+
+async function ensureCodexHookSurface(target, harnessDir, results) {
+  const destination = path.join(target, CODEX_HOOK_SURFACE.path);
+  if (!await exists(destination)) {
+    results.push(await copyAsset(CODEX_HOOK_SURFACE.template, destination));
+    return;
+  }
+  const content = await readText(destination);
+  if (!CODEX_HOOK_SURFACE.routed(content)) {
+    results.push(await copyAsset(
+      CODEX_HOOK_SURFACE.addition,
+      path.join(harnessDir, path.basename(CODEX_HOOK_SURFACE.addition, '.template'))
+    ));
+  }
+  results.push({ path: destination, status: 'preserved' });
 }
 
 export async function detectProject(root) {
@@ -278,8 +336,7 @@ export async function initHarness(root, options = {}) {
       maxRepeatedFailures: Number(options.maxRepeatedFailures || 2),
       commandTimeoutMs: Number(options.commandTimeoutMs || 600000),
       passingIsTerminal: true,
-      requireEvidence: true,
-      requireCleanHandoff: true
+      requireEvidence: true
     },
     verification,
     completion: {
@@ -299,6 +356,11 @@ export async function initHarness(root, options = {}) {
       enforcement: 'required',
       defaultAllow: ['**/*'],
       defaultDeny: DEFAULT_DENY
+    },
+    continuity: {
+      mode: 'fresh_task',
+      dirtyWorktree: 'record',
+      blockMutationsAfterHandoff: true
     },
     security: {
       environmentAllow: DEFAULT_ENVIRONMENT_ALLOW,
@@ -326,6 +388,7 @@ export async function initHarness(root, options = {}) {
 
   await mkdir(path.join(harnessDir, 'evidence'), { recursive: true });
   await mkdir(path.join(harnessDir, 'loops'), { recursive: true });
+  await mkdir(path.join(harnessDir, 'hooks'), { recursive: true });
   const results = [];
 
   const configPath = path.join(harnessDir, 'config.json');
@@ -340,6 +403,12 @@ export async function initHarness(root, options = {}) {
     results.push({ path: featuresPath, status: 'written' });
   } else results.push({ path: featuresPath, status: 'preserved' });
 
+  const continuityPath = path.join(harnessDir, 'continuity.json');
+  if (options.force || !await exists(continuityPath)) {
+    await writeJson(continuityPath, initialContinuity());
+    results.push({ path: continuityPath, status: 'written' });
+  } else results.push({ path: continuityPath, status: 'preserved' });
+
   results.push(await copyAsset('project-runtime.mjs', path.join(harnessDir, 'run.mjs'), { force: Boolean(options.force) }));
   results.push(await copyAsset('progress.md', path.join(harnessDir, 'progress.md'), { force: Boolean(options.force) }));
   results.push(await copyAsset('handoff.md', path.join(harnessDir, 'handoff.md'), { force: Boolean(options.force) }));
@@ -350,8 +419,10 @@ export async function initHarness(root, options = {}) {
   results.push(await copyAsset('goal.md', path.join(harnessDir, 'loops', 'goal.md'), { force: Boolean(options.force) }));
   results.push(await copyAsset('maker.md', path.join(harnessDir, 'loops', 'maker.md'), { force: Boolean(options.force) }));
   results.push(await copyAsset('checker.md', path.join(harnessDir, 'loops', 'checker.md'), { force: Boolean(options.force) }));
+  results.push(await copyAsset('precompact-handoff.mjs', path.join(harnessDir, 'hooks', 'precompact-handoff.mjs'), { force: Boolean(options.force) }));
 
   await ensureAgentSurfaces(target, harnessDir, results, { PROJECT_PURPOSE: projectPurpose });
+  await ensureCodexHookSurface(target, harnessDir, results);
 
   await atomicWrite(path.join(harnessDir, 'evidence', '.gitkeep'), '');
   if (!await exists(path.join(harnessDir, 'credentials-state.json'))) {
@@ -368,6 +439,7 @@ export async function syncHarness(root) {
   const harnessDir = path.join(target, '.harness');
   const configPath = path.join(harnessDir, 'config.json');
   const featuresPath = path.join(harnessDir, 'features.json');
+  const continuityPath = path.join(harnessDir, 'continuity.json');
   if (!await exists(configPath) || !await exists(featuresPath)) {
     throw new Error(`No harness found at ${target}. Run init first.`);
   }
@@ -377,8 +449,10 @@ export async function syncHarness(root) {
   const profile = await detectProject(target);
   const originalConfig = await readJson(configPath);
   const originalState = await readJson(featuresPath);
+  const originalContinuity = await exists(continuityPath) ? await readJson(continuityPath) : null;
   const config = migrateConfig(originalConfig, profile);
   const state = migrateState(originalState, config);
+  const continuity = migrateContinuity(originalContinuity);
   const migrations = [];
   if (stableHash(config) !== stableHash(originalConfig)) {
     await writeJson(configPath, config);
@@ -388,9 +462,14 @@ export async function syncHarness(root) {
     await writeJson(featuresPath, state);
     migrations.push('.harness/features.json');
   }
+  if (stableHash(continuity) !== stableHash(originalContinuity)) {
+    await writeJson(continuityPath, continuity);
+    migrations.push('.harness/continuity.json');
+  }
   const repairs = [];
   await mkdir(path.join(harnessDir, 'evidence'), { recursive: true });
   await mkdir(path.join(harnessDir, 'loops'), { recursive: true });
+  await mkdir(path.join(harnessDir, 'hooks'), { recursive: true });
   const supportAssets = [
     ['progress.md', path.join(harnessDir, 'progress.md'), {}],
     ['handoff.md', path.join(harnessDir, 'handoff.md'), {}],
@@ -398,7 +477,8 @@ export async function syncHarness(root) {
     ['docs-map.md.template', path.join(harnessDir, 'docs-map.md'), { replacements: { PROJECT_NAME: config.project?.name ?? path.basename(target) } }],
     ['goal.md', path.join(harnessDir, 'loops', 'goal.md'), {}],
     ['maker.md', path.join(harnessDir, 'loops', 'maker.md'), {}],
-    ['checker.md', path.join(harnessDir, 'loops', 'checker.md'), {}]
+    ['checker.md', path.join(harnessDir, 'loops', 'checker.md'), {}],
+    ['precompact-handoff.mjs', path.join(harnessDir, 'hooks', 'precompact-handoff.mjs'), {}]
   ];
   for (const [asset, destination, options] of supportAssets) {
     const repaired = await copyAsset(asset, destination, options);
@@ -421,6 +501,7 @@ export async function syncHarness(root) {
   }
   const instructionResults = [];
   await ensureAgentSurfaces(target, harnessDir, instructionResults, { PROJECT_PURPOSE: config.project?.purpose ?? '' });
+  await ensureCodexHookSurface(target, harnessDir, instructionResults);
   for (const instruction of instructionResults) {
     if (instruction.status === 'written') repairs.push(normalizeRelative(target, instruction.path));
   }
@@ -433,6 +514,7 @@ function normalizeRelative(root, target) {
 }
 
 function migrateConfig(config, profile) {
+  const { requireCleanHandoff: _legacyCleanHandoff, ...existingPolicies } = config.policies ?? {};
   const verification = {
     quick: [],
     full: [],
@@ -451,8 +533,7 @@ function migrateConfig(config, profile) {
       commandTimeoutMs: 600000,
       passingIsTerminal: true,
       requireEvidence: true,
-      requireCleanHandoff: true,
-      ...(config.policies ?? {})
+      ...existingPolicies
     },
     verification,
     completion: {
@@ -480,6 +561,12 @@ function migrateConfig(config, profile) {
       defaultAllow: ['**/*'],
       defaultDeny: DEFAULT_DENY,
       ...(config.scope ?? {})
+    },
+    continuity: {
+      mode: 'fresh_task',
+      dirtyWorktree: 'record',
+      blockMutationsAfterHandoff: true,
+      ...(config.continuity ?? {})
     },
     security: {
       environmentAllow: DEFAULT_ENVIRONMENT_ALLOW,
@@ -587,9 +674,11 @@ export async function auditHarness(root) {
   const harnessDir = path.join(target, '.harness');
   const configPath = path.join(harnessDir, 'config.json');
   const featuresPath = path.join(harnessDir, 'features.json');
+  const continuityPath = path.join(harnessDir, 'continuity.json');
   const config = await exists(configPath).then((yes) => yes ? readJson(configPath).catch(() => null) : null);
   const features = await exists(featuresPath).then((yes) => yes ? readJson(featuresPath).catch(() => null) : null);
-  const enabledAgents = Array.isArray(config?.agents?.enabled) ? config.agents.enabled : [];
+  const continuity = await exists(continuityPath).then((yes) => yes ? readJson(continuityPath).catch(() => null) : null);
+  const enabledAgents = Array.isArray(config?.agents?.enabled) ? config.agents.enabled : AGENT_SURFACES.map((surface) => surface.id);
   const featureItems = Array.isArray(features?.features) ? features.features : [];
   const active = featureItems.filter((item) => item.status === 'active');
   const evidenceNames = await exists(path.join(harnessDir, 'evidence'))
@@ -654,6 +743,9 @@ export async function auditHarness(root) {
     if (await exists(additionPath)) unresolvedInstructionAdditions.push(normalizeRelative(target, additionPath));
   }
   const runtimeText = await exists(path.join(harnessDir, 'run.mjs')).then((yes) => yes ? readText(path.join(harnessDir, 'run.mjs')) : '');
+  const codexHookPath = path.join(target, CODEX_HOOK_SURFACE.path);
+  const codexHookText = await exists(codexHookPath).then((yes) => yes ? readText(codexHookPath) : '');
+  const codexHookAddition = path.join(harnessDir, path.basename(CODEX_HOOK_SURFACE.addition, '.template'));
   const missingDocs = [];
   for (const required of config?.docs?.required ?? []) if (!await exists(path.join(target, required))) missingDocs.push(required);
 
@@ -692,8 +784,14 @@ export async function auditHarness(root) {
     state: [
       check(Boolean(config), 'config.json is valid JSON'),
       check(Boolean(features), 'features.json is valid JSON'),
+      check(Boolean(continuity), 'continuity.json is valid JSON'),
       check(featureItems.every(validFeature), 'Every feature has the required typed fields'),
       check(config?.version === STATE_SCHEMA_VERSION && features?.version === STATE_SCHEMA_VERSION, 'Harness state schema versions are supported'),
+      check(continuity?.version === 1 && ['working', 'awaiting_resume'].includes(continuity?.phase), 'Continuity state schema and phase are supported'),
+      check(Number.isInteger(continuity?.generation) && continuity.generation > 0, 'Continuity generation is monotonic'),
+      check(continuity?.phase !== 'awaiting_resume' || Boolean(continuity?.handoff?.id), 'Awaiting-resume state has a handoff capsule'),
+      check(continuity?.phase !== 'awaiting_resume' || continuity?.handoff?.featureRevision === features?.revision, 'Pending handoff matches the current feature revision'),
+      check(Number(features?.revision ?? 0) === 0 || continuity?.checkpoint?.featureRevision === features?.revision, 'Progress checkpoint matches the current feature revision', 'warning'),
       check(Number.isInteger(features?.revision) && features.revision >= 0, 'Feature revision is monotonic state'),
       check(active.length <= Number(config?.policies?.wipLimit ?? 1), 'Active work respects the WIP limit'),
       check(evidenceIntegrity.length === 0, evidenceIntegrity.length ? evidenceIntegrity.join('; ') : 'Passing evidence chains are valid'),
@@ -718,10 +816,15 @@ export async function auditHarness(root) {
     ],
     lifecycle: [
       check(await exists(path.join(harnessDir, 'handoff.md')), 'Handoff state exists'),
+      check(await exists(path.join(harnessDir, 'hooks', 'precompact-handoff.mjs')), 'Pre-compaction handoff adapter exists'),
+      check(CODEX_HOOK_SURFACE.routed(codexHookText), 'Codex automatic compaction routes through the fresh-task handoff guard', 'warning'),
+      check(!await exists(codexHookAddition), 'No unresolved Codex hook merge addition remains', 'warning'),
+      check(config?.continuity?.mode === 'fresh_task', 'Continuity requires a fresh task after handoff'),
+      check(config?.continuity?.dirtyWorktree === 'record', 'Dirty worktrees are recorded instead of blocking handoff'),
+      check(config?.continuity?.blockMutationsAfterHandoff === true, 'Feature mutations stop after handoff'),
       check(await exists(path.join(harnessDir, 'quality.md')), 'Quality ledger exists'),
       check(await exists(path.join(harnessDir, 'loops', 'goal.md')), 'Goal loop template exists'),
-      check(await exists(path.join(harnessDir, 'loops', 'checker.md')), 'Independent checker template exists'),
-      check(Boolean(config?.policies?.requireCleanHandoff), 'Clean handoff is required by policy')
+      check(await exists(path.join(harnessDir, 'loops', 'checker.md')), 'Independent checker template exists')
     ]
   };
 

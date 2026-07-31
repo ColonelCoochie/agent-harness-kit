@@ -26,7 +26,7 @@ The stable core is a five-subsystem model, with scope and lifecycle acting acros
 | State | New sessions reconstruct or contradict prior work | Frozen feature contracts, journal, progress, decisions, and handoff |
 | Feedback | Local confidence becomes "done" | Cumulative executable checks and provenance-bound evidence |
 
-Scope and lifecycle supply WIP limits, dependencies, allow/deny boundaries, locks, retries, clean handoffs, and periodic simplification across that core.
+Scope and lifecycle supply WIP limits, dependencies, allow/deny boundaries, locks, retries, bounded handoff capsules, and periodic simplification across that core.
 
 Lecture 13 adds an autonomy layer above this system: scheduling, worktree isolation, reusable skills, connectors, subagents, and external state. Its crucial boundary is that loops do not repair an unreliable single run; they multiply it. The harness must work before scheduling or fleet orchestration is added.
 
@@ -62,6 +62,7 @@ Codex Harness Kit keeps the upstream strengths and tightens the enforcement boun
 - Goal, maker, and checker templates make generator/evaluator separation available without forcing multi-agent complexity on ordinary work.
 - Production feedback now makes Git scope NUL-delimited and file-exact, narrows runtime-owned exemptions, filters transient locks and diagnostics, and preserves exact verification-plan provenance.
 - A read-only `next` command, safe legacy-default migration, dead-owner lock recovery, and decision-gate routing improve fresh-session restartability without adding an orchestrator.
+- Runtime v4 separates feature state from a `working -> awaiting_resume -> working` continuity lifecycle. Dirty-safe terminal handoffs park mutations, ID-bound resumes detect drift, and a reviewed Codex `PreCompact` hook turns automatic compaction pressure into a fresh-task boundary.
 
 ## Lecture-to-code traceability
 
@@ -78,12 +79,12 @@ Codex Harness Kit keeps the upstream strengths and tightens the enforcement boun
 | 9 | Successful acceptance commands and provenance-bound evidence are the only completion gate. |
 | 10 | Quick, full, E2E, architecture, clean, and acceptance checks compose cumulatively. |
 | 11 | Evidence captures separate redacted streams, truncation, repository identity, and correlated trace events. |
-| 12 | Doctor verifies the evidence chain and guidance route; handoff enforces a clean project checkpoint. |
+| 12 | Doctor verifies the evidence chain and guidance route; handoff always persists the project checkpoint, records dirty state, and parks mutations until a fresh-task resume. |
 | 13 | Locks, retry budgets, trace state, and goal/maker/checker templates prepare safe later automation. |
 
 ## Recommended rollout
 
-Start with one representative repository and one session-sized feature. Tune the project profile until a fresh Codex session can reach useful work quickly and the feature passes only with credible evidence. Repeat the same task before and after the harness, then track rebuild time, verified completion rate, repeated failures, and clean-handoff rate. Roll out to more repositories only after the first profile proves its commands and scope boundaries.
+Start with one representative repository and one session-sized feature. Tune the project profile until a fresh Codex session can reach useful work quickly and the feature passes only with credible evidence. Repeat the same task before and after the harness, then track rebuild time, verified completion rate, repeated failures, successful handoff/resume rate, and context-compaction escapes. Roll out to more repositories only after the first profile proves its commands and scope boundaries.
 
 Add automation last. A daily checker or long-running goal should call the checked-in runtime and consume the same project state rather than introduce a second source of truth.
 

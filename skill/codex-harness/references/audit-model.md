@@ -20,7 +20,8 @@ Track these outside the structural score:
 - Verified completion rate: passing features divided by activated features.
 - Rebuild cost after a session reset.
 - Repeated-failure count before escalation.
-- Clean-handoff rate.
+- Successful terminal-handoff/fresh-task-resume rate.
+- Automatic compactions that escaped the handoff guard.
 - Before/after success on the same representative task.
 
 Audit the harness periodically. Remove rules that no longer prevent observed failures, promote recurring review feedback into executable checks, and keep the root instruction file short.

@@ -2,7 +2,7 @@
 
 A zero-dependency, evidence-gated project harness for OpenAI Codex, Anthropic Claude Code, and GitHub Copilot.
 
-The kit installs one checked-in control plane for feature state, bounded scope, verification, evidence, and handoff. Each coding agent receives a native instruction entry point, but `AGENTS.md` remains the canonical workflow so the agents do not drift.
+The kit installs one checked-in control plane for feature state, bounded scope, verification, evidence, and fresh-task continuity. Each coding agent receives a native instruction entry point, but `AGENTS.md` remains the canonical workflow so the agents do not drift.
 
 ## What gets installed
 
@@ -10,21 +10,25 @@ The kit installs one checked-in control plane for feature state, bounded scope, 
 AGENTS.md                         Canonical project workflow for Codex and other agents
 CLAUDE.md                         Claude Code adapter that imports AGENTS.md
 .github/copilot-instructions.md   GitHub Copilot adapter
+.codex/hooks.json                 Codex PreCompact stop guard (review/trust locally)
 .harness/
   config.json                    Project policy, providers, and verification profile
   features.json                  WIP-limited feature state machine
+  continuity.json                Working/awaiting-resume lifecycle state and bounded capsules
   run.mjs                        Cross-platform local controller
   credentials-state.json         Non-secret round-robin cursors
-  progress.md                    Durable session state
-  handoff.md                     Restart instructions
+  progress.md                    Bounded projection of the latest checkpoint
+  handoff.md                     Terminal fresh-task bootstrap
+  history/progress/              Archived progress projections at handoff boundaries
   quality.md                     Module quality ledger
   docs-map.md                    Repository knowledge map
   loops/                         Goal, maker, and checker templates
   evidence/                      Write-once verification records
   events.jsonl                   Append-only lifecycle trace
+  hooks/precompact-handoff.mjs   Shared automatic terminal-handoff hook
 ```
 
-Existing instruction files are never overwritten. When one does not route to the harness, initialization writes a reviewable addition under `.harness/` for manual merging.
+Existing instruction and Codex hook files are never overwritten. When one does not route to the harness, initialization writes a reviewable addition under `.harness/` for manual merging, including `.harness/codex-hooks.addition.json` when an existing `.codex/hooks.json` needs the guard.
 
 ## Quick start
 
@@ -35,10 +39,13 @@ node bin/agent-harness.mjs init /path/to/project \
   --name "My Project" \
   --purpose "What the project does"
 
+node /path/to/project/.harness/run.mjs session
 node /path/to/project/.harness/run.mjs doctor
 node /path/to/project/.harness/run.mjs status
 node /path/to/project/.harness/run.mjs next
 ```
+
+The generic scaffold deliberately leaves `verification.full` unconfigured. Set it to the project's real completion command before expecting `doctor` to pass; the failure is a setup gate, not a broken installation.
 
 Install the package locally or globally to use `agent-harness`. The previous `codex-harness` command remains as a compatibility alias.
 
@@ -54,18 +61,67 @@ node .harness/run.mjs add feat-001 \
 node .harness/run.mjs start feat-001
 node .harness/run.mjs verify feat-001
 node .harness/run.mjs trace feat-001
-node .harness/run.mjs handoff --summary "What changed and what remains"
+node .harness/run.mjs checkpoint \
+  --summary "What is true now" \
+  --next "Run the focused regression test"
+node .harness/run.mjs handoff \
+  --summary "What changed and what remains" \
+  --next "Run the full verification gate"
 ```
 
 ## Agent compatibility
 
 | Agent | Native project instruction | Harness behavior |
 |---|---|---|
-| OpenAI Codex | `AGENTS.md` | Reads the canonical startup, scope, and verification workflow |
-| Anthropic Claude Code | `CLAUDE.md` | Imports `@AGENTS.md`, with room for Claude-only guidance |
+| OpenAI Codex | `AGENTS.md` plus `.codex/hooks.json` | Reads the canonical workflow; a reviewed project-local `PreCompact` hook parks state before compaction |
+| Anthropic Claude Code | `CLAUDE.md` | Imports `@AGENTS.md`, with room for Claude-only guidance and an optional shared `PreCompact` adapter |
 | GitHub Copilot | `.github/copilot-instructions.md` plus `AGENTS.md` | Routes Copilot surfaces to the same workflow |
 
-The adapters follow the current official conventions for [Codex `AGENTS.md`](https://developers.openai.com/codex/guides/agents-md/), [Claude Code project memory](https://code.claude.com/docs/en/memory), and [GitHub Copilot repository instructions](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions).
+The adapters follow the current official conventions for [Codex `AGENTS.md`](https://developers.openai.com/codex/guides/agents-md/), [Codex hooks](https://developers.openai.com/codex/hooks), [Claude Code project memory](https://code.claude.com/docs/en/memory), [Claude Code hooks](https://code.claude.com/docs/en/hooks), [GitHub Copilot repository instructions](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions), and [Copilot hooks](https://docs.github.com/en/copilot/reference/hooks-reference).
+
+## Fresh-task continuity
+
+Runtime v4 makes the conversation boundary explicit and repository-backed:
+
+```text
+working generation N
+  | checkpoint (stay in this task)
+  v
+working generation N
+  | handoff (terminal for this task)
+  v
+awaiting_resume
+  | resume HANDOFF_ID (from a genuinely fresh task)
+  v
+working generation N+1
+```
+
+At the start of every task, inspect continuity before changing files:
+
+```bash
+node .harness/run.mjs session
+```
+
+If the phase is `working`, continue with `doctor`, `status`, and `next`. If it is `awaiting_resume`, the current task must be a genuinely fresh chat or coding-agent task. Run the exact command printed by `session`, then repeat the startup checks:
+
+```bash
+node .harness/run.mjs resume HANDOFF_ID
+node .harness/run.mjs doctor
+node .harness/run.mjs status
+node .harness/run.mjs next
+```
+
+`resume` checks the handoff ID, feature revision, configuration hash, commit, branch, and worktree checkpoint. Drift fails closed. Use `--accept-drift` only after reviewing and intentionally accepting every reported difference. A successful resume advances the continuity generation and is idempotent for that handoff ID.
+
+Use `checkpoint` for a durable, bounded snapshot while the same task continues. It rewrites `.harness/progress.md`, updates `.harness/continuity.json`, and appends an event without parking work. Summaries are capped at 4,000 characters, next actions at 2,000 characters, repeated decision/blocker/evidence entries at 20 each, and recorded changed-file details at 100 paths; the total count and worktree hash still cover the complete project change set. Use Git history, events, and evidence for older detail instead of turning `progress.md` into a transcript.
+
+`handoff` uses the same bounded capsule, archives the prior progress projection, records dirty project paths and hashes, writes the fresh-task bootstrap, and changes the phase to `awaiting_resume`. A dirty worktree is a recorded risk, not a reason to lose continuity; `handoff` does not clean, stage, or commit anything. After it prints `STOP_CURRENT_CHAT`, stop. Do not call `resume` from the same conversation, resume the old transcript, or use context compaction as a substitute for a fresh task.
+
+For Codex, v4 also installs a project-local `.codex/hooks.json` automatic `PreCompact` guard that invokes the shared handoff script with `--platform codex`. When Codex is about to compact automatically, the hook writes an automatic dirty-safe terminal handoff and returns `continue: false`, so Codex stops before compaction. Review and trust project-local hooks before enabling them. Claude Code users may optionally register `node "${CLAUDE_PROJECT_DIR}/.harness/hooks/precompact-handoff.mjs" --platform claude` for automatic `PreCompact` after the same review; the kit does not replace user-owned Claude hook settings. The hook converts compaction pressure into a parked handoff—it does not make compacted context an acceptable continuation. Copilot's current `preCompact` event is notification-only, so the kit relies on the terminal runtime barrier and fresh-task instructions there instead of claiming that Copilot compaction can be blocked.
+
+While parked, the runtime rejects feature and verification mutations such as `add`, `start`, `block`, `unblock`, `check`, `verify`, and `checkpoint`. Read-only inspection remains available. This barrier governs the harness command surface; it cannot prevent an editor or arbitrary shell command from changing files.
+
+The runtime and hook can persist the capsule, park harness mutations, print an exact bootstrap prompt, and emit a Codex deep link in `.harness/handoff.md`. They cannot universally create a chat in every supported platform, terminate every host conversation, or prove that the operator opened a fresh task. Codex, Claude Code, and GitHub Copilot must use their platform-specific new-task controls and follow the checked-in terminal instruction.
 
 ## Multiple API keys and Anthropic
 
@@ -134,6 +190,7 @@ Edit `.harness/config.json` for project facts:
 
 - `verification.quick`, `full`, `e2e`, `architecture`, and `clean`: cumulative executable gates.
 - `scope.defaultAllow` and `defaultDeny`: change boundaries.
+- `continuity`: fixed fresh-task mode, dirty-worktree recording, and the post-handoff mutation barrier.
 - `docs.required`: knowledge a fresh agent must be able to find.
 - `policies.wipLimit`: defaults to one; raise only with isolated ownership.
 - `policies.maxAttempts` and `maxRepeatedFailures`: bounded stop conditions.
@@ -150,7 +207,7 @@ Feature-specific acceptance commands and scope live in `.harness/features.json`.
 node bin/agent-harness.mjs sync /path/to/project
 ```
 
-`sync` is idempotent. Runtime v3 migrates legacy configuration, installs the credential cursor without secret material, adds missing agent adapters non-destructively, and preserves project facts and historical evidence.
+`sync` is idempotent. Runtime v4 migrates legacy configuration, creates or repairs `.harness/continuity.json`, removes the obsolete clean-worktree handoff gate, installs the credential cursor without secret material, installs the Codex compaction guard non-destructively, adds missing agent adapters, and preserves project facts and historical evidence.
 
 ## Design guarantees
 
@@ -159,7 +216,9 @@ node bin/agent-harness.mjs sync /path/to/project
 - Evidence is write-once JSON bound to the frozen feature contract and exact verification plan.
 - Command environments are allowlisted; provider keys are injected only by explicit request.
 - Secret-bearing environment values and common token formats are redacted before persistence.
-- State mutations and credential rotation are serialized with a recoverable lock.
+- State mutations, continuity transitions, and credential rotation are serialized with a recoverable lock.
+- Checkpoints remain bounded; terminal handoffs preserve dirty work and block harness mutations until an ID-bound fresh-task resume.
+- The reviewed Codex `PreCompact` hook turns automatic compaction into a terminal handoff and stop; Claude Code can opt into the same guard.
 - `passing` is terminal; regressions become new features.
 - The project runtime is checked in and works on Windows, macOS, and Linux.
 

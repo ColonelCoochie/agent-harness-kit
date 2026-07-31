@@ -23,7 +23,7 @@ try {
     for (const item of result.results) {
       console.log(`${item.status.toUpperCase().padEnd(9)} ${path.relative(result.target, item.path) || '.'}`);
     }
-    console.log('\nNext: review .harness/config.json, then run node .harness/run.mjs doctor');
+    console.log('\nNext: review .harness/config.json, then run node .harness/run.mjs session and doctor');
   } else if (command === 'audit') {
     const target = path.resolve(args._[1] || args.target || process.cwd());
     const result = await auditHarness(target);
@@ -52,7 +52,7 @@ Usage:
   agent-harness sync [project]
 
 Initialization preserves existing files. --force overwrites managed .harness files,
-but never overwrites existing AGENTS.md, CLAUDE.md, or Copilot instructions. Sync is
+but never overwrites existing AGENTS.md, CLAUDE.md, Copilot instructions, or Codex hooks. Sync is
 idempotent, refuses an active state lock, and fills missing legacy defaults without
 replacing project facts.`);
 }

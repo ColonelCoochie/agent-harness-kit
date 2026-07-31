@@ -2,4 +2,6 @@
 
 ## Claude Code
 
-Use the checked-in `.harness/run.mjs` controller for feature state and verification. Keep project-wide workflow in `AGENTS.md`; add only Claude-specific guidance here so the two instruction surfaces cannot drift.
+Use the checked-in `.harness/run.mjs` controller for feature state, verification, and fresh-task continuity. Keep project-wide workflow in `AGENTS.md`; add only Claude-specific guidance here so the two instruction surfaces cannot drift.
+
+At task start, obey `session` and run an exact pending `resume` only in a genuinely fresh Claude Code session. Treat `handoff` as terminal; do not compact or continue the handing-off session. As an optional defense in depth, a user may review and register `node "${CLAUDE_PROJECT_DIR}/.harness/hooks/precompact-handoff.mjs" --platform claude` for Claude Code's automatic `PreCompact` event. Project-local hooks require explicit trust and do not create the next session.

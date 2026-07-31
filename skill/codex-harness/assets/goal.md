@@ -33,4 +33,6 @@ State one durable objective.
 
 ## External state
 
-Update `.harness/progress.md`, `.harness/handoff.md`, and evidence after every round.
+At the start of a task, run `node .harness/run.mjs session`; resume a pending handoff ID only from a genuinely fresh task. After a round that will continue in the same task, persist concise current facts with `checkpoint --summary ... --next ...`. Evidence remains machine-written by verification.
+
+When the current conversation must end, run dirty-safe `handoff --summary ... --next ...` and stop after `STOP_CURRENT_CHAT`. Do not resume the transcript or use context compaction as a substitute. The Codex `PreCompact` hook is a reviewed/trusted defense in depth that automatically parks state; it still cannot create the fresh task.

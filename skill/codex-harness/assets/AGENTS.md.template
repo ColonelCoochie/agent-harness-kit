@@ -4,16 +4,18 @@
 
 ## Start Here
 
-Before changing code:
+At the start of every task, before changing files:
 
 1. Confirm the repository root.
-2. Read `.harness/config.json`, `.harness/features.json`, `.harness/progress.md`, and `.harness/handoff.md`.
-3. Use `.harness/docs-map.md` to load only relevant project documentation.
-4. Run `node .harness/run.mjs doctor`.
-5. Run `node .harness/run.mjs status`.
-6. Run `node .harness/run.mjs next` to identify dependency-ready work.
+2. Run `node .harness/run.mjs session` and inspect `.harness/continuity.json`.
+3. If the repository is `awaiting_resume`, continue only in a genuinely fresh chat or task. Run the exact `node .harness/run.mjs resume <handoff-id>` command printed by `session`. If this is the handing-off conversation, stop and open a fresh task instead.
+4. Read `.harness/config.json`, `.harness/features.json`, `.harness/progress.md`, and `.harness/handoff.md`.
+5. Use `.harness/docs-map.md` to load only relevant project documentation.
+6. Run `node .harness/run.mjs doctor`.
+7. Run `node .harness/run.mjs status`.
+8. Run `node .harness/run.mjs next` to identify dependency-ready work.
 
-If the baseline is unhealthy, record the failure before adding feature scope.
+If the baseline is unhealthy, record the failure with a bounded `checkpoint` before adding feature scope. Never use context compaction, transcript continuation, or a same-task `resume` as a substitute for the required fresh-task boundary.
 
 ## Working Invariants
 
@@ -22,10 +24,14 @@ If the baseline is unhealthy, record the failure before adding feature scope.
 - Stay inside the feature's allow/deny scope.
 - Do not refactor unrelated code while completing a feature.
 - Treat `.harness/features.json` as the source of truth for work state.
+- Treat `.harness/continuity.json` as the source of truth for whether work may mutate.
 - Never hand-edit a feature to `passing`.
+- Never hand-edit continuity from `awaiting_resume` to `working`.
 - Run `node .harness/run.mjs verify <feature-id>` to create evidence and pass a feature.
+- Use `node .harness/run.mjs checkpoint --summary "<current facts>" --next "<next executable step>"` for meaningful in-task milestones. Keep it bounded; it is not a transcript or task boundary.
 - Consult project docs before making architecture or product decisions.
 - Ask the user when a required decision is not established in repository state.
+- After `handoff`, the harness mutation barrier is active. Do not change files or run feature/verification mutations until a fresh task successfully resumes the exact handoff ID.
 
 ## Project Gates
 
@@ -49,18 +55,20 @@ Command success and captured evidence—not model confidence—determine complet
 ## End of Session
 
 1. Run the widest relevant verification.
-2. Update `.harness/progress.md` with facts, blockers, and the next executable step.
-3. Run `node .harness/run.mjs handoff --summary "<current state and next action>"`.
-4. Leave the repository restartable through the standard startup path.
+2. Leave the repository restartable through the standard startup path.
+3. Run `node .harness/run.mjs handoff --summary "<current facts>" --next "<next executable step>"`, adding bounded blocker, decision, and evidence entries when useful.
+4. Treat `HANDOFF_READY` and `STOP_CURRENT_CHAT` as terminal. Stop the current conversation and use the printed bootstrap only in a genuinely fresh task.
 
-If clean handoff requires a commit and committing is not authorized, record that exact blocker in `.harness/progress.md`; do not weaken the policy or commit implicitly.
+`handoff` records dirty project files and hashes without cleaning, staging, or committing them. Dirty state remains subject to feature scope during later verification. The runtime can park its own state and print a bootstrap, but it cannot universally create or terminate chats or prove that a task is fresh; the agent and platform must honor the boundary. Codex's project-local `PreCompact` hook adds a defense in depth by writing an automatic handoff and returning `continue: false`; review and trust project-local hooks before enabling them.
 
 ## Detailed Guidance
 
 - Project profile: `.harness/config.json`
 - Feature and scope state: `.harness/features.json`
 - Documentation routes: `.harness/docs-map.md`
-- Continuity: `.harness/progress.md` and `.harness/handoff.md`
+- Continuity authority: `.harness/continuity.json`
+- Current and terminal projections: `.harness/progress.md` and `.harness/handoff.md`
+- Archived progress projections: `.harness/history/progress/`
 - Quality ledger: `.harness/quality.md`
 - Loop templates: `.harness/loops/`
 - Verification evidence: `.harness/evidence/`

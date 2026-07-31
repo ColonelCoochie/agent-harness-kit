@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -48,6 +48,22 @@ async function runtimeWithEnvironment(root, overrides, ...args) {
   });
 }
 
+async function runHook(root, platform, input) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [path.join(root, '.harness', 'hooks', 'precompact-handoff.mjs'), '--platform', platform], {
+      cwd: root,
+      windowsHide: true
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', (code) => code === 0 ? resolve({ stdout, stderr }) : reject(new Error(stderr || stdout || `hook exited ${code}`)));
+    child.stdin.end(JSON.stringify(input));
+  });
+}
+
 async function add(root, id, extra = []) {
   return runtime(root, 'add', id,
     '--title', `${id} behavior`,
@@ -75,7 +91,7 @@ test('preserves existing guidance and fails until the harness route is merged', 
     (error) => /AGENTS\.md does not route|addition is still unmerged/.test(`${error.stdout ?? ''}\n${error.stderr ?? ''}`)
   );
 
-  await writeFile(path.join(root, 'AGENTS.md'), '# Project instructions\nRead `.harness/config.json` and `.harness/features.json`.\n');
+  await writeFile(path.join(root, 'AGENTS.md'), '# Project instructions\nRead `.harness/config.json`, `.harness/features.json`, and `.harness/continuity.json`. A fresh task runs `.harness/run.mjs resume`.\n');
   await rm(path.join(root, '.harness', 'AGENTS.addition.md'));
   assert.match((await runtime(root, 'doctor')).stdout, /Structural state is healthy/);
   const audit = await auditHarness(root);
@@ -88,23 +104,49 @@ test('scaffolds native instructions for Codex, Claude Code, and GitHub Copilot',
   const config = JSON.parse(await readFile(path.join(root, '.harness', 'config.json'), 'utf8'));
   assert.deepEqual(config.agents.enabled, ['codex', 'claude', 'github-copilot']);
   assert.match(await readFile(path.join(root, 'AGENTS.md'), 'utf8'), /\.harness\/features\.json/);
+  assert.match(await readFile(path.join(root, 'AGENTS.md'), 'utf8'), /\.harness\/continuity\.json/);
+  assert.match(await readFile(path.join(root, 'AGENTS.md'), 'utf8'), /\.harness\/run\.mjs resume/);
+  assert.equal(JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8')).phase, 'working');
   assert.match(await readFile(path.join(root, 'CLAUDE.md'), 'utf8'), /^@AGENTS\.md/m);
   assert.match(await readFile(path.join(root, '.github', 'copilot-instructions.md'), 'utf8'), /AGENTS\.md/);
+  assert.match(await readFile(path.join(root, '.codex', 'hooks.json'), 'utf8'), /precompact-handoff\.mjs/);
   assert.match((await runtime(root, 'doctor')).stdout, /Structural state is healthy/);
+});
+
+test('Codex automatic compaction guard writes a terminal handoff before blocking', async () => {
+  const root = await project('precompact-guard');
+  const result = await runHook(root, 'codex', {
+    hook_event_name: 'PreCompact',
+    trigger: 'auto',
+    cwd: root,
+    session_id: 'test-session'
+  });
+  const output = JSON.parse(result.stdout);
+  assert.equal(output.continue, false);
+  assert.match(output.stopReason, /Automatic compaction was stopped/);
+  const continuity = JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8'));
+  assert.equal(continuity.phase, 'awaiting_resume');
+  assert.equal(continuity.handoff.automatic, true);
+  assert.equal(continuity.handoff.reason, 'context_limit');
+  await runtime(root, 'resume', continuity.handoff.id);
 });
 
 test('preserves existing Claude and Copilot instructions and emits reviewable additions', async () => {
   const root = await project('instruction-preservation');
   const claude = '# Existing Claude rules\n';
   const copilot = '# Existing Copilot rules\n';
+  const codexHooks = '{"description":"Existing Codex hooks","hooks":{}}\n';
   await writeFile(path.join(root, 'CLAUDE.md'), claude);
   await writeFile(path.join(root, '.github', 'copilot-instructions.md'), copilot);
+  await writeFile(path.join(root, '.codex', 'hooks.json'), codexHooks);
   await initHarness(root, { name: 'instruction-preservation', purpose: 'Preserves user-owned instructions.' });
 
   assert.equal(await readFile(path.join(root, 'CLAUDE.md'), 'utf8'), claude);
   assert.equal(await readFile(path.join(root, '.github', 'copilot-instructions.md'), 'utf8'), copilot);
+  assert.equal(await readFile(path.join(root, '.codex', 'hooks.json'), 'utf8'), codexHooks);
   assert.match(await readFile(path.join(root, '.harness', 'CLAUDE.addition.md'), 'utf8'), /@AGENTS\.md/);
   assert.match(await readFile(path.join(root, '.harness', 'copilot-instructions.addition.md'), 'utf8'), /Project Harness/);
+  assert.match(await readFile(path.join(root, '.harness', 'codex-hooks.addition.json'), 'utf8'), /precompact-handoff\.mjs/);
 });
 
 test('requires executable acceptance and bounded scope', async () => {
@@ -138,12 +180,81 @@ test('enforces WIP and only cumulative verification can create passing state', a
   assert.ok(evidence.contractHash && evidence.configHash);
   assert.ok(evidence.verificationHash);
   assert.ok(evidence.changedFiles.every((item) => !item.startsWith('.harness/')));
-  assert.match((await runtime(root, 'handoff', '--summary', 'The first behavior is verified.')).stdout, /Updated \.harness\/handoff\.md/);
-
+  const handoffResult = await runtime(root, 'handoff', '--summary', 'The first behavior is verified.');
+  assert.match(handoffResult.stdout, /HANDOFF_READY/);
+  assert.match(handoffResult.stdout, /STOP_CURRENT_CHAT/);
+  const parked = JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8'));
+  assert.equal(parked.phase, 'awaiting_resume');
+  assert.equal(parked.handoff.featureRevision, state.revision);
+  const parkedMutations = [
+    ['add', 'feat-003', '--title', 'Parked', '--description', 'Must not be added.', '--criterion', 'Never runs.', '--command', pass, '--allow', 'src/**'],
+    ['start', 'feat-002'],
+    ['block', 'feat-001', '--reason', 'Must not mutate.'],
+    ['unblock', 'feat-001'],
+    ['check', 'quick'],
+    ['verify', 'feat-001'],
+    ['checkpoint', '--summary', 'Must not overwrite the terminal handoff.']
+  ];
+  for (const parkedMutation of parkedMutations) {
+    await assert.rejects(() => runtime(root, ...parkedMutation), /Repository is parked/);
+  }
+  assert.match((await runtime(root, 'status')).stdout, new RegExp(parked.handoff.id));
+  await assert.rejects(() => runtime(root, 'resume', 'wrong-handoff'), /Handoff ID mismatch/);
+  assert.match((await runtime(root, 'resume', parked.handoff.id)).stdout, /SESSION_RESUMED/);
   await runtime(root, 'start', 'feat-002');
   await runtime(root, 'block', 'feat-002', '--reason', 'Needs a product decision.');
   await runtime(root, 'unblock', 'feat-002');
   assert.match((await runtime(root, 'trace', 'feat-002')).stdout, /feature\.unblocked/);
+});
+
+test('writes a bounded checkpoint without ending the working session', async () => {
+  const root = await project('checkpoint');
+  await add(root, 'feat-001');
+  await runtime(root, 'start', 'feat-001');
+  const result = await runtime(root, 'checkpoint', '--summary', 'Implementation is partially complete.', '--next', 'Finish the focused unit test.', '--decision', 'Keep the public API stable.', '--blocker', 'Waiting on a fixture.', '--evidence', 'notes/manual-check.txt');
+  assert.match(result.stdout, /CHECKPOINT_WRITTEN/);
+  const continuity = JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8'));
+  const state = JSON.parse(await readFile(path.join(root, '.harness', 'features.json'), 'utf8'));
+  assert.equal(continuity.phase, 'working');
+  assert.equal(continuity.checkpoint.featureRevision, state.revision);
+  assert.deepEqual(continuity.checkpoint.decisions, ['Keep the public API stable.']);
+  const progress = await readFile(path.join(root, '.harness', 'progress.md'), 'utf8');
+  assert.match(progress, /bounded current-state snapshot/);
+  assert.match(progress, /Finish the focused unit test/);
+  assert.doesNotMatch(progress, /Harness scaffold created/);
+  assert.match((await runtime(root, 'doctor')).stdout, /Structural state is healthy/);
+});
+
+test('makes handoff and resume idempotent when command output is lost', async () => {
+  const root = await project('continuity-idempotence');
+  const first = await runtime(root, 'handoff', '--summary', 'Ready to continue in a fresh task.');
+  const continuity = JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8'));
+  const id = continuity.handoff.id;
+  assert.match(first.stdout, new RegExp(id));
+  await rm(path.join(root, '.harness', 'progress.md'));
+  await rm(path.join(root, '.harness', 'handoff.md'));
+  assert.match((await runtime(root, 'handoff', '--summary', 'This retry must not replace the capsule.')).stdout, new RegExp(id));
+  assert.match(await readFile(path.join(root, '.harness', 'progress.md'), 'utf8'), new RegExp(id));
+  assert.match(await readFile(path.join(root, '.harness', 'handoff.md'), 'utf8'), new RegExp(id));
+  assert.equal(JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8')).handoff.summary, 'Ready to continue in a fresh task.');
+  await runtime(root, 'resume', id);
+  assert.match((await runtime(root, 'resume', id)).stdout, /ALREADY_RESUMED/);
+  const resumed = JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8'));
+  assert.equal(resumed.phase, 'working');
+  assert.equal(resumed.generation, 2);
+  assert.equal(resumed.lastHandoff.id, id);
+});
+
+test('detects repository drift before consuming a handoff capsule', async () => {
+  const root = await project('continuity-drift');
+  await writeFile(path.join(root, 'README.md'), '# Dirty at handoff\n');
+  await runtime(root, 'handoff', '--summary', 'Preserve the dirty worktree.');
+  const continuity = JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8'));
+  await writeFile(path.join(root, 'README.md'), '# Changed after handoff\n');
+  await assert.rejects(() => runtime(root, 'resume', continuity.handoff.id), /Repository drifted after handoff/);
+  const accepted = await runtime(root, 'resume', continuity.handoff.id, '--accept-drift');
+  assert.match(accepted.stdout, /Accepted drift/);
+  assert.equal(JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8')).lastHandoff.driftAccepted, true);
 });
 
 test('runs configured layers cumulatively instead of selecting an easier tier', async () => {
@@ -282,6 +393,21 @@ test('redacts the values of allowlisted secret environment variables', async () 
   assert.match(raw, /REDACTED_ENV/);
 });
 
+test('redacts configured provider values from continuity capsules and projections', async () => {
+  const root = await project('continuity-redaction');
+  const secret = 'sk-continuity-secret-value-1234567890';
+  const result = await runtimeWithEnvironment(root, { OPENAI_API_KEY: secret }, 'handoff', '--summary', `Investigated token=${secret}`, '--next', `Continue without ${secret}`);
+  assert.doesNotMatch(result.stdout, new RegExp(secret));
+  const continuityPath = path.join(root, '.harness', 'continuity.json');
+  const continuityRaw = await readFile(continuityPath, 'utf8');
+  const progressRaw = await readFile(path.join(root, '.harness', 'progress.md'), 'utf8');
+  const handoffRaw = await readFile(path.join(root, '.harness', 'handoff.md'), 'utf8');
+  assert.doesNotMatch(`${continuityRaw}\n${progressRaw}\n${handoffRaw}`, new RegExp(secret));
+  assert.match(continuityRaw, /REDACTED/);
+  const continuity = JSON.parse(continuityRaw);
+  await runtimeWithEnvironment(root, { OPENAI_API_KEY: secret }, 'resume', continuity.handoff.id);
+});
+
 test('keeps provider keys out of commands that do not explicitly request them', async () => {
   const root = await project('credential-opt-in');
   const command = 'node -e "console.log(process.env.ANTHROPIC_API_KEY ?? \'absent\')"';
@@ -396,6 +522,10 @@ test('rejects dependency cycles during doctor checks', async () => {
 
 test('fails closed when Git-backed scope state is unavailable', async () => {
   const root = await project('no-git', pass, { git: false });
+  assert.match((await runtime(root, 'handoff', '--summary', 'Git is unavailable, but continuity must persist.')).stdout, /HANDOFF_READY/);
+  const continuity = JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8'));
+  assert.equal(continuity.handoff.repository.available, false);
+  await runtime(root, 'resume', continuity.handoff.id);
   await assert.rejects(
     () => runtime(root, 'doctor'),
     (error) => /scope enforcement is required/.test(`${error.stdout ?? ''}\n${error.stderr ?? ''}`)
@@ -409,7 +539,13 @@ test('rejects newly changed files outside feature scope', async () => {
   await add(root, 'feat-001');
   await runtime(root, 'start', 'feat-001');
   await writeFile(path.join(root, 'README.md'), '# Changed outside scope\n');
-  await assert.rejects(() => runtime(root, 'handoff', '--summary', 'Unsafe dirty handoff.'), /Clean handoff is required/);
+  const handoff = await runtime(root, 'handoff', '--summary', 'Dirty work is safely checkpointed.');
+  assert.match(handoff.stdout, /worktree is not clean/);
+  const continuity = JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8'));
+  assert.equal(continuity.phase, 'awaiting_resume');
+  assert.equal(continuity.handoff.repository.clean, false);
+  assert.ok(continuity.handoff.repository.changedFiles.some((item) => item.path === 'README.md'));
+  await runtime(root, 'resume', continuity.handoff.id);
   await assert.rejects(() => runtime(root, 'verify', 'feat-001'));
 
   const state = JSON.parse(await readFile(path.join(root, '.harness', 'features.json'), 'utf8'));
@@ -469,6 +605,33 @@ test('recovers a lock owned by a process that no longer exists', async () => {
   assert.equal(state.features[0].id, 'feat-001');
 });
 
+test('sync flags stale canonical instructions for a continuity-contract merge', async () => {
+  const root = await project('instruction-continuity-sync');
+  await writeFile(path.join(root, 'AGENTS.md'), '# Legacy instructions\nRead `.harness/config.json` and `.harness/features.json`.\n');
+  const result = await syncHarness(root);
+  assert.ok(result.repairs.includes('.harness/AGENTS.addition.md'));
+  const addition = await readFile(path.join(root, '.harness', 'AGENTS.addition.md'), 'utf8');
+  assert.match(addition, /\.harness\/continuity\.json/);
+  assert.match(addition, /\.harness\/run\.mjs resume/);
+  const audit = await auditHarness(root);
+  assert.ok(audit.criticalFailures > 0);
+  assert.match(JSON.stringify(audit), /Unresolved instruction additions/);
+});
+
+test('sync preserves a pending handoff barrier and refuses to erase a corrupt one', async () => {
+  const root = await project('pending-continuity-sync');
+  await runtime(root, 'handoff', '--summary', 'This pending handoff must survive sync.');
+  const continuityPath = path.join(root, '.harness', 'continuity.json');
+  const pending = JSON.parse(await readFile(continuityPath, 'utf8'));
+  await syncHarness(root);
+  const preserved = JSON.parse(await readFile(continuityPath, 'utf8'));
+  assert.equal(preserved.phase, 'awaiting_resume');
+  assert.equal(preserved.handoff.id, pending.handoff.id);
+  preserved.handoff = null;
+  await writeFile(continuityPath, `${JSON.stringify(preserved, null, 2)}\n`);
+  await assert.rejects(() => syncHarness(root), /Refusing to clear an awaiting-resume barrier/);
+});
+
 test('sync is idempotent and migrates legacy state without discarding project facts', async () => {
   const root = await project('sync');
   const configPath = path.join(root, '.harness', 'config.json');
@@ -478,6 +641,8 @@ test('sync is idempotent and migrates legacy state without discarding project fa
   delete config.completion;
   delete config.execution;
   delete config.security;
+  delete config.continuity;
+  config.policies.requireCleanHandoff = true;
   delete config.scope.enforcement;
   await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
   const state = JSON.parse(await readFile(statePath, 'utf8'));
@@ -486,6 +651,7 @@ test('sync is idempotent and migrates legacy state without discarding project fa
   await writeFile(runtimePath, '#!/usr/bin/env node\n// legacy runtime\n');
   await rm(path.join(root, '.harness', 'events.jsonl'));
   await rm(path.join(root, '.harness', 'credentials-state.json'));
+  await rm(path.join(root, '.harness', 'continuity.json'));
   await rm(path.join(root, 'CLAUDE.md'));
   await rm(path.join(root, '.github', 'copilot-instructions.md'));
 
@@ -496,7 +662,7 @@ test('sync is idempotent and migrates legacy state without discarding project fa
 
   const first = await syncHarness(root);
   assert.equal(first.result.status, 'written');
-  assert.deepEqual(first.migrations.sort(), ['.harness/config.json', '.harness/features.json']);
+  assert.deepEqual(first.migrations.sort(), ['.harness/config.json', '.harness/continuity.json', '.harness/features.json']);
   assert.deepEqual(first.repairs, [
     '.harness/events.jsonl',
     '.harness/credentials-state.json',
@@ -506,12 +672,16 @@ test('sync is idempotent and migrates legacy state without discarding project fa
   const migratedConfig = JSON.parse(await readFile(configPath, 'utf8'));
   assert.equal(migratedConfig.project.name, 'sync');
   assert.equal(migratedConfig.scope.enforcement, 'required');
+  assert.equal(migratedConfig.continuity.mode, 'fresh_task');
+  assert.equal(migratedConfig.continuity.dirtyWorktree, 'record');
+  assert.equal(Object.hasOwn(migratedConfig.policies, 'requireCleanHandoff'), false);
   assert.deepEqual(migratedConfig.completion.baseLayers, ['full']);
   assert.deepEqual(migratedConfig.agents.enabled, ['codex', 'claude', 'github-copilot']);
   assert.equal(migratedConfig.security.credentials.providers.anthropic.targetEnvironment, 'ANTHROPIC_API_KEY');
   const migratedState = JSON.parse(await readFile(statePath, 'utf8'));
   assert.equal(migratedState.revision, 0);
-  assert.match(await readFile(runtimePath, 'utf8'), /HARNESS_RUNTIME_VERSION = 3/);
+  assert.equal(JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8')).phase, 'working');
+  assert.match(await readFile(runtimePath, 'utf8'), /HARNESS_RUNTIME_VERSION = 4/);
 
   const second = await syncHarness(root);
   assert.equal(second.result.status, 'unchanged');

@@ -1,3 +1,3 @@
 ## Project Harness for Claude Code
 
-Import `@AGENTS.md` so Claude Code follows the same checked-in workflow as the other coding agents. Use `.harness/run.mjs` for feature state and verification, and keep only Claude-specific exceptions in `CLAUDE.md`.
+Import `@AGENTS.md` so Claude Code follows the same checked-in workflow as the other coding agents. Use `.harness/run.mjs` for feature state, verification, and fresh-task continuity, and keep only Claude-specific exceptions in `CLAUDE.md`. Run a pending `resume` only in a genuinely fresh Claude Code session and treat `handoff` as terminal. Optionally, after trust review, register `node "${CLAUDE_PROJECT_DIR}/.harness/hooks/precompact-handoff.mjs" --platform claude` for automatic `PreCompact`; it is a stop guard, not a session creator.

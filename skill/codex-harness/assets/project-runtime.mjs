@@ -10,17 +10,26 @@ const HARNESS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HARNESS_DIR, '..');
 const CONFIG_PATH = path.join(HARNESS_DIR, 'config.json');
 const FEATURES_PATH = path.join(HARNESS_DIR, 'features.json');
+const CONTINUITY_PATH = path.join(HARNESS_DIR, 'continuity.json');
+const PROGRESS_PATH = path.join(HARNESS_DIR, 'progress.md');
+const HANDOFF_PATH = path.join(HARNESS_DIR, 'handoff.md');
+const CONTINUITY_HISTORY_DIR = path.join(HARNESS_DIR, 'history', 'progress');
 const EVIDENCE_DIR = path.join(HARNESS_DIR, 'evidence');
 const CREDENTIAL_STATE_PATH = path.join(HARNESS_DIR, 'credentials-state.json');
-const HARNESS_RUNTIME_VERSION = 3;
+const HARNESS_RUNTIME_VERSION = 4;
 const STATE_SCHEMA_VERSION = 1;
+const CONTINUITY_SCHEMA_VERSION = 1;
 const STATES = new Set(['not_started', 'active', 'blocked', 'passing']);
+const CONTINUITY_PHASES = new Set(['working', 'awaiting_resume']);
 const RUNTIME_OWNED_PATHS = [
   '.harness/features.json',
   '.harness/events.jsonl',
   '.harness/evidence/**',
   '.harness/credentials-state.json',
+  '.harness/continuity.json',
+  '.harness/progress.md',
   '.harness/handoff.md',
+  '.harness/history/progress/**',
   '.harness/state.lock/**'
 ];
 const args = parseArgs(process.argv.slice(2));
@@ -33,16 +42,19 @@ const AGENT_INSTRUCTIONS = {
 
 try {
   if (!command || command === 'help') printHelp();
+  else if (command === 'session') await continuityStatus();
+  else if (command === 'resume') await withStateLock(resumeHandoff);
   else if (command === 'doctor') await doctor();
   else if (command === 'status') await status();
   else if (command === 'next') await nextFeature();
-  else if (command === 'add') await withStateLock(addFeature);
-  else if (command === 'start') await withStateLock(startFeature);
-  else if (command === 'block') await withStateLock(blockFeature);
-  else if (command === 'unblock') await withStateLock(unblockFeature);
-  else if (command === 'check') await withStateLock(checkLevel);
-  else if (command === 'verify') await withStateLock(verifyFeature);
+  else if (command === 'add') await withStateLock(() => whileWorking(addFeature));
+  else if (command === 'start') await withStateLock(() => whileWorking(startFeature));
+  else if (command === 'block') await withStateLock(() => whileWorking(blockFeature));
+  else if (command === 'unblock') await withStateLock(() => whileWorking(unblockFeature));
+  else if (command === 'check') await withStateLock(() => whileWorking(checkLevel));
+  else if (command === 'verify') await withStateLock(() => whileWorking(verifyFeature));
   else if (command === 'credentials') await credentialsStatus();
+  else if (command === 'checkpoint') await withStateLock(() => whileWorking(writeCheckpoint));
   else if (command === 'handoff') await withStateLock(writeHandoff);
   else if (command === 'trace') await traceFeature();
   else throw new Error(`Unknown command: ${command}`);
@@ -173,6 +185,69 @@ async function load() {
   return { config, state };
 }
 
+async function readContinuity() {
+  if (!await exists(CONTINUITY_PATH)) {
+    throw new Error('Continuity state is missing. Run the reusable sync command before continuing.');
+  }
+  const continuity = await readJson(CONTINUITY_PATH);
+  if (!continuity || typeof continuity !== 'object' || Array.isArray(continuity)) {
+    throw new Error('continuity.json must contain an object.');
+  }
+  if (continuity.version !== CONTINUITY_SCHEMA_VERSION || !CONTINUITY_PHASES.has(continuity.phase)) {
+    throw new Error('continuity.json has an unsupported version or phase. Run the reusable sync command.');
+  }
+  if (!Number.isInteger(continuity.generation) || continuity.generation < 1) {
+    throw new Error('continuity.json generation must be a positive integer.');
+  }
+  if (continuity.phase === 'awaiting_resume' && !continuity.handoff?.id) {
+    throw new Error('continuity.json is awaiting resume without a handoff capsule.');
+  }
+  return continuity;
+}
+
+function resumeCommand(continuity) {
+  return continuity.handoff?.id
+    ? `node .harness/run.mjs resume ${continuity.handoff.id}`
+    : null;
+}
+
+function continuityView(continuity) {
+  return {
+    phase: continuity.phase,
+    generation: continuity.generation,
+    handoffId: continuity.handoff?.id ?? null,
+    resumeCommand: resumeCommand(continuity),
+    checkpoint: continuity.checkpoint ?? null,
+    lastHandoff: continuity.lastHandoff ?? null
+  };
+}
+
+function printAwaitingResume(continuity) {
+  console.log(`FRESH_TASK_REQUIRED ${continuity.handoff.id}`);
+  console.log(`Start a new chat/task in this same worktree, then run: ${resumeCommand(continuity)}`);
+  console.log('Do not continue implementation, resume this transcript, or use context compaction as a substitute.');
+}
+
+async function continuityStatus() {
+  const continuity = await readContinuity();
+  if (args.json) {
+    console.log(JSON.stringify(continuityView(continuity), null, 2));
+    return;
+  }
+  console.log(`Continuity: ${continuity.phase}; generation ${continuity.generation}`);
+  if (continuity.phase === 'awaiting_resume') printAwaitingResume(continuity);
+  else if (continuity.checkpoint) console.log(`Latest checkpoint: ${continuity.checkpoint.id} (${continuity.checkpoint.createdAt})`);
+  else console.log('No runtime checkpoint has been written yet.');
+}
+
+async function whileWorking(operation) {
+  const continuity = await readContinuity();
+  if (continuity.phase !== 'working') {
+    throw new Error(`Repository is parked at handoff ${continuity.handoff.id}. End this chat and resume from a fresh task with: ${resumeCommand(continuity)}`);
+  }
+  return operation();
+}
+
 function list(value) {
   if (value === undefined || value === true) return [];
   const values = Array.isArray(value) ? value : [value];
@@ -214,7 +289,12 @@ function validCommandEntry(entry) {
 }
 
 function instructionRoutes(agent, content) {
-  if (agent === 'codex') return content.includes('.harness/config.json') && content.includes('.harness/features.json');
+  if (agent === 'codex') {
+    return content.includes('.harness/config.json')
+      && content.includes('.harness/features.json')
+      && content.includes('.harness/continuity.json')
+      && content.includes('.harness/run.mjs resume');
+  }
   if (agent === 'claude') return content.includes('@AGENTS.md') || (content.includes('.harness/config.json') && content.includes('.harness/features.json'));
   if (agent === 'github-copilot') return content.includes('AGENTS.md') || (content.includes('.harness/config.json') && content.includes('.harness/features.json'));
   return false;
@@ -304,6 +384,7 @@ async function validatePassingEvidence(feature, config) {
 
 async function doctor() {
   const { config, state } = await load();
+  const continuity = await readContinuity();
   const errors = [];
   const warnings = [];
   const ids = new Set();
@@ -319,6 +400,9 @@ async function doctor() {
   if (!Array.isArray(config.completion?.baseLayers) || !config.completion.baseLayers.includes('full')) errors.push('completion.baseLayers must include full.');
   if (!Array.isArray(config.completion?.alwaysRunWhenConfigured)) errors.push('completion.alwaysRunWhenConfigured must be an array.');
   if (!Array.isArray(config.scope?.defaultAllow) || !Array.isArray(config.scope?.defaultDeny)) errors.push('scope defaultAllow/defaultDeny must be arrays.');
+  if (config.continuity?.mode !== 'fresh_task') errors.push('continuity.mode must be fresh_task.');
+  if (config.continuity?.dirtyWorktree !== 'record') errors.push('continuity.dirtyWorktree must be record so unfinished work can always be handed off.');
+  if (config.continuity?.blockMutationsAfterHandoff !== true) errors.push('continuity.blockMutationsAfterHandoff must be true.');
   if (!Array.isArray(config.security?.environmentAllow)) errors.push('security.environmentAllow must be an array.');
   const providers = credentialProviders(config);
   if (!config.security?.credentials || config.security.credentials.stateFile !== '.harness/credentials-state.json') errors.push('security.credentials.stateFile must be .harness/credentials-state.json.');
@@ -337,6 +421,13 @@ async function doctor() {
   if (Number(process.versions.node.split('.')[0]) < Number(config.execution?.harnessRuntime?.minimumMajorVersion ?? 20)) errors.push('Node.js does not meet the configured harness runtime minimum.');
   if (config.scope?.enforcement === 'required' && !(await repositoryChanges()).available) errors.push('Git-backed scope enforcement is required but repository state is unavailable.');
   if (activeFeatures(state).length > Number(config.policies?.wipLimit ?? 1)) errors.push('Active features exceed the WIP limit.');
+  if (continuity.phase === 'awaiting_resume' && continuity.handoff?.featureRevision !== state.revision) {
+    errors.push(`Pending handoff ${continuity.handoff?.id ?? '(missing)'} captured feature revision ${continuity.handoff?.featureRevision ?? '(missing)'}, but current state is revision ${state.revision}.`);
+  } else if (continuity.phase === 'working' && continuity.checkpoint && continuity.checkpoint.featureRevision !== state.revision) {
+    warnings.push(`Progress checkpoint ${continuity.checkpoint.id} is older than feature revision ${state.revision}; write a checkpoint before ending the session.`);
+  }
+  if (!await exists(PROGRESS_PATH)) errors.push('Progress snapshot is missing.');
+  if (!await exists(HANDOFF_PATH)) errors.push('Handoff projection is missing.');
 
   for (const feature of state.features) {
     if (!feature.id || ids.has(feature.id)) errors.push(`Feature ID is missing or duplicated: ${feature.id || '(empty)'}`);
@@ -377,12 +468,23 @@ async function doctor() {
     const additionName = agent === 'codex' ? 'AGENTS.addition.md' : agent === 'claude' ? 'CLAUDE.addition.md' : 'copilot-instructions.addition.md';
     if (await exists(path.join(HARNESS_DIR, additionName))) errors.push(`${additionName} is still unmerged.`);
   }
+  if (enabledAgents.includes('codex')) {
+    const guardPath = path.join(HARNESS_DIR, 'hooks', 'precompact-handoff.mjs');
+    const hooksPath = path.join(ROOT, '.codex', 'hooks.json');
+    if (!await exists(guardPath)) errors.push('Codex pre-compaction handoff adapter is missing. Run the reusable sync command.');
+    const hooksText = await exists(hooksPath) ? await readFile(hooksPath, 'utf8') : '';
+    if (!hooksText.includes('.harness/hooks/precompact-handoff.mjs') || !hooksText.includes('PreCompact')) {
+      warnings.push('Codex automatic compaction guard is not merged; review .harness/codex-hooks.addition.json or rerun sync.');
+    }
+  }
 
   console.log(`Harness doctor: ${ROOT} (runtime v${HARNESS_RUNTIME_VERSION}, schema v${STATE_SCHEMA_VERSION})`);
   console.log(`Features: ${state.features.length}; active: ${activeFeatures(state).length}; passing: ${state.features.filter((item) => item.status === 'passing').length}`);
+  console.log(`Continuity: ${continuity.phase}; generation: ${continuity.generation}`);
   for (const warning of warnings) console.log(`WARN  ${warning}`);
   for (const error of errors) console.log(`FAIL  ${error}`);
   if (errors.length === 0) console.log('PASS  Structural state is healthy.');
+  if (continuity.phase === 'awaiting_resume') printAwaitingResume(continuity);
   if (errors.length > 0) process.exitCode = 1;
 }
 
@@ -408,7 +510,10 @@ function findCycles(features) {
 
 async function status() {
   const { config, state } = await load();
+  const continuity = await readContinuity();
   console.log(`${config.project.name}: ${config.project.purpose}`);
+  console.log(`Continuity ${continuity.phase}; generation ${continuity.generation}`);
+  if (continuity.phase === 'awaiting_resume') printAwaitingResume(continuity);
   console.log(`WIP ${activeFeatures(state).length}/${config.policies.wipLimit}`);
   if (state.features.length === 0) {
     console.log('No features. Use add to define the first bounded behavior.');
@@ -432,14 +537,20 @@ function nextCandidates(state, config) {
 
 async function nextFeature() {
   const { config, state } = await load();
+  const continuity = await readContinuity();
   const active = activeFeatures(state);
   const candidates = nextCandidates(state, config);
   const result = {
+    continuity: continuityView(continuity),
     active: active.map((item) => ({ id: item.id, title: item.title })),
     candidates: candidates.map((item) => ({ id: item.id, title: item.title }))
   };
   if (args.json) {
     console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  if (continuity.phase === 'awaiting_resume') {
+    printAwaitingResume(continuity);
     return;
   }
   if (active.length) {
@@ -986,31 +1097,233 @@ function printRun(run) {
   }
 }
 
-async function writeHandoff() {
-  const { config, state } = await load();
-  const summary = requireText('summary', args.summary);
+function repeatedText(value, maximumItems = 20) {
+  if (value === undefined || value === true) return [];
+  const values = Array.isArray(value) ? value : [value];
+  return values.map((item) => String(item).trim()).filter(Boolean).slice(0, maximumItems);
+}
+
+function boundedText(name, value, maximumLength) {
+  const text = requireText(name, value);
+  if (text.length > maximumLength) throw new Error(`--${name} must be at most ${maximumLength} characters.`);
+  return text;
+}
+
+function inferredNextAction(state, config) {
   const active = activeFeatures(state);
   const blocked = state.features.filter((item) => item.status === 'blocked');
-  const git = await repositoryChanges();
-  const nonHarnessChanges = git.files.filter((item) => !matchGlob(item.path, '.harness/**'));
-  if (config.policies?.requireCleanHandoff && (!git.available || nonHarnessChanges.length > 0)) {
-    const reason = !git.available ? 'Git state is unavailable' : `uncommitted project files: ${nonHarnessChanges.map((item) => item.path).join(', ')}`;
-    throw new Error(`Clean handoff is required; ${reason}. Commit or deliberately revise the policy.`);
-  }
   const candidate = nextCandidates(state, config)[0];
-  const inferredNext = active[0]
-    ? `Continue ${active[0].id}: ${active[0].description}`
-    : candidate
-      ? `Start ${candidate.id}: node .harness/run.mjs start ${candidate.id}`
-      : blocked[0]?.blocker
-        ? `Resolve ${blocked[0].id}: ${blocked[0].blocker}`
-        : 'Add the next bounded feature before changing project code.';
-  const next = String(args.next || inferredNext);
+  if (active[0]) return `Continue ${active[0].id}: ${active[0].description}`;
+  if (candidate) return `Start ${candidate.id}: node .harness/run.mjs start ${candidate.id}`;
+  if (blocked[0]?.blocker) return `Resolve ${blocked[0].id}: ${blocked[0].blocker}`;
+  return 'Add the next bounded feature before changing project code.';
+}
+
+function latestEvidence(state) {
+  return state.features.flatMap((feature) => feature.evidence ?? []).slice(-10);
+}
+
+function checkpointId(prefix, createdAt, value) {
+  const stamp = createdAt.replace(/[^0-9]/g, '').slice(0, 17);
+  return `${prefix}-${stamp}-${stableHash(value).slice(0, 8)}`;
+}
+
+async function buildCheckpoint(kind) {
+  const { config, state } = await load();
+  const continuitySecrets = secretEnvironmentValues(config.security);
+  const sanitize = (value) => redact(String(value), continuitySecrets);
+  const summary = sanitize(boundedText('summary', args.summary, 4000));
+  const next = sanitize(args.next ? boundedText('next', args.next, 2000) : inferredNextAction(state, config));
+  const createdAt = new Date().toISOString();
+  const git = await repositoryChanges();
   const identity = await repositoryIdentity();
-  const markdown = `# Session Handoff\n\nGenerated: ${new Date().toISOString()}\n\n## Summary\n\n${summary}\n\n## Active feature\n\n${active.length ? active.map((item) => `- ${item.id}: ${item.title}`).join('\n') : 'None.'}\n\n## Reproducible checkpoint\n\n- Commit: ${identity.head ?? '(unavailable)'}\n- Branch: ${identity.branch || '(detached or unavailable)'}\n- Harness revision: ${state.revision ?? 0}\n\n## Repository state\n\n\`\`\`text\n${git.output.trim() || '(clean)'}\n\`\`\`\n\n## Blockers\n\n${blocked.length ? blocked.map((item) => `- ${item.id}: ${item.blocker}`).join('\n') : 'None recorded.'}\n\n## Next action\n\n${next}\n`;
-  await atomicWrite(path.join(HARNESS_DIR, 'handoff.md'), markdown);
-  await appendEvent('handoff.written', { summary, next, head: identity.head, revision: state.revision ?? 0 });
-  console.log('Updated .harness/handoff.md');
+  const projectFiles = git.files.filter((item) => !matchGlob(item.path, '.harness/**'));
+  const active = activeFeatures(state).map((item) => ({ id: item.id, title: sanitize(item.title), description: sanitize(item.description) }));
+  const featureBlockers = state.features
+    .filter((item) => item.status === 'blocked')
+    .map((item) => sanitize(`${item.id}: ${item.blocker}`));
+  const userBlockers = repeatedText(args.blocker).map(sanitize);
+  const decisions = repeatedText(args.decision).map(sanitize);
+  const evidence = unique([...latestEvidence(state), ...repeatedText(args.evidence)].map(sanitize));
+  const seed = { kind, createdAt, summary, next, revision: state.revision, head: identity.head };
+  return {
+    id: checkpointId(kind, createdAt, seed),
+    kind,
+    createdAt,
+    reason: sanitize(args.reason || (args.automatic ? 'context_limit' : 'planned')),
+    agent: args.agent && args.agent !== true ? sanitize(args.agent) : null,
+    automatic: args.automatic === true,
+    summary,
+    next,
+    decisions,
+    blockers: unique([...featureBlockers, ...userBlockers]),
+    featureRevision: state.revision,
+    activeFeatures: active,
+    passingFeatureCount: state.features.filter((item) => item.status === 'passing').length,
+    evidence,
+    configHash: stableHash(config),
+    repository: {
+      available: git.available && identity.available,
+      head: identity.head,
+      branch: identity.branch ? sanitize(identity.branch) : identity.branch,
+      clean: git.available && projectFiles.length === 0,
+      worktreeHash: git.available ? stableHash(projectFiles) : null,
+      changedFileCount: projectFiles.length,
+      changedFiles: projectFiles.slice(0, 100).map((item) => ({ path: sanitize(item.path), status: item.status, hash: item.hash }))
+    }
+  };
+}
+
+function markdownItems(items, empty = 'None recorded.') {
+  return items.length ? items.map((item) => `- ${item}`).join('\n') : empty;
+}
+
+function renderProgress(checkpoint, phase, generation) {
+  const active = checkpoint.activeFeatures.map((item) => `${item.id}: ${item.title}`);
+  const files = checkpoint.repository.changedFiles.map((item) => `${item.status.trim() || 'M'} ${item.path}`);
+  const omitted = checkpoint.repository.changedFileCount - checkpoint.repository.changedFiles.length;
+  if (omitted > 0) files.push(`... ${omitted} more changed project files (see Git status)`);
+  const phaseText = phase === 'awaiting_resume'
+    ? `Awaiting a fresh task for handoff \`${checkpoint.id}\``
+    : `Working generation ${generation}`;
+  return `# Progress\n\nGenerated: ${new Date().toISOString()}\n\nThis is a bounded current-state snapshot. Use Git history, \`.harness/events.jsonl\`, and evidence files for older history.\n\n## Current state\n\n- Continuity: ${phaseText}\n- Feature revision: ${checkpoint.featureRevision}\n- Active features: ${active.length}\n- Passing features: ${checkpoint.passingFeatureCount}\n- Branch: ${checkpoint.repository.branch || '(detached or unavailable)'}\n- Commit: ${checkpoint.repository.head ?? '(unavailable)'}\n- Project worktree: ${checkpoint.repository.available ? checkpoint.repository.clean ? 'clean' : 'dirty (preserved for resume)' : 'unavailable'}\n\n## Current summary\n\n${checkpoint.summary}\n\n## Active feature\n\n${markdownItems(active, 'None.')}\n\n## Blockers and risks\n\n${markdownItems(checkpoint.blockers)}\n\n## Decisions to preserve\n\n${markdownItems(checkpoint.decisions)}\n\n## Next executable step\n\n${checkpoint.next}\n\n## Changed project files\n\n${markdownItems(files, checkpoint.repository.clean ? 'None.' : 'Unavailable.')}\n\n## Latest evidence\n\n${markdownItems(checkpoint.evidence, 'None.')}\n`;
+}
+
+function freshTaskPrompt(handoff) {
+  return `Resume harness handoff ${handoff.id} in this fresh task. Run \`node .harness/run.mjs resume ${handoff.id}\` before changing files, then follow the printed next action.`;
+}
+
+function renderHandoff(handoff, generation) {
+  const active = handoff.activeFeatures.map((item) => `${item.id}: ${item.title}`);
+  const files = handoff.repository.changedFiles.map((item) => `${item.status.trim() || 'M'} ${item.path}`);
+  const omitted = handoff.repository.changedFileCount - handoff.repository.changedFiles.length;
+  if (omitted > 0) files.push(`... ${omitted} more changed project files (see Git status)`);
+  const prompt = freshTaskPrompt(handoff);
+  const codexLink = `codex://new?path=${encodeURIComponent(ROOT)}&prompt=${encodeURIComponent(prompt)}`;
+  return `# Fresh-task Handoff\n\nGenerated: ${handoff.createdAt}\n\n- Handoff ID: \`${handoff.id}\`\n- From generation: ${generation}\n- Status: **FRESH TASK REQUIRED**\n- Resume command: \`node .harness/run.mjs resume ${handoff.id}\`\n\n## Terminal boundary\n\nStop the current conversation after this handoff. Do not invoke \`resume\` here, resume this transcript, or use context compaction as a substitute. Start a genuinely new chat/task in the same worktree.\n\n[Open a fresh Codex task](${codexLink})\n\nFor Claude Code, start a new session in this repository. For GitHub Copilot, start a new chat or coding-agent task. Use this bootstrap prompt:\n\n\`\`\`text\n${prompt}\n\`\`\`\n\n## Summary\n\n${handoff.summary}\n\n## Active feature\n\n${markdownItems(active, 'None.')}\n\n## Repository checkpoint\n\n- Commit: ${handoff.repository.head ?? '(unavailable)'}\n- Branch: ${handoff.repository.branch || '(detached or unavailable)'}\n- Feature revision: ${handoff.featureRevision}\n- Project worktree: ${handoff.repository.available ? handoff.repository.clean ? 'clean' : 'dirty; exact paths and hashes are recorded' : 'unavailable'}\n\nDirty or unavailable repository state is recorded as a handoff risk; it never prevents continuity from being persisted.\n\n## Changed project files\n\n${markdownItems(files, handoff.repository.clean ? 'None.' : 'Unavailable.')}\n\n## Blockers and risks\n\n${markdownItems(handoff.blockers)}\n\n## Decisions to preserve\n\n${markdownItems(handoff.decisions)}\n\n## Latest evidence\n\n${markdownItems(handoff.evidence, 'None.')}\n\n## Next action\n\n${handoff.next}\n`;
+}
+
+async function archiveProgress(handoffId) {
+  if (!await exists(PROGRESS_PATH)) return;
+  const current = await readFile(PROGRESS_PATH, 'utf8');
+  if (!current.trim()) return;
+  await mkdir(CONTINUITY_HISTORY_DIR, { recursive: true });
+  const target = path.join(CONTINUITY_HISTORY_DIR, `${safeName(handoffId)}.md`);
+  if (!await exists(target)) await atomicWrite(target, current);
+}
+
+async function writeCheckpoint() {
+  const continuity = await readContinuity();
+  const checkpoint = await buildCheckpoint('checkpoint');
+  await atomicWrite(PROGRESS_PATH, renderProgress(checkpoint, 'working', continuity.generation));
+  await writeJson(CONTINUITY_PATH, { ...continuity, checkpoint });
+  await appendEvent('checkpoint.written', {
+    checkpointId: checkpoint.id,
+    summary: checkpoint.summary,
+    next: checkpoint.next,
+    revision: checkpoint.featureRevision,
+    generation: continuity.generation
+  });
+  if (args.json) console.log(JSON.stringify(checkpoint, null, 2));
+  else console.log(`CHECKPOINT_WRITTEN ${checkpoint.id}`);
+}
+
+async function writeHandoff() {
+  const continuity = await readContinuity();
+  if (continuity.phase === 'awaiting_resume') {
+    await atomicWrite(PROGRESS_PATH, renderProgress(continuity.handoff, 'awaiting_resume', continuity.generation));
+    await atomicWrite(HANDOFF_PATH, renderHandoff(continuity.handoff, continuity.generation));
+    if (args.json) console.log(JSON.stringify(continuity.handoff, null, 2));
+    else printAwaitingResume(continuity);
+    return;
+  }
+  const handoff = await buildCheckpoint('handoff');
+  await archiveProgress(handoff.id);
+  const updated = { ...continuity, phase: 'awaiting_resume', checkpoint: handoff, handoff };
+  await writeJson(CONTINUITY_PATH, updated);
+  await atomicWrite(PROGRESS_PATH, renderProgress(handoff, 'awaiting_resume', continuity.generation));
+  await atomicWrite(HANDOFF_PATH, renderHandoff(handoff, continuity.generation));
+  await appendEvent('handoff.ready', {
+    handoffId: handoff.id,
+    summary: handoff.summary,
+    next: handoff.next,
+    head: handoff.repository.head,
+    clean: handoff.repository.clean,
+    revision: handoff.featureRevision,
+    generation: continuity.generation
+  });
+  if (args.json) console.log(JSON.stringify(handoff, null, 2));
+  else {
+    console.log(`HANDOFF_READY ${handoff.id}`);
+    if (!handoff.repository.clean) console.log('WARN  Project worktree is not clean; its exact state was recorded and continuity remains valid.');
+    printAwaitingResume(updated);
+    console.log(`Bootstrap prompt: ${freshTaskPrompt(handoff)}`);
+    console.log('STOP_CURRENT_CHAT');
+  }
+}
+
+async function currentRepositoryCheckpoint() {
+  const git = await repositoryChanges();
+  const identity = await repositoryIdentity();
+  const projectFiles = git.files.filter((item) => !matchGlob(item.path, '.harness/**'));
+  return {
+    available: git.available && identity.available,
+    head: identity.head,
+    branch: identity.branch,
+    worktreeHash: git.available ? stableHash(projectFiles) : null
+  };
+}
+
+async function resumeHandoff() {
+  const continuity = await readContinuity();
+  const id = boundedText('handoff-id', args._[1] || args.id, 200);
+  if (continuity.phase === 'working') {
+    if (continuity.lastHandoff?.id === id) {
+      if (args.json) console.log(JSON.stringify(continuityView(continuity), null, 2));
+      else console.log(`ALREADY_RESUMED ${id}; generation ${continuity.generation}`);
+      return;
+    }
+    throw new Error(`No handoff is awaiting resume. Current continuity phase is ${continuity.phase}.`);
+  }
+  const handoff = continuity.handoff;
+  if (handoff.id !== id) throw new Error(`Handoff ID mismatch. Pending handoff is ${handoff.id}.`);
+  const { config, state } = await load();
+  const repository = await currentRepositoryCheckpoint();
+  const drift = [];
+  if (handoff.featureRevision !== state.revision) drift.push(`feature revision ${handoff.featureRevision} -> ${state.revision}`);
+  if (handoff.configHash !== stableHash(config)) drift.push('configuration changed');
+  if (handoff.repository.available && repository.available) {
+    if (handoff.repository.head !== repository.head) drift.push(`commit ${handoff.repository.head} -> ${repository.head}`);
+    if (handoff.repository.branch !== repository.branch) drift.push(`branch ${handoff.repository.branch || '(detached)'} -> ${repository.branch || '(detached)'}`);
+    if (handoff.repository.worktreeHash !== repository.worktreeHash) drift.push('project worktree changed');
+  } else if (handoff.repository.available !== repository.available) drift.push('repository availability changed');
+  if (drift.length && args.acceptDrift !== true) {
+    throw new Error(`Repository drifted after handoff: ${drift.join('; ')}. Review it, then rerun with --accept-drift if intentional.`);
+  }
+  const resumedAt = new Date().toISOString();
+  const generation = continuity.generation + 1;
+  const lastHandoff = { ...handoff, resumedAt, driftAccepted: drift.length > 0, drift };
+  const updated = {
+    ...continuity,
+    phase: 'working',
+    generation,
+    resumedAt,
+    checkpoint: handoff,
+    handoff: null,
+    lastHandoff
+  };
+  await atomicWrite(PROGRESS_PATH, renderProgress(handoff, 'working', generation));
+  await writeJson(CONTINUITY_PATH, updated);
+  await appendEvent('session.resumed', { handoffId: id, generation, drift, driftAccepted: drift.length > 0 });
+  if (args.json) {
+    console.log(JSON.stringify({ continuity: continuityView(updated), summary: handoff.summary, next: handoff.next, drift }, null, 2));
+    return;
+  }
+  console.log(`SESSION_RESUMED ${id}; generation ${generation}`);
+  if (drift.length) console.log(`WARN  Accepted drift: ${drift.join('; ')}`);
+  console.log(`Summary: ${handoff.summary}`);
+  console.log(`Next: ${handoff.next}`);
+  console.log('Now run node .harness/run.mjs doctor, status, and next before changing files.');
 }
 
 async function traceFeature() {
@@ -1034,6 +1347,8 @@ function printHelp() {
   console.log(`Project harness runtime
 
 Usage:
+  node .harness/run.mjs session [--json]
+  node .harness/run.mjs resume HANDOFF_ID [--accept-drift] [--json]
   node .harness/run.mjs doctor
   node .harness/run.mjs status
   node .harness/run.mjs next [--json]
@@ -1045,12 +1360,17 @@ Usage:
   node .harness/run.mjs credentials [--json]
   node .harness/run.mjs verify [ID]
   node .harness/run.mjs trace ID
-  node .harness/run.mjs handoff --summary TEXT [--next TEXT]
+  node .harness/run.mjs checkpoint --summary TEXT [--next TEXT] [--decision TEXT] [--blocker TEXT] [--evidence PATH]
+  node .harness/run.mjs handoff --summary TEXT [--next TEXT] [--reason TEXT] [--agent NAME] [--json]
 
 Command entries may request configured credential pools with a credentials array.
 The add command accepts --credential PROVIDER for acceptance commands. Keys are
 selected from environment variables, rotated without persisting values, and are
 never retried automatically after command execution.
+
+Handoff is terminal for the current conversation. It records dirty work safely,
+parks feature mutations, and prints the exact resume command for a fresh task.
+Context compaction is not a substitute for handoff and resume.
 
 Only successful verify runs can transition an active feature to passing.`);
 }
