@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "project": {
+    "name": "Agent Harness Kit",
+    "purpose": "Build and maintain an evidence-gated repository-development harness for coding agents.",
+    "stack": "node"
+  },
+  "policies": {
+    "wipLimit": 1,
+    "maxAttempts": 3,
+    "maxRepeatedFailures": 2,
+    "commandTimeoutMs": 600000,
+    "passingIsTerminal": true,
+    "requireEvidence": true
+  },
+  "verification": {
+    "quick": [],
+    "full": [
+      "node --test"
+    ],
+    "e2e": [],
+    "architecture": [
+      "node --check skill/codex-harness/assets/project-runtime.mjs",
+      "node --check skill/codex-harness/scripts/lib/core.mjs"
+    ],
+    "clean": []
+  },
+  "completion": {
+    "baseLayers": [
+      "full"
+    ],
+    "alwaysRunWhenConfigured": [
+      "quick",
+      "architecture"
+    ],
+    "requireAcceptanceCommands": true
+  },
+  "execution": {
+    "harnessRuntime": {
+      "command": "node",
+      "minimumMajorVersion": 20
+    },
+    "packageManager": "npm",
+    "setup": [],
+    "start": [],
+    "health": [],
+    "shutdown": []
+  },
+  "scope": {
+    "enforcement": "required",
+    "defaultAllow": [
+      "**/*"
+    ],
+    "defaultDeny": [
+      ".git/**",
+      ".env",
+      ".env.*",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**"
+    ]
+  },
+  "continuity": {
+    "mode": "fresh_task",
+    "dirtyWorktree": "record",
+    "blockMutationsAfterHandoff": true
+  },
+  "security": {
+    "environmentAllow": [
+      "PATH",
+      "Path",
+      "PATHEXT",
+      "SystemRoot",
+      "ComSpec",
+      "TEMP",
+      "TMP",
+      "HOME",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "CI",
+      "NODE_ENV"
+    ],
+    "redactOutput": true,
+    "credentials": {
+      "stateFile": ".harness/credentials-state.json",
+      "providers": {
+        "openai": {
+          "targetEnvironment": "OPENAI_API_KEY",
+          "sources": [
+            "OPENAI_API_KEY",
+            "OPENAI_API_KEY_2",
+            "OPENAI_API_KEY_3",
+            "OPENAI_API_KEY_4"
+          ],
+          "selection": "round_robin"
+        },
+        "anthropic": {
+          "targetEnvironment": "ANTHROPIC_API_KEY",
+          "sources": [
+            "ANTHROPIC_API_KEY",
+            "ANTHROPIC_API_KEY_2",
+            "ANTHROPIC_API_KEY_3",
+            "ANTHROPIC_API_KEY_4"
+          ],
+          "selection": "round_robin"
+        }
+      }
+    }
+  },
+  "agents": {
+    "enabled": [
+      "codex",
+      "claude",
+      "github-copilot"
+    ],
+    "instructions": {
+      "codex": "AGENTS.md",
+      "claude": "CLAUDE.md",
+      "github-copilot": ".github/copilot-instructions.md"
+    }
+  },
+  "docs": {
+    "required": [
+      "README.md",
+      "ANALYSIS.md",
+      "CONTRIBUTING.md",
+      "SECURITY.md"
+    ],
+    "router": ".harness/docs-map.md"
+  }
+}

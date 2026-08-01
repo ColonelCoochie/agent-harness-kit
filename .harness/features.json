@@ -1,0 +1,1209 @@
+{
+  "version": 1,
+  "revision": 15,
+  "features": [
+    {
+      "id": "feat-001",
+      "title": "Research and harden mutation locking",
+      "description": "Record fifty independent scholarly review lanes and eliminate live-owner lock eviction without weakening dead-owner recovery.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          ".harness/**",
+          ".codex/**",
+          ".github/copilot-instructions.md",
+          "AGENTS.md",
+          "CLAUDE.md",
+          "README.md",
+          "ANALYSIS.md",
+          "CHANGELOG.md",
+          "CONTRIBUTING.md",
+          "package.json",
+          "RESEARCH-2026-08-01.md",
+          "scripts/**",
+          "tests/**",
+          "skill/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "The research ledger records all fifty lanes with sources hypotheses experiment outcomes and rejected or deferred ideas.",
+          "command": "node scripts/verify-research.mjs"
+        },
+        {
+          "id": "ac-2",
+          "description": "A live lock owner cannot be evicted by age and lock release cannot remove another owner lock.",
+          "command": "node --test tests/state-lock.test.mjs"
+        },
+        {
+          "id": "ac-3",
+          "description": "The standalone self-hosted workspace remains structurally ready.",
+          "command": "node bin/agent-harness.mjs audit . --min-score 95"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-01T19-00-21-352Z-feat-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-01T17:24:59.714Z",
+      "updatedAt": "2026-08-01T19:00:21.352Z",
+      "scopeBaseline": {
+        "available": true,
+        "files": [
+          {
+            "path": ".codex/hooks.json",
+            "status": "??",
+            "hash": "8d367d04dac89481f67e5b9abc37c773701aceb79e566fd2e83b10c49e83340a"
+          },
+          {
+            "path": ".github/copilot-instructions.md",
+            "status": " M",
+            "hash": "c3d637b0dcf1d8f46908271b3c1a2ff0c1935375ad41247cdf5deebda9b0151c"
+          },
+          {
+            "path": ".harness/config.json",
+            "status": "??",
+            "hash": "9dc1448adadb7d9801602af9b0ee85f6b5f4ae98f7026fa4685bb8170f05f17f"
+          },
+          {
+            "path": ".harness/continuity.json",
+            "status": "??",
+            "hash": "9aaf3354ca8499d9b99a69418f6e368c5a9c714ba370735712e7de5f43c52bd5"
+          },
+          {
+            "path": ".harness/credentials-state.json",
+            "status": "??",
+            "hash": "cb93cb0d5d634372964d9fb1cd355b5d1e1bf2f1f761842b771db60000fed584"
+          },
+          {
+            "path": ".harness/docs-map.md",
+            "status": "??",
+            "hash": "5093a63639bb4502c27b4fe126c850b398b6511b2fcbb9026ee0c6d7196afc22"
+          },
+          {
+            "path": ".harness/events.jsonl",
+            "status": "??",
+            "hash": "f187f5aa4276f2e90d5c73a197b5ef5d3c07253b9a95d747b67d108c2bac17b1"
+          },
+          {
+            "path": ".harness/evidence/.gitkeep",
+            "status": "??",
+            "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": ".harness/features.json",
+            "status": "??",
+            "hash": "59c3db14ace38bd189dc7adbfaf2e5657246d2a603cc2c40cab1a904d8276071"
+          },
+          {
+            "path": ".harness/handoff.md",
+            "status": "??",
+            "hash": "aaa50d6002b881eb2286b069561977e926abcc0893f9949321101e0ce5133358"
+          },
+          {
+            "path": ".harness/hooks/precompact-handoff.mjs",
+            "status": "??",
+            "hash": "a0edb77d542a70835d02d196ec0e976c2b2d2e0c102493a3b8c7536dbc7e2f62"
+          },
+          {
+            "path": ".harness/loops/checker.md",
+            "status": "??",
+            "hash": "001f8b740e0e6282a7b3b346255a1e5e54ddd163228886e3ff18e642f8efca7d"
+          },
+          {
+            "path": ".harness/loops/goal.md",
+            "status": "??",
+            "hash": "c444ec6cde487d8d864c7de3e218809add1ba634fa33820e4bc57f031547d01b"
+          },
+          {
+            "path": ".harness/loops/maker.md",
+            "status": "??",
+            "hash": "b9055260a12c21d9684b61b8c885fd6e80ffbbf29657952ee08dd22dab2da239"
+          },
+          {
+            "path": ".harness/progress.md",
+            "status": "??",
+            "hash": "8537c050e34fde729062f8861c1b901366ba71bd461aed8ef6b038f596fd9b6f"
+          },
+          {
+            "path": ".harness/quality.md",
+            "status": "??",
+            "hash": "55cf0f17562221eaff7ead9fe7fddfd7762f651368545b1cc958ced43cec5f1c"
+          },
+          {
+            "path": ".harness/run.mjs",
+            "status": "??",
+            "hash": "6d3ff258a0a646dd58d7a7ce335d1ff60afd1c67b7bd5d07faada2ca9c71cca8"
+          },
+          {
+            "path": "AGENTS.md",
+            "status": " M",
+            "hash": "aca270cd1bf651bb596c4afe9f83bbc40ae01e80a4ea24c3e733962834289415"
+          },
+          {
+            "path": "CLAUDE.md",
+            "status": " M",
+            "hash": "6c856ccfa2e17dc96e24d0b16f523bf557d53522f601d8c78e7bab6587776a9d"
+          }
+        ],
+        "output": " M .github/copilot-instructions.md\n M AGENTS.md\n M CLAUDE.md\n?? .codex/hooks.json\n?? .harness/config.json\n?? .harness/continuity.json\n?? .harness/credentials-state.json\n?? .harness/docs-map.md\n?? .harness/events.jsonl\n?? .harness/evidence/.gitkeep\n?? .harness/features.json\n?? .harness/handoff.md\n?? .harness/hooks/precompact-handoff.mjs\n?? .harness/loops/checker.md\n?? .harness/loops/goal.md\n?? .harness/loops/maker.md\n?? .harness/progress.md\n?? .harness/quality.md\n?? .harness/run.mjs",
+        "diagnostics": "warning: unable to access 'C:\\Users\\Jason/.config/git/ignore': Permission denied\nwarning: unable to access 'C:\\Users\\Jason/.config/git/ignore': Permission denied"
+      },
+      "contract": {
+        "hash": "3b84a8639695103182e9ee422399ed2ff9dc0b41234e9d01228c0b2085ce2ab0",
+        "snapshot": {
+          "id": "feat-001",
+          "title": "Research and harden mutation locking",
+          "description": "Record fifty independent scholarly review lanes and eliminate live-owner lock eviction without weakening dead-owner recovery.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              ".harness/**",
+              ".codex/**",
+              ".github/copilot-instructions.md",
+              "AGENTS.md",
+              "CLAUDE.md",
+              "README.md",
+              "ANALYSIS.md",
+              "CHANGELOG.md",
+              "CONTRIBUTING.md",
+              "package.json",
+              "RESEARCH-2026-08-01.md",
+              "scripts/**",
+              "tests/**",
+              "skill/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "The research ledger records all fifty lanes with sources hypotheses experiment outcomes and rejected or deferred ideas.",
+              "command": "node scripts/verify-research.mjs"
+            },
+            {
+              "id": "ac-2",
+              "description": "A live lock owner cannot be evicted by age and lock release cannot remove another owner lock.",
+              "command": "node --test tests/state-lock.test.mjs"
+            },
+            {
+              "id": "ac-3",
+              "description": "The standalone self-hosted workspace remains structurally ready.",
+              "command": "node bin/agent-harness.mjs audit . --min-score 95"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-01T17:25:03.157Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-01T19:00:21.352Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "feat-002",
+      "title": "Detect committed scope changes",
+      "description": "Bind feature scope to the starting Git commit so a later commit cannot erase an out-of-scope change from verification.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          ".harness/**",
+          "tests/scope-history.test.mjs",
+          "RESEARCH-2026-08-01.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "An out-of-scope file committed after feature start is rejected even when the worktree is otherwise clean.",
+          "command": "node --test tests/scope-history.test.mjs"
+        },
+        {
+          "id": "ac-2",
+          "description": "The standalone harness remains structurally ready.",
+          "command": "node bin/agent-harness.mjs audit . --min-score 95"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-01T19-06-55-568Z-feat-002.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-01T19:00:38.541Z",
+      "updatedAt": "2026-08-01T19:06:55.569Z",
+      "scopeBaseline": {
+        "available": true,
+        "files": [
+          {
+            "path": ".codex/hooks.json",
+            "status": "??",
+            "hash": "8d367d04dac89481f67e5b9abc37c773701aceb79e566fd2e83b10c49e83340a"
+          },
+          {
+            "path": ".github/copilot-instructions.md",
+            "status": " M",
+            "hash": "c3d637b0dcf1d8f46908271b3c1a2ff0c1935375ad41247cdf5deebda9b0151c"
+          },
+          {
+            "path": ".harness/config.json",
+            "status": "??",
+            "hash": "f77b1a94064673bd7d2159861d228db9dc6ca4122ae68e20a90bbb43cf9a6b8f"
+          },
+          {
+            "path": ".harness/continuity.json",
+            "status": "??",
+            "hash": "693fe6e6273b52aaa8e10df72a1ee7be4dee9ba070e6d3371f8d3c4dfffbbb2d"
+          },
+          {
+            "path": ".harness/credentials-state.json",
+            "status": "??",
+            "hash": "cb93cb0d5d634372964d9fb1cd355b5d1e1bf2f1f761842b771db60000fed584"
+          },
+          {
+            "path": ".harness/docs-map.md",
+            "status": "??",
+            "hash": "5093a63639bb4502c27b4fe126c850b398b6511b2fcbb9026ee0c6d7196afc22"
+          },
+          {
+            "path": ".harness/events.jsonl",
+            "status": "??",
+            "hash": "ff6da53503f2194eff4b1183758b96f6c82bd395ff0bb793f3eae6880a072478"
+          },
+          {
+            "path": ".harness/evidence/.gitkeep",
+            "status": "??",
+            "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": ".harness/evidence/2026-08-01T19-00-21-352Z-feat-001.json",
+            "status": "??",
+            "hash": "4ef1ae93774d3ac97eef0cf16ea25bc16d3cd68df1f49f577e46299ed8dac9b7"
+          },
+          {
+            "path": ".harness/features.json",
+            "status": "??",
+            "hash": "7b345c71ae5bbffbf28266907c97d22add5504a77f190613c7e57c4979c7be1c"
+          },
+          {
+            "path": ".harness/handoff.md",
+            "status": "??",
+            "hash": "aaa50d6002b881eb2286b069561977e926abcc0893f9949321101e0ce5133358"
+          },
+          {
+            "path": ".harness/hooks/precompact-handoff.mjs",
+            "status": "??",
+            "hash": "a0edb77d542a70835d02d196ec0e976c2b2d2e0c102493a3b8c7536dbc7e2f62"
+          },
+          {
+            "path": ".harness/loops/checker.md",
+            "status": "??",
+            "hash": "001f8b740e0e6282a7b3b346255a1e5e54ddd163228886e3ff18e642f8efca7d"
+          },
+          {
+            "path": ".harness/loops/goal.md",
+            "status": "??",
+            "hash": "c444ec6cde487d8d864c7de3e218809add1ba634fa33820e4bc57f031547d01b"
+          },
+          {
+            "path": ".harness/loops/maker.md",
+            "status": "??",
+            "hash": "b9055260a12c21d9684b61b8c885fd6e80ffbbf29657952ee08dd22dab2da239"
+          },
+          {
+            "path": ".harness/progress.md",
+            "status": "??",
+            "hash": "3cae5a83f54aa18979b6d4a70a0addeb9a4c2fe75aca0fc1626debc4ae3ae7c4"
+          },
+          {
+            "path": ".harness/quality.md",
+            "status": "??",
+            "hash": "55cf0f17562221eaff7ead9fe7fddfd7762f651368545b1cc958ced43cec5f1c"
+          },
+          {
+            "path": ".harness/run.mjs",
+            "status": "??",
+            "hash": "b243ec3ba2f42effcb2fbd285f43457f89f839b59f53f091197a7055cc66bd85"
+          },
+          {
+            "path": "AGENTS.md",
+            "status": " M",
+            "hash": "aca270cd1bf651bb596c4afe9f83bbc40ae01e80a4ea24c3e733962834289415"
+          },
+          {
+            "path": "CLAUDE.md",
+            "status": " M",
+            "hash": "6c856ccfa2e17dc96e24d0b16f523bf557d53522f601d8c78e7bab6587776a9d"
+          },
+          {
+            "path": "package.json",
+            "status": " M",
+            "hash": "b16edb2c16941c4dfccd5f7b1937a953fb471f4b5180ac51120b4ed1a35302cc"
+          },
+          {
+            "path": "RESEARCH-2026-08-01.md",
+            "status": "??",
+            "hash": "61df11d9689e783bc39334e98cf2785bd8fbec5489381574193e998b7c08c0f4"
+          },
+          {
+            "path": "scripts/verify-research.mjs",
+            "status": "??",
+            "hash": "35a99383688228a18b97f2c50af7da827da88cbb7c818790d8def0c9a33f6513"
+          },
+          {
+            "path": "skill/codex-harness/assets/project-runtime.mjs",
+            "status": " M",
+            "hash": "b243ec3ba2f42effcb2fbd285f43457f89f839b59f53f091197a7055cc66bd85"
+          },
+          {
+            "path": "tests/state-lock.test.mjs",
+            "status": "??",
+            "hash": "085c11345c0ff1d5c05fd15eb3acc73d85214f726ef1a27df6ecd29e6a1b081b"
+          }
+        ],
+        "output": " M .github/copilot-instructions.md\n M AGENTS.md\n M CLAUDE.md\n M package.json\n M skill/codex-harness/assets/project-runtime.mjs\n?? .codex/hooks.json\n?? .harness/config.json\n?? .harness/continuity.json\n?? .harness/credentials-state.json\n?? .harness/docs-map.md\n?? .harness/events.jsonl\n?? .harness/evidence/.gitkeep\n?? .harness/evidence/2026-08-01T19-00-21-352Z-feat-001.json\n?? .harness/features.json\n?? .harness/handoff.md\n?? .harness/hooks/precompact-handoff.mjs\n?? .harness/loops/checker.md\n?? .harness/loops/goal.md\n?? .harness/loops/maker.md\n?? .harness/progress.md\n?? .harness/quality.md\n?? .harness/run.mjs\n?? RESEARCH-2026-08-01.md\n?? scripts/verify-research.mjs\n?? tests/state-lock.test.mjs",
+        "diagnostics": "warning: unable to access 'C:\\Users\\Jason/.config/git/ignore': Permission denied\nwarning: unable to access 'C:\\Users\\Jason/.config/git/ignore': Permission denied"
+      },
+      "contract": {
+        "hash": "47f1cb823560d24bef9b4dd25e7ada42304f5c72a55918cbef815e6ed71f75a9",
+        "snapshot": {
+          "id": "feat-002",
+          "title": "Detect committed scope changes",
+          "description": "Bind feature scope to the starting Git commit so a later commit cannot erase an out-of-scope change from verification.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              ".harness/**",
+              "tests/scope-history.test.mjs",
+              "RESEARCH-2026-08-01.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "An out-of-scope file committed after feature start is rejected even when the worktree is otherwise clean.",
+              "command": "node --test tests/scope-history.test.mjs"
+            },
+            {
+              "id": "ac-2",
+              "description": "The standalone harness remains structurally ready.",
+              "command": "node bin/agent-harness.mjs audit . --min-score 95"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-01T19:00:50.788Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-01T19:06:55.569Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "feat-003",
+      "title": "Fail closed on command environment policy",
+      "description": "Reject configured project commands before spawn when security environment allowlist is missing or invalid.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          ".harness/**",
+          "tests/environment-boundary.test.mjs",
+          "RESEARCH-2026-08-01.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Malformed environment policy never spawns a configured command or exposes an ambient canary.",
+          "command": "node --test tests/environment-boundary.test.mjs"
+        },
+        {
+          "id": "ac-2",
+          "description": "The standalone harness remains structurally ready.",
+          "command": "node bin/agent-harness.mjs audit . --min-score 95"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-01T19-10-34-515Z-feat-003.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-01T19:07:06.732Z",
+      "updatedAt": "2026-08-01T19:10:34.516Z",
+      "scopeBaseline": {
+        "available": true,
+        "files": [
+          {
+            "path": ".codex/hooks.json",
+            "status": "??",
+            "hash": "8d367d04dac89481f67e5b9abc37c773701aceb79e566fd2e83b10c49e83340a"
+          },
+          {
+            "path": ".github/copilot-instructions.md",
+            "status": " M",
+            "hash": "c3d637b0dcf1d8f46908271b3c1a2ff0c1935375ad41247cdf5deebda9b0151c"
+          },
+          {
+            "path": ".harness/config.json",
+            "status": "??",
+            "hash": "f77b1a94064673bd7d2159861d228db9dc6ca4122ae68e20a90bbb43cf9a6b8f"
+          },
+          {
+            "path": ".harness/continuity.json",
+            "status": "??",
+            "hash": "693fe6e6273b52aaa8e10df72a1ee7be4dee9ba070e6d3371f8d3c4dfffbbb2d"
+          },
+          {
+            "path": ".harness/credentials-state.json",
+            "status": "??",
+            "hash": "cb93cb0d5d634372964d9fb1cd355b5d1e1bf2f1f761842b771db60000fed584"
+          },
+          {
+            "path": ".harness/docs-map.md",
+            "status": "??",
+            "hash": "5093a63639bb4502c27b4fe126c850b398b6511b2fcbb9026ee0c6d7196afc22"
+          },
+          {
+            "path": ".harness/events.jsonl",
+            "status": "??",
+            "hash": "21c548ca0a958f73333154abf9bd265228a49a266f1ca5aeb2a8848c6c77dca8"
+          },
+          {
+            "path": ".harness/evidence/.gitkeep",
+            "status": "??",
+            "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": ".harness/evidence/2026-08-01T19-00-21-352Z-feat-001.json",
+            "status": "??",
+            "hash": "4ef1ae93774d3ac97eef0cf16ea25bc16d3cd68df1f49f577e46299ed8dac9b7"
+          },
+          {
+            "path": ".harness/evidence/2026-08-01T19-06-55-568Z-feat-002.json",
+            "status": "??",
+            "hash": "2c97ff087240fabf4b6e290679e03a8b4aa69db35404b924c02b14249435db75"
+          },
+          {
+            "path": ".harness/features.json",
+            "status": "??",
+            "hash": "443380f56e37dd3eaf6b0cce1d21ad58b431d9af4055b826f90f06b934f055ba"
+          },
+          {
+            "path": ".harness/handoff.md",
+            "status": "??",
+            "hash": "aaa50d6002b881eb2286b069561977e926abcc0893f9949321101e0ce5133358"
+          },
+          {
+            "path": ".harness/hooks/precompact-handoff.mjs",
+            "status": "??",
+            "hash": "a0edb77d542a70835d02d196ec0e976c2b2d2e0c102493a3b8c7536dbc7e2f62"
+          },
+          {
+            "path": ".harness/loops/checker.md",
+            "status": "??",
+            "hash": "001f8b740e0e6282a7b3b346255a1e5e54ddd163228886e3ff18e642f8efca7d"
+          },
+          {
+            "path": ".harness/loops/goal.md",
+            "status": "??",
+            "hash": "c444ec6cde487d8d864c7de3e218809add1ba634fa33820e4bc57f031547d01b"
+          },
+          {
+            "path": ".harness/loops/maker.md",
+            "status": "??",
+            "hash": "b9055260a12c21d9684b61b8c885fd6e80ffbbf29657952ee08dd22dab2da239"
+          },
+          {
+            "path": ".harness/progress.md",
+            "status": "??",
+            "hash": "3cae5a83f54aa18979b6d4a70a0addeb9a4c2fe75aca0fc1626debc4ae3ae7c4"
+          },
+          {
+            "path": ".harness/quality.md",
+            "status": "??",
+            "hash": "55cf0f17562221eaff7ead9fe7fddfd7762f651368545b1cc958ced43cec5f1c"
+          },
+          {
+            "path": ".harness/run.mjs",
+            "status": "??",
+            "hash": "4e99a4eb7d731662fa0661a84d6ce7459604ab2db4b5882eda86e4c4b27f4391"
+          },
+          {
+            "path": "AGENTS.md",
+            "status": " M",
+            "hash": "aca270cd1bf651bb596c4afe9f83bbc40ae01e80a4ea24c3e733962834289415"
+          },
+          {
+            "path": "CLAUDE.md",
+            "status": " M",
+            "hash": "6c856ccfa2e17dc96e24d0b16f523bf557d53522f601d8c78e7bab6587776a9d"
+          },
+          {
+            "path": "package.json",
+            "status": " M",
+            "hash": "b16edb2c16941c4dfccd5f7b1937a953fb471f4b5180ac51120b4ed1a35302cc"
+          },
+          {
+            "path": "RESEARCH-2026-08-01.md",
+            "status": "??",
+            "hash": "bab42ee058121ae5b1eba48fabaa608b45366c89eeed77edf73c89e4057082b4"
+          },
+          {
+            "path": "scripts/verify-research.mjs",
+            "status": "??",
+            "hash": "35a99383688228a18b97f2c50af7da827da88cbb7c818790d8def0c9a33f6513"
+          },
+          {
+            "path": "skill/codex-harness/assets/project-runtime.mjs",
+            "status": " M",
+            "hash": "4e99a4eb7d731662fa0661a84d6ce7459604ab2db4b5882eda86e4c4b27f4391"
+          },
+          {
+            "path": "tests/scope-history.test.mjs",
+            "status": "??",
+            "hash": "dc9b011ab502f18433d696e56bfee1e7eeb131872a02dcdc22c5745397f7fbee"
+          },
+          {
+            "path": "tests/state-lock.test.mjs",
+            "status": "??",
+            "hash": "085c11345c0ff1d5c05fd15eb3acc73d85214f726ef1a27df6ecd29e6a1b081b"
+          }
+        ],
+        "output": " M .github/copilot-instructions.md\n M AGENTS.md\n M CLAUDE.md\n M package.json\n M skill/codex-harness/assets/project-runtime.mjs\n?? .codex/hooks.json\n?? .harness/config.json\n?? .harness/continuity.json\n?? .harness/credentials-state.json\n?? .harness/docs-map.md\n?? .harness/events.jsonl\n?? .harness/evidence/.gitkeep\n?? .harness/evidence/2026-08-01T19-00-21-352Z-feat-001.json\n?? .harness/evidence/2026-08-01T19-06-55-568Z-feat-002.json\n?? .harness/features.json\n?? .harness/handoff.md\n?? .harness/hooks/precompact-handoff.mjs\n?? .harness/loops/checker.md\n?? .harness/loops/goal.md\n?? .harness/loops/maker.md\n?? .harness/progress.md\n?? .harness/quality.md\n?? .harness/run.mjs\n?? RESEARCH-2026-08-01.md\n?? scripts/verify-research.mjs\n?? tests/scope-history.test.mjs\n?? tests/state-lock.test.mjs",
+        "diagnostics": "warning: unable to access 'C:\\Users\\Jason/.config/git/ignore': Permission denied\nwarning: unable to access 'C:\\Users\\Jason/.config/git/ignore': Permission denied",
+        "head": "3f3f2a682c362261b3cb2ed5a7e41d108d5bb5fb"
+      },
+      "contract": {
+        "hash": "f512d1ec2ba9da870cef73780c86e6a51eb5b31579315e3aadbb6832011da9d4",
+        "snapshot": {
+          "id": "feat-003",
+          "title": "Fail closed on command environment policy",
+          "description": "Reject configured project commands before spawn when security environment allowlist is missing or invalid.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              ".harness/**",
+              "tests/environment-boundary.test.mjs",
+              "RESEARCH-2026-08-01.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Malformed environment policy never spawns a configured command or exposes an ambient canary.",
+              "command": "node --test tests/environment-boundary.test.mjs"
+            },
+            {
+              "id": "ac-2",
+              "description": "The standalone harness remains structurally ready.",
+              "command": "node bin/agent-harness.mjs audit . --min-score 95"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-01T19:07:11.348Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-01T19:10:34.516Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "feat-004",
+      "title": "Preserve opaque CLI values",
+      "description": "Keep commas intact in repeatable criterion command allow and deny values while retaining documented CSV identifier lists.",
+      "dependencies": [
+        "feat-003"
+      ],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          ".harness/**",
+          "tests/cli-values.test.mjs",
+          "RESEARCH-2026-08-01.md",
+          "CHANGELOG.md",
+          "README.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Comma-bearing prose commands and globs round-trip and execute as one value each.",
+          "command": "node --test tests/cli-values.test.mjs"
+        },
+        {
+          "id": "ac-2",
+          "description": "The fifty-lane research ledger and measured experiment records remain complete.",
+          "command": "node scripts/verify-research.mjs"
+        },
+        {
+          "id": "ac-3",
+          "description": "The standalone harness remains structurally ready.",
+          "command": "node bin/agent-harness.mjs audit . --min-score 95"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-01T19-15-38-663Z-feat-004.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-01T19:10:52.016Z",
+      "updatedAt": "2026-08-01T19:15:38.664Z",
+      "scopeBaseline": {
+        "available": true,
+        "files": [
+          {
+            "path": ".codex/hooks.json",
+            "status": "??",
+            "hash": "8d367d04dac89481f67e5b9abc37c773701aceb79e566fd2e83b10c49e83340a"
+          },
+          {
+            "path": ".github/copilot-instructions.md",
+            "status": " M",
+            "hash": "c3d637b0dcf1d8f46908271b3c1a2ff0c1935375ad41247cdf5deebda9b0151c"
+          },
+          {
+            "path": ".harness/config.json",
+            "status": "??",
+            "hash": "f77b1a94064673bd7d2159861d228db9dc6ca4122ae68e20a90bbb43cf9a6b8f"
+          },
+          {
+            "path": ".harness/continuity.json",
+            "status": "??",
+            "hash": "693fe6e6273b52aaa8e10df72a1ee7be4dee9ba070e6d3371f8d3c4dfffbbb2d"
+          },
+          {
+            "path": ".harness/credentials-state.json",
+            "status": "??",
+            "hash": "cb93cb0d5d634372964d9fb1cd355b5d1e1bf2f1f761842b771db60000fed584"
+          },
+          {
+            "path": ".harness/docs-map.md",
+            "status": "??",
+            "hash": "5093a63639bb4502c27b4fe126c850b398b6511b2fcbb9026ee0c6d7196afc22"
+          },
+          {
+            "path": ".harness/events.jsonl",
+            "status": "??",
+            "hash": "fd6eedbefc44bbe40abce666be858768549172e701b88f3d281864e76e831182"
+          },
+          {
+            "path": ".harness/evidence/.gitkeep",
+            "status": "??",
+            "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": ".harness/evidence/2026-08-01T19-00-21-352Z-feat-001.json",
+            "status": "??",
+            "hash": "4ef1ae93774d3ac97eef0cf16ea25bc16d3cd68df1f49f577e46299ed8dac9b7"
+          },
+          {
+            "path": ".harness/evidence/2026-08-01T19-06-55-568Z-feat-002.json",
+            "status": "??",
+            "hash": "2c97ff087240fabf4b6e290679e03a8b4aa69db35404b924c02b14249435db75"
+          },
+          {
+            "path": ".harness/evidence/2026-08-01T19-10-34-515Z-feat-003.json",
+            "status": "??",
+            "hash": "541e5026d6698fa988117cff4f1783a313288e91da5e2add4e14725218c02d4a"
+          },
+          {
+            "path": ".harness/features.json",
+            "status": "??",
+            "hash": "6b7b22cbd8a20b27430f39d5ef5c3dcebae390571b6dd93d9cc32f037d0c0345"
+          },
+          {
+            "path": ".harness/handoff.md",
+            "status": "??",
+            "hash": "aaa50d6002b881eb2286b069561977e926abcc0893f9949321101e0ce5133358"
+          },
+          {
+            "path": ".harness/hooks/precompact-handoff.mjs",
+            "status": "??",
+            "hash": "a0edb77d542a70835d02d196ec0e976c2b2d2e0c102493a3b8c7536dbc7e2f62"
+          },
+          {
+            "path": ".harness/loops/checker.md",
+            "status": "??",
+            "hash": "001f8b740e0e6282a7b3b346255a1e5e54ddd163228886e3ff18e642f8efca7d"
+          },
+          {
+            "path": ".harness/loops/goal.md",
+            "status": "??",
+            "hash": "c444ec6cde487d8d864c7de3e218809add1ba634fa33820e4bc57f031547d01b"
+          },
+          {
+            "path": ".harness/loops/maker.md",
+            "status": "??",
+            "hash": "b9055260a12c21d9684b61b8c885fd6e80ffbbf29657952ee08dd22dab2da239"
+          },
+          {
+            "path": ".harness/progress.md",
+            "status": "??",
+            "hash": "3cae5a83f54aa18979b6d4a70a0addeb9a4c2fe75aca0fc1626debc4ae3ae7c4"
+          },
+          {
+            "path": ".harness/quality.md",
+            "status": "??",
+            "hash": "55cf0f17562221eaff7ead9fe7fddfd7762f651368545b1cc958ced43cec5f1c"
+          },
+          {
+            "path": ".harness/run.mjs",
+            "status": "??",
+            "hash": "2356ca6af3ae02c1965ca1866e437d558d8ff932b101ef9cac04cfe27d86a934"
+          },
+          {
+            "path": "AGENTS.md",
+            "status": " M",
+            "hash": "aca270cd1bf651bb596c4afe9f83bbc40ae01e80a4ea24c3e733962834289415"
+          },
+          {
+            "path": "CLAUDE.md",
+            "status": " M",
+            "hash": "6c856ccfa2e17dc96e24d0b16f523bf557d53522f601d8c78e7bab6587776a9d"
+          },
+          {
+            "path": "package.json",
+            "status": " M",
+            "hash": "b16edb2c16941c4dfccd5f7b1937a953fb471f4b5180ac51120b4ed1a35302cc"
+          },
+          {
+            "path": "RESEARCH-2026-08-01.md",
+            "status": "??",
+            "hash": "743001292415ef2936cd8c7a3f524a694acb2d24632b02d888fc0108af358077"
+          },
+          {
+            "path": "scripts/verify-research.mjs",
+            "status": "??",
+            "hash": "35a99383688228a18b97f2c50af7da827da88cbb7c818790d8def0c9a33f6513"
+          },
+          {
+            "path": "skill/codex-harness/assets/project-runtime.mjs",
+            "status": " M",
+            "hash": "2356ca6af3ae02c1965ca1866e437d558d8ff932b101ef9cac04cfe27d86a934"
+          },
+          {
+            "path": "tests/environment-boundary.test.mjs",
+            "status": "??",
+            "hash": "121d32824dbd6b9aa956455078427e368ad799eca29a34722ae38d403a79e100"
+          },
+          {
+            "path": "tests/scope-history.test.mjs",
+            "status": "??",
+            "hash": "dc9b011ab502f18433d696e56bfee1e7eeb131872a02dcdc22c5745397f7fbee"
+          },
+          {
+            "path": "tests/state-lock.test.mjs",
+            "status": "??",
+            "hash": "085c11345c0ff1d5c05fd15eb3acc73d85214f726ef1a27df6ecd29e6a1b081b"
+          }
+        ],
+        "output": " M .github/copilot-instructions.md\n M AGENTS.md\n M CLAUDE.md\n M package.json\n M skill/codex-harness/assets/project-runtime.mjs\n?? .codex/hooks.json\n?? .harness/config.json\n?? .harness/continuity.json\n?? .harness/credentials-state.json\n?? .harness/docs-map.md\n?? .harness/events.jsonl\n?? .harness/evidence/.gitkeep\n?? .harness/evidence/2026-08-01T19-00-21-352Z-feat-001.json\n?? .harness/evidence/2026-08-01T19-06-55-568Z-feat-002.json\n?? .harness/evidence/2026-08-01T19-10-34-515Z-feat-003.json\n?? .harness/features.json\n?? .harness/handoff.md\n?? .harness/hooks/precompact-handoff.mjs\n?? .harness/loops/checker.md\n?? .harness/loops/goal.md\n?? .harness/loops/maker.md\n?? .harness/progress.md\n?? .harness/quality.md\n?? .harness/run.mjs\n?? RESEARCH-2026-08-01.md\n?? scripts/verify-research.mjs\n?? tests/environment-boundary.test.mjs\n?? tests/scope-history.test.mjs\n?? tests/state-lock.test.mjs",
+        "diagnostics": "warning: unable to access 'C:\\Users\\Jason/.config/git/ignore': Permission denied\nwarning: unable to access 'C:\\Users\\Jason/.config/git/ignore': Permission denied",
+        "head": "3f3f2a682c362261b3cb2ed5a7e41d108d5bb5fb"
+      },
+      "contract": {
+        "hash": "33e1117c7adc03b0262ff0174381b79c0c78cbf6b74b400329be70c87eecb542",
+        "snapshot": {
+          "id": "feat-004",
+          "title": "Preserve opaque CLI values",
+          "description": "Keep commas intact in repeatable criterion command allow and deny values while retaining documented CSV identifier lists.",
+          "dependencies": [
+            "feat-003"
+          ],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              ".harness/**",
+              "tests/cli-values.test.mjs",
+              "RESEARCH-2026-08-01.md",
+              "CHANGELOG.md",
+              "README.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Comma-bearing prose commands and globs round-trip and execute as one value each.",
+              "command": "node --test tests/cli-values.test.mjs"
+            },
+            {
+              "id": "ac-2",
+              "description": "The fifty-lane research ledger and measured experiment records remain complete.",
+              "command": "node scripts/verify-research.mjs"
+            },
+            {
+              "id": "ac-3",
+              "description": "The standalone harness remains structurally ready.",
+              "command": "node bin/agent-harness.mjs audit . --min-score 95"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-01T19:10:56.482Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-01T19:15:38.664Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "feat-005",
+      "title": "Keep tests portable on Node 20",
+      "description": "Use Node-native test discovery so the supported Node 20 contract does not depend on shell wildcard expansion.",
+      "dependencies": [
+        "feat-004"
+      ],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          ".harness/**",
+          "package.json",
+          "tests/test-command.test.mjs",
+          "RESEARCH-2026-08-01.md",
+          "CHANGELOG.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Package and self-hosted full gates use shell-independent Node-native test discovery.",
+          "command": "node --test tests/test-command.test.mjs"
+        },
+        {
+          "id": "ac-2",
+          "description": "Native discovery executes the complete conformance suite.",
+          "command": "node --test"
+        },
+        {
+          "id": "ac-3",
+          "description": "The standalone harness remains structurally ready.",
+          "command": "node bin/agent-harness.mjs audit . --min-score 95"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-01T19-31-36-808Z-feat-005.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-01T19:23:26.618Z",
+      "updatedAt": "2026-08-01T19:31:36.809Z",
+      "scopeBaseline": {
+        "available": true,
+        "files": [
+          {
+            "path": ".codex/hooks.json",
+            "status": "??",
+            "hash": "8d367d04dac89481f67e5b9abc37c773701aceb79e566fd2e83b10c49e83340a"
+          },
+          {
+            "path": ".github/copilot-instructions.md",
+            "status": " M",
+            "hash": "c3d637b0dcf1d8f46908271b3c1a2ff0c1935375ad41247cdf5deebda9b0151c"
+          },
+          {
+            "path": ".harness/config.json",
+            "status": "??",
+            "hash": "f77b1a94064673bd7d2159861d228db9dc6ca4122ae68e20a90bbb43cf9a6b8f"
+          },
+          {
+            "path": ".harness/continuity.json",
+            "status": "??",
+            "hash": "a4c533cd67cba9c14a7ce75804898a01b27b54a43f99a713bd4c1f06d5c3ce73"
+          },
+          {
+            "path": ".harness/credentials-state.json",
+            "status": "??",
+            "hash": "cb93cb0d5d634372964d9fb1cd355b5d1e1bf2f1f761842b771db60000fed584"
+          },
+          {
+            "path": ".harness/docs-map.md",
+            "status": "??",
+            "hash": "5093a63639bb4502c27b4fe126c850b398b6511b2fcbb9026ee0c6d7196afc22"
+          },
+          {
+            "path": ".harness/events.jsonl",
+            "status": "??",
+            "hash": "dfda07545a9853c57dc8dcf1df279d9b61db8d975f4ad4f0ca7f2fe37501f95d"
+          },
+          {
+            "path": ".harness/evidence/.gitkeep",
+            "status": "??",
+            "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "path": ".harness/evidence/2026-08-01T19-00-21-352Z-feat-001.json",
+            "status": "??",
+            "hash": "4ef1ae93774d3ac97eef0cf16ea25bc16d3cd68df1f49f577e46299ed8dac9b7"
+          },
+          {
+            "path": ".harness/evidence/2026-08-01T19-06-55-568Z-feat-002.json",
+            "status": "??",
+            "hash": "2c97ff087240fabf4b6e290679e03a8b4aa69db35404b924c02b14249435db75"
+          },
+          {
+            "path": ".harness/evidence/2026-08-01T19-10-34-515Z-feat-003.json",
+            "status": "??",
+            "hash": "541e5026d6698fa988117cff4f1783a313288e91da5e2add4e14725218c02d4a"
+          },
+          {
+            "path": ".harness/evidence/2026-08-01T19-15-38-663Z-feat-004.json",
+            "status": "??",
+            "hash": "2e2b3af65aa4d8cf9db1d5511e7a0dc11e5d178c883fb7c0ec123cd30051c293"
+          },
+          {
+            "path": ".harness/features.json",
+            "status": "??",
+            "hash": "13ef7b3afbdaf10ce7044a1415172adb0c2eef764512aefc404ba2f53b2fd219"
+          },
+          {
+            "path": ".harness/handoff.md",
+            "status": "??",
+            "hash": "aaa50d6002b881eb2286b069561977e926abcc0893f9949321101e0ce5133358"
+          },
+          {
+            "path": ".harness/hooks/precompact-handoff.mjs",
+            "status": "??",
+            "hash": "a0edb77d542a70835d02d196ec0e976c2b2d2e0c102493a3b8c7536dbc7e2f62"
+          },
+          {
+            "path": ".harness/loops/checker.md",
+            "status": "??",
+            "hash": "001f8b740e0e6282a7b3b346255a1e5e54ddd163228886e3ff18e642f8efca7d"
+          },
+          {
+            "path": ".harness/loops/goal.md",
+            "status": "??",
+            "hash": "c444ec6cde487d8d864c7de3e218809add1ba634fa33820e4bc57f031547d01b"
+          },
+          {
+            "path": ".harness/loops/maker.md",
+            "status": "??",
+            "hash": "b9055260a12c21d9684b61b8c885fd6e80ffbbf29657952ee08dd22dab2da239"
+          },
+          {
+            "path": ".harness/progress.md",
+            "status": "??",
+            "hash": "cf4e01f3b535332bf2c3cafa1d2882e8ae7c7ee4f58a7be3907cc982557d050f"
+          },
+          {
+            "path": ".harness/quality.md",
+            "status": "??",
+            "hash": "55cf0f17562221eaff7ead9fe7fddfd7762f651368545b1cc958ced43cec5f1c"
+          },
+          {
+            "path": ".harness/run.mjs",
+            "status": "??",
+            "hash": "854f09e2bd5dd6fcc455746f6855ab18fc39e440f8f51f1b06e8a5918dafee45"
+          },
+          {
+            "path": "AGENTS.md",
+            "status": " M",
+            "hash": "aca270cd1bf651bb596c4afe9f83bbc40ae01e80a4ea24c3e733962834289415"
+          },
+          {
+            "path": "CHANGELOG.md",
+            "status": " M",
+            "hash": "cfb7658203301bb5fdcb055adb5fcbae8931969aef03029e948bf72a071cdfa7"
+          },
+          {
+            "path": "CLAUDE.md",
+            "status": " M",
+            "hash": "6c856ccfa2e17dc96e24d0b16f523bf557d53522f601d8c78e7bab6587776a9d"
+          },
+          {
+            "path": "package.json",
+            "status": " M",
+            "hash": "b16edb2c16941c4dfccd5f7b1937a953fb471f4b5180ac51120b4ed1a35302cc"
+          },
+          {
+            "path": "README.md",
+            "status": " M",
+            "hash": "ed74c099dbe25c532e5fcfa41ca40da035f04a88d8d98616cbc1c87279bf09c4"
+          },
+          {
+            "path": "RESEARCH-2026-08-01.md",
+            "status": "??",
+            "hash": "9df5a4b4f744ed23af1fd789d9ed6ea69fb7b87760f963316fd987a76acd7088"
+          },
+          {
+            "path": "scripts/verify-research.mjs",
+            "status": "??",
+            "hash": "35a99383688228a18b97f2c50af7da827da88cbb7c818790d8def0c9a33f6513"
+          },
+          {
+            "path": "skill/codex-harness/assets/project-runtime.mjs",
+            "status": " M",
+            "hash": "854f09e2bd5dd6fcc455746f6855ab18fc39e440f8f51f1b06e8a5918dafee45"
+          },
+          {
+            "path": "tests/cli-values.test.mjs",
+            "status": "??",
+            "hash": "ceb9f6fa33a66f8cc1a8af4c80fddd7eb04c500c20e19bbe81f0de8b0acb7ff4"
+          },
+          {
+            "path": "tests/environment-boundary.test.mjs",
+            "status": "??",
+            "hash": "121d32824dbd6b9aa956455078427e368ad799eca29a34722ae38d403a79e100"
+          },
+          {
+            "path": "tests/scope-history.test.mjs",
+            "status": "??",
+            "hash": "dc9b011ab502f18433d696e56bfee1e7eeb131872a02dcdc22c5745397f7fbee"
+          },
+          {
+            "path": "tests/state-lock.test.mjs",
+            "status": "??",
+            "hash": "085c11345c0ff1d5c05fd15eb3acc73d85214f726ef1a27df6ecd29e6a1b081b"
+          }
+        ],
+        "output": " M .github/copilot-instructions.md\n M AGENTS.md\n M CHANGELOG.md\n M CLAUDE.md\n M README.md\n M package.json\n M skill/codex-harness/assets/project-runtime.mjs\n?? .codex/hooks.json\n?? .harness/config.json\n?? .harness/continuity.json\n?? .harness/credentials-state.json\n?? .harness/docs-map.md\n?? .harness/events.jsonl\n?? .harness/evidence/.gitkeep\n?? .harness/evidence/2026-08-01T19-00-21-352Z-feat-001.json\n?? .harness/evidence/2026-08-01T19-06-55-568Z-feat-002.json\n?? .harness/evidence/2026-08-01T19-10-34-515Z-feat-003.json\n?? .harness/evidence/2026-08-01T19-15-38-663Z-feat-004.json\n?? .harness/features.json\n?? .harness/handoff.md\n?? .harness/hooks/precompact-handoff.mjs\n?? .harness/loops/checker.md\n?? .harness/loops/goal.md\n?? .harness/loops/maker.md\n?? .harness/progress.md\n?? .harness/quality.md\n?? .harness/run.mjs\n?? RESEARCH-2026-08-01.md\n?? scripts/verify-research.mjs\n?? tests/cli-values.test.mjs\n?? tests/environment-boundary.test.mjs\n?? tests/scope-history.test.mjs\n?? tests/state-lock.test.mjs",
+        "diagnostics": "warning: unable to access 'C:\\Users\\Jason/.config/git/ignore': Permission denied\nwarning: unable to access 'C:\\Users\\Jason/.config/git/ignore': Permission denied",
+        "head": "3f3f2a682c362261b3cb2ed5a7e41d108d5bb5fb"
+      },
+      "contract": {
+        "hash": "49a0da54d5bec783ed553bb824746181e3af6a236cd119f98da2997b8a9cab01",
+        "snapshot": {
+          "id": "feat-005",
+          "title": "Keep tests portable on Node 20",
+          "description": "Use Node-native test discovery so the supported Node 20 contract does not depend on shell wildcard expansion.",
+          "dependencies": [
+            "feat-004"
+          ],
+          "scope": {
+            "allow": [
+              ".harness/**",
+              "package.json",
+              "tests/test-command.test.mjs",
+              "RESEARCH-2026-08-01.md",
+              "CHANGELOG.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Package and self-hosted full gates use shell-independent Node-native test discovery.",
+              "command": "node --test tests/test-command.test.mjs"
+            },
+            {
+              "id": "ac-2",
+              "description": "Native discovery executes the complete conformance suite.",
+              "command": "node --test"
+            },
+            {
+              "id": "ac-3",
+              "description": "The standalone harness remains structurally ready.",
+              "command": "node bin/agent-harness.mjs audit . --min-score 95"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-01T19:23:27.486Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-01T19:31:36.809Z",
+        "pass": true
+      }
+    }
+  ]
+}

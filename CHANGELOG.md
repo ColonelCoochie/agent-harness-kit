@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Self-host the standalone repository with its own development-only `.harness/` workspace and native Codex Claude Code and GitHub Copilot instruction routes.
+- Record fifty separately prompted scholarly review lanes with explicit source and claim boundaries plus falsifiable adoption gates.
+- Prevent age-based eviction of a known-live state-lock owner and require an acquisition token before ordinary release can remove a lock instance.
+- Bind newly started feature scope to its Git start commit so committed changes and both sides of committed renames cannot disappear from verification when the worktree becomes clean.
+- Reject malformed command-environment allowlists before configured commands spawn while preserving explicit empty policy and opt-in provider credentials.
+- Preserve commas in repeated acceptance prose command and scope values while retaining documented CSV parsing for identifier lists.
+- Use Node-native test discovery so the Node 20 and Windows support contract does not depend on shell wildcard expansion.
+- Expand the conformance suite with focused failing-before and passing-after lock scope environment and CLI regressions.
+
 ## 0.5.0
 
 - Normalize relative executable paths used by Windows verification commands so local virtual-environment Python commands run through `cmd.exe`, while preserving POSIX command text.

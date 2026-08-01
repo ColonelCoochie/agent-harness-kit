@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "phase": "working",
+  "generation": 1,
+  "startedAt": "2026-08-01T17:23:03.912Z",
+  "resumedAt": null,
+  "checkpoint": {
+    "id": "checkpoint-20260801193148059-6150c01d",
+    "kind": "checkpoint",
+    "createdAt": "2026-08-01T19:31:48.059Z",
+    "reason": "planned",
+    "agent": null,
+    "automatic": false,
+    "summary": "Five bounded fixes are passing authoritative verification: four research-selected runtime hardenings plus Node 20 shell-independent test discovery. Full native discovery passes 61/61 on Node 22.17.0 and checksum-verified Node 20.20.2 for Windows.",
+    "next": "Run final release checks, stage, commit, and push codex/research-validated-harness-v0.6.",
+    "decisions": [],
+    "blockers": [],
+    "featureRevision": 15,
+    "activeFeatures": [],
+    "passingFeatureCount": 5,
+    "evidence": [
+      ".harness/evidence/2026-08-01T19-00-21-352Z-feat-001.json",
+      ".harness/evidence/2026-08-01T19-06-55-568Z-feat-002.json",
+      ".harness/evidence/2026-08-01T19-10-34-515Z-feat-003.json",
+      ".harness/evidence/2026-08-01T19-15-38-663Z-feat-004.json",
+      ".harness/evidence/2026-08-01T19-31-36-808Z-feat-005.json"
+    ],
+    "configHash": "fc7fe102ecdffbb8807b83304375db47ff8829a03ba8613d0a433df5bd7e3a64",
+    "repository": {
+      "available": true,
+      "head": "3f3f2a682c362261b3cb2ed5a7e41d108d5bb5fb",
+      "branch": "codex/research-validated-harness-v0.6",
+      "clean": false,
+      "worktreeHash": "fd35a581fc7ac398e5bb19476c72bc119bf2b839e6df94c779c87ffafd38a516",
+      "changedFileCount": 15,
+      "changedFiles": [
+        {
+          "path": ".codex/hooks.json",
+          "status": "??",
+          "hash": "8d367d04dac89481f67e5b9abc37c773701aceb79e566fd2e83b10c49e83340a"
+        },
+        {
+          "path": ".github/copilot-instructions.md",
+          "status": " M",
+          "hash": "c3d637b0dcf1d8f46908271b3c1a2ff0c1935375ad41247cdf5deebda9b0151c"
+        },
+        {
+          "path": "AGENTS.md",
+          "status": " M",
+          "hash": "aca270cd1bf651bb596c4afe9f83bbc40ae01e80a4ea24c3e733962834289415"
+        },
+        {
+          "path": "CHANGELOG.md",
+          "status": " M",
+          "hash": "ec31e5f14b9e74fd79a476f0f18a2899192685c9cf9c1ae90a623648a36aabbb"
+        },
+        {
+          "path": "CLAUDE.md",
+          "status": " M",
+          "hash": "6c856ccfa2e17dc96e24d0b16f523bf557d53522f601d8c78e7bab6587776a9d"
+        },
+        {
+          "path": "package.json",
+          "status": " M",
+          "hash": "b7595ad2cf88ad00f2b24657f4f9683cfd2eaf44d1e1958bf652a8efeff1dd60"
+        },
+        {
+          "path": "README.md",
+          "status": " M",
+          "hash": "ed74c099dbe25c532e5fcfa41ca40da035f04a88d8d98616cbc1c87279bf09c4"
+        },
+        {
+          "path": "RESEARCH-2026-08-01.md",
+          "status": "??",
+          "hash": "a12364a2d3a1e40f9b05df1b79b5de4eef3319397ea7da48d03fc0baaae3296b"
+        },
+        {
+          "path": "scripts/verify-research.mjs",
+          "status": "??",
+          "hash": "35a99383688228a18b97f2c50af7da827da88cbb7c818790d8def0c9a33f6513"
+        },
+        {
+          "path": "skill/codex-harness/assets/project-runtime.mjs",
+          "status": " M",
+          "hash": "854f09e2bd5dd6fcc455746f6855ab18fc39e440f8f51f1b06e8a5918dafee45"
+        },
+        {
+          "path": "tests/cli-values.test.mjs",
+          "status": "??",
+          "hash": "ceb9f6fa33a66f8cc1a8af4c80fddd7eb04c500c20e19bbe81f0de8b0acb7ff4"
+        },
+        {
+          "path": "tests/environment-boundary.test.mjs",
+          "status": "??",
+          "hash": "121d32824dbd6b9aa956455078427e368ad799eca29a34722ae38d403a79e100"
+        },
+        {
+          "path": "tests/scope-history.test.mjs",
+          "status": "??",
+          "hash": "dc9b011ab502f18433d696e56bfee1e7eeb131872a02dcdc22c5745397f7fbee"
+        },
+        {
+          "path": "tests/state-lock.test.mjs",
+          "status": "??",
+          "hash": "085c11345c0ff1d5c05fd15eb3acc73d85214f726ef1a27df6ecd29e6a1b081b"
+        },
+        {
+          "path": "tests/test-command.test.mjs",
+          "status": "??",
+          "hash": "95e1b7b0500fa60b0d235cee0c0f266734513942ab3205265ad7d2975d2f83ed"
+        }
+      ]
+    }
+  },
+  "handoff": null,
+  "lastHandoff": null
+}

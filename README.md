@@ -4,6 +4,12 @@ A zero-dependency, evidence-gated repository-development harness for OpenAI Code
 
 The kit installs one checked-in development control plane for feature state, bounded scope, verification, evidence, and fresh-task continuity. It never becomes application runtime. Any in-product agent, loop, scheduler, or orchestrator remains product-owned, with state, configuration, telemetry, and operations separate from `.harness/`; product runtime must never depend on, read, or write `.harness/`. The harness may build and test that code as ordinary feature-scoped code. Each enabled coding agent receives a native instruction entry point, but `AGENTS.md` remains the canonical workflow and boundary router.
 
+## Evidence boundary
+
+The [2026 research-validated review](RESEARCH-2026-08-01.md) records fifty separately prompted scholarly lanes and distinguishes literature-motivated hypotheses from repository evidence. Four narrow corrections have failing-before and passing-after focused results: lock ownership `0/2 → 2/2`, committed scope history `1/5 → 5/5`, fail-closed command environment `2/5 → 5/5`, and lossless repeatable CLI values `3/8 → 8/8`. Larger proposals remain deferred behind their stated experiments.
+
+Those results establish the tested local mechanisms. They do not establish that the harness increases coding-agent success; that claim requires randomized clean episodes with a sealed external oracle as described in the review.
+
 ## What gets installed
 
 ```text
