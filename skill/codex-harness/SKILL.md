@@ -1,23 +1,23 @@
 ---
 name: codex-harness
-description: Initialize, audit, operate, repair, or simplify reusable project harnesses for Codex, Claude Code, and GitHub Copilot with native instruction files, project-specific verification profiles, opt-in multi-key OpenAI and Anthropic credential pools, WIP-limited feature state, executable completion gates, durable evidence, bounded checkpoints, and terminal fresh-task handoffs. Use when a repository needs reliable coding-agent startup, verification, or cross-task continuity; when agents lose context or drift; when an agent claims completion without proof; or when adapting one common harness across multiple projects.
+description: Initialize, audit, operate, repair, or simplify reusable repository-development harnesses for Codex, Claude Code, and GitHub Copilot with native instruction files, project-specific verification profiles, opt-in multi-key OpenAI and Anthropic credential pools, WIP-limited feature state, executable completion gates, durable evidence, bounded checkpoints, and terminal fresh-task handoffs. Use when a repository needs reliable coding-agent startup, verification, or cross-task continuity; when coding agents lose context, drift, or claim completion without proof; or when adapting one development harness across projects. Never use it as application runtime or as state or orchestration for in-product agents.
 ---
 
-# Project Harness
+# Repository Development Harness
 
-Build a small project control plane shared by Codex, Claude Code, and GitHub Copilot. Keep reusable procedure in this skill and project facts in the target repository.
+Build a small repository-development control plane shared by enabled coding agents. `.harness/` is never application runtime. Product agents, loops, schedulers, and orchestrators keep application-owned state, configuration, telemetry, and operations and never depend on, read, or write `.harness/`; the harness only builds or tests them as feature-scoped product code.
 
 ## Workflow
 
 1. Inspect the target before writing: existing `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, agent configuration, `.harness/`, docs and decision records, manifests, scripts, tests, and git state. Identify any product, security, data-rights, external-provider, or deployment gate that must pass before implementation.
-2. Initialize only when `.harness/config.json` is absent:
+2. Initialize only when `.harness/config.json` is absent. Select only the coding-agent surfaces the repository should expose:
 
    ```bash
-   node <skill-dir>/scripts/harness.mjs init <project-dir> --name "Project name" --purpose "One-sentence purpose"
+   node <skill-dir>/scripts/harness.mjs init <project-dir> --name "Project name" --purpose "One-sentence purpose" --agents "codex,github-copilot"
    ```
 
 3. Review detected commands in `.harness/config.json`. Replace guesses with the project's real quick, full, end-to-end, architecture, and cleanup commands.
-4. Preserve existing agent instructions. Merge any `.harness/*.addition.md` manually only after checking for conflicts. Keep `AGENTS.md` canonical, have `CLAUDE.md` import `@AGENTS.md`, and keep Copilot guidance consistent.
+4. Preserve existing coding-agent instructions. Merge any `.harness/*.addition.md` manually only after checking for conflicts. Require the canonical `## Development-Harness Boundary`; disabled adapters must remain absent across `sync`.
 5. At the start of every task, inspect the lifecycle before changing files:
 
    ```bash
@@ -40,7 +40,7 @@ Build a small project control plane shared by Codex, Claude Code, and GitHub Cop
 10. End with a dirty-safe `handoff --summary ... --next ...`. Once it parks the repository, stop the current task; the next agent must open a fresh task and run the exact ID-bound `resume` command before mutation.
 11. For Codex, review and trust the installed project-local `.codex/hooks.json` before relying on its automatic `PreCompact` guard. The hook invokes `.harness/hooks/precompact-handoff.mjs` with the Codex adapter, writes an automatic terminal handoff, and returns `continue: false`. Claude Code may optionally register `node "${CLAUDE_PROJECT_DIR}/.harness/hooks/precompact-handoff.mjs" --platform claude` for automatic `PreCompact` after review.
 12. Configure provider pools under `security.credentials.providers` only when project commands need API keys. Require command entries to opt in with `credentials`; never put key values in project files.
-13. Use `sync` to upgrade an existing runtime, create or migrate `.harness/continuity.json`, and fill missing legacy schema defaults without replacing project facts.
+13. Use `sync` to upgrade an existing runtime and fill missing legacy defaults without replacing project facts, product runtime, user instructions, or disabled agent surfaces.
 14. Before reporting completion, require a passing evidence record and a reproducible fresh-task restart path.
 
 ## Commands
@@ -53,7 +53,7 @@ node <skill-dir>/scripts/harness.mjs audit <project> --json
 node <skill-dir>/scripts/harness.mjs sync <project>
 ```
 
-Use the checked-in project runtime for day-to-day work:
+Use the checked-in development-harness controller for day-to-day work:
 
 ```bash
 node .harness/run.mjs session
@@ -76,6 +76,7 @@ node .harness/run.mjs resume HANDOFF_ID
 
 - Default to WIP=1. Raise it only when work is isolated with explicit ownership.
 - Keep root `AGENTS.md` a concise router; move details into project docs.
+- Keep the stable `## Development-Harness Boundary` section. Never let product-runtime agents or orchestration use `.harness/` state, configuration, telemetry, or lifecycle.
 - Treat `.harness/features.json` as the scope source of truth.
 - Permit `active -> passing` only through successful verification.
 - Freeze the feature contract at start and require cumulative full, configured fast/architecture, requested, and acceptance layers.
@@ -98,7 +99,7 @@ node .harness/run.mjs resume HANDOFF_ID
 - Keep initialization non-destructive and non-mutating.
 - Preserve existing user files unless overwrite is explicitly requested.
 - Treat post-pass configuration evolution as normal historical progression; validate the commands captured in evidence instead of retroactively invalidating terminal features.
-- Separate maker and checker for autonomous or high-risk loops.
+- Separate development maker and checker roles for autonomous or high-risk coding loops; these roles are not product-runtime agents.
 
 ## References
 
@@ -115,5 +116,5 @@ Do not call a harness ready until:
 - `.harness/run.mjs doctor` passes.
 - The project verification profile contains real commands.
 - A fresh task can find purpose, architecture, state, active scope, continuity phase, the exact resume command when parked, and the verification path from repository files.
-- Codex, Claude Code, and GitHub Copilot instruction surfaces exist, agree, and route to the same harness state.
+- Every enabled Codex, Claude Code, or GitHub Copilot instruction surface exists, agrees, and routes to the same development-harness state.
 - At least one representative feature has been run through `start -> verify -> passing`, or the user has been told that behavioral validation is still pending.

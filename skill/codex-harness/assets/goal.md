@@ -1,4 +1,6 @@
-# Goal Loop
+# Development Goal Loop
+
+This template coordinates coding-agent repository-development work only. It is not a product-runtime loop, scheduler, or orchestrator and must not own application runtime state or operations.
 
 ## Goal
 

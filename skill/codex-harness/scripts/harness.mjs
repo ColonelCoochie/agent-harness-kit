@@ -47,11 +47,13 @@ function printHelp() {
   console.log(`Agent Harness Kit
 
 Usage:
-  agent-harness init [project] [--name NAME] [--purpose TEXT] [--commands "cmd,cmd"]
+  agent-harness init [project] [--name NAME] [--purpose TEXT] [--commands "cmd,cmd"] [--agents "codex,claude,github-copilot"]
   agent-harness audit [project] [--json] [--min-score 75]
   agent-harness sync [project]
 
-Initialization preserves existing files. --force overwrites managed .harness files,
+Initialization preserves existing files. --agents selects one or more known coding-agent
+surfaces; AGENTS.md remains the canonical boundary router even when Codex is disabled.
+--force overwrites managed .harness files,
 but never overwrites existing AGENTS.md, CLAUDE.md, Copilot instructions, or Codex hooks. Sync is
 idempotent, refuses an active state lock, and fills missing legacy defaults without
 replacing project facts.`);

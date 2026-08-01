@@ -28,7 +28,7 @@ The stable core is a five-subsystem model, with scope and lifecycle acting acros
 
 Scope and lifecycle supply WIP limits, dependencies, allow/deny boundaries, locks, retries, bounded handoff capsules, and periodic simplification across that core.
 
-Lecture 13 adds an autonomy layer above this system: scheduling, worktree isolation, reusable skills, connectors, subagents, and external state. Its crucial boundary is that loops do not repair an unreliable single run; they multiply it. The harness must work before scheduling or fleet orchestration is added.
+Lecture 13 adds a coding-agent development autonomy layer above this system: scheduling, worktree isolation, reusable skills, connectors, subagents, and external state. Its crucial boundary is that development loops do not repair an unreliable single run; they multiply it. The development harness must work before coding-agent scheduling or fleet orchestration is added. In-product agents and orchestration remain independent application runtime.
 
 ## Upstream implementation audit
 
@@ -49,7 +49,7 @@ The following gaps matter for a Codex harness intended to span real projects:
 Codex Harness Kit keeps the upstream strengths and tightens the enforcement boundary:
 
 - A reusable Codex skill and CLI own scaffolding, audit, and runtime upgrades.
-- Every project receives a zero-dependency Node runtime so control is identical across Windows, macOS, and Linux.
+- Every project receives a zero-dependency Node development-harness controller so control is identical across Windows, macOS, and Linux.
 - Initialization detects but does not execute commands or install dependencies.
 - A typed feature graph enforces WIP, dependencies, blockers, terminal pass state, and cycle checks.
 - Only successful cumulative verification can create `passing` state.
@@ -59,10 +59,10 @@ Codex Harness Kit keeps the upstream strengths and tightens the enforcement boun
 - State mutations are serialized; repeated failures consume a bounded budget and the append-only journal explains every transition.
 - Existing root instructions are preserved and a merge snippet is emitted; leaving it unresolved is a hard failure.
 - Project differences live in `.harness/config.json`; the shared skill is not forked for normal customization.
-- Goal, maker, and checker templates make generator/evaluator separation available without forcing multi-agent complexity on ordinary work.
+- Development goal, maker, and checker templates make coding-agent generator/evaluator separation available without forcing multi-agent complexity on ordinary work.
 - Production feedback now makes Git scope NUL-delimited and file-exact, narrows runtime-owned exemptions, filters transient locks and diagnostics, and preserves exact verification-plan provenance.
-- A read-only `next` command, safe legacy-default migration, dead-owner lock recovery, and decision-gate routing improve fresh-session restartability without adding an orchestrator.
-- Runtime v4 separates feature state from a `working -> awaiting_resume -> working` continuity lifecycle. Dirty-safe terminal handoffs park mutations, ID-bound resumes detect drift, and a reviewed Codex `PreCompact` hook turns automatic compaction pressure into a fresh-task boundary.
+- A read-only `next` command, safe legacy-default migration, dead-owner lock recovery, and decision-gate routing improve fresh-session restartability without adding a second development orchestrator.
+- Runtime v5 separates feature state from a `working -> awaiting_resume -> working` continuity lifecycle, enforces the development/product-runtime boundary, preserves selectively enabled coding-agent surfaces, and normalizes relative executables for Windows command execution. Dirty-safe terminal handoffs park mutations, ID-bound resumes detect drift, and a reviewed Codex `PreCompact` hook turns automatic compaction pressure into a fresh-task boundary.
 
 ## Lecture-to-code traceability
 
@@ -80,12 +80,12 @@ Codex Harness Kit keeps the upstream strengths and tightens the enforcement boun
 | 10 | Quick, full, E2E, architecture, clean, and acceptance checks compose cumulatively. |
 | 11 | Evidence captures separate redacted streams, truncation, repository identity, and correlated trace events. |
 | 12 | Doctor verifies the evidence chain and guidance route; handoff always persists the project checkpoint, records dirty state, and parks mutations until a fresh-task resume. |
-| 13 | Locks, retry budgets, trace state, and goal/maker/checker templates prepare safe later automation. |
+| 13 | Locks, retry budgets, trace state, and development goal/maker/checker templates prepare safe later coding-agent automation without governing product runtime. |
 
 ## Recommended rollout
 
 Start with one representative repository and one session-sized feature. Tune the project profile until a fresh Codex session can reach useful work quickly and the feature passes only with credible evidence. Repeat the same task before and after the harness, then track rebuild time, verified completion rate, repeated failures, successful handoff/resume rate, and context-compaction escapes. Roll out to more repositories only after the first profile proves its commands and scope boundaries.
 
-Add automation last. A daily checker or long-running goal should call the checked-in runtime and consume the same project state rather than introduce a second source of truth.
+Add coding-agent development automation last. A development checker or long-running coding goal should call the checked-in harness controller and consume the same development state rather than introduce a second source of truth. Product-runtime automation remains application-owned and must not consume `.harness/` as its control plane.
 
 The second-stage review is recorded in [REVIEW-2026-07-20.md](REVIEW-2026-07-20.md).

@@ -1,4 +1,6 @@
-# Checker Role
+# Development Checker Role
+
+This is an independent coding-agent development role, not an in-product agent. It evaluates product-runtime code as repository code and must not participate in or replace the application's runtime agent lifecycle.
 
 Independently verify the maker's output. Search for defects rather than agreement.
 

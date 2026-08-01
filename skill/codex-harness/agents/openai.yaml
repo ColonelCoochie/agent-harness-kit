@@ -1,4 +1,4 @@
 interface:
-  display_name: "Agent Harness"
-  short_description: "Evidence gates and fresh-task continuity"
-  default_prompt: "Use $codex-harness to initialize, audit, or operate the shared Codex, Claude Code, and GitHub Copilot harness, including its fresh-task continuity lifecycle."
+  display_name: "Development Harness"
+  short_description: "Evidence-gated coding-project continuity"
+  default_prompt: "Use $codex-harness to initialize or audit a repository-development harness while keeping product-runtime agents independent."

@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { auditHarness, initHarness, syncHarness } from '../skill/codex-harness/scripts/lib/core.mjs';
+import { auditHarness, initHarness, normalizeCommandForPlatform, syncHarness } from '../skill/codex-harness/scripts/lib/core.mjs';
 
 const execFileAsync = promisify(execFile);
 const temporary = [];
@@ -78,6 +78,31 @@ test.after(async () => {
   for (const root of temporary) await rm(root, { recursive: true, force: true });
 });
 
+test('normalizes relative executable paths for cmd without changing POSIX commands', () => {
+  const command = '.venv/Scripts/python.exe -m pytest -q tests';
+  assert.equal(normalizeCommandForPlatform(command, 'win32'), '.\\.venv\\Scripts\\python.exe -m pytest -q tests');
+  assert.equal(normalizeCommandForPlatform('".venv/Scripts/python.exe" -m pytest', 'win32'), '".\\.venv\\Scripts\\python.exe" -m pytest');
+  assert.equal(normalizeCommandForPlatform(command, 'linux'), command);
+  assert.equal(normalizeCommandForPlatform(command, 'darwin'), command);
+});
+
+test('initialization and generated runtime execute a Windows relative-path command', { skip: process.platform !== 'win32' }, async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'codex-harness-windows-command-'));
+  temporary.push(root);
+  await mkdir(path.join(root, '.venv', 'Scripts'), { recursive: true });
+  await writeFile(path.join(root, '.venv', 'Scripts', 'python.cmd'), '@exit /b 0\r\n');
+  await writeFile(path.join(root, 'requirements.txt'), 'pytest\n');
+  await initHarness(root, {
+    name: 'windows-command',
+    purpose: 'Exercises Windows relative executable paths.',
+    commands: '.venv/Scripts/python.cmd -m pytest'
+  });
+  const config = JSON.parse(await readFile(path.join(root, '.harness', 'config.json'), 'utf8'));
+  assert.deepEqual(config.verification.full, ['.\\.venv\\Scripts\\python.cmd -m pytest']);
+  const result = await runtime(root, 'check', 'full');
+  assert.match(result.stdout, /\[exit=0 /);
+});
+
 test('preserves existing guidance and fails until the harness route is merged', async () => {
   const root = await project('initialization');
   const original = '# User-owned instructions\n';
@@ -91,7 +116,7 @@ test('preserves existing guidance and fails until the harness route is merged', 
     (error) => /AGENTS\.md does not route|addition is still unmerged/.test(`${error.stdout ?? ''}\n${error.stderr ?? ''}`)
   );
 
-  await writeFile(path.join(root, 'AGENTS.md'), '# Project instructions\nRead `.harness/config.json`, `.harness/features.json`, and `.harness/continuity.json`. A fresh task runs `.harness/run.mjs resume`.\n');
+  await writeFile(path.join(root, 'AGENTS.md'), '# Project instructions\n\n## Development-Harness Boundary\n\n`.harness/` is development-only.\n\nRead `.harness/config.json`, `.harness/features.json`, and `.harness/continuity.json`. A fresh task runs `.harness/run.mjs resume`.\n');
   await rm(path.join(root, '.harness', 'AGENTS.addition.md'));
   assert.match((await runtime(root, 'doctor')).stdout, /Structural state is healthy/);
   const audit = await auditHarness(root);
@@ -106,9 +131,12 @@ test('scaffolds native instructions for Codex, Claude Code, and GitHub Copilot',
   assert.match(await readFile(path.join(root, 'AGENTS.md'), 'utf8'), /\.harness\/features\.json/);
   assert.match(await readFile(path.join(root, 'AGENTS.md'), 'utf8'), /\.harness\/continuity\.json/);
   assert.match(await readFile(path.join(root, 'AGENTS.md'), 'utf8'), /\.harness\/run\.mjs resume/);
+  assert.match(await readFile(path.join(root, 'AGENTS.md'), 'utf8'), /^## Development-Harness Boundary$/m);
   assert.equal(JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8')).phase, 'working');
   assert.match(await readFile(path.join(root, 'CLAUDE.md'), 'utf8'), /^@AGENTS\.md/m);
+  assert.match(await readFile(path.join(root, 'CLAUDE.md'), 'utf8'), /Development-Harness Boundary/);
   assert.match(await readFile(path.join(root, '.github', 'copilot-instructions.md'), 'utf8'), /AGENTS\.md/);
+  assert.match(await readFile(path.join(root, '.github', 'copilot-instructions.md'), 'utf8'), /Development-Harness Boundary/);
   assert.match(await readFile(path.join(root, '.codex', 'hooks.json'), 'utf8'), /precompact-handoff\.mjs/);
   assert.match((await runtime(root, 'doctor')).stdout, /Structural state is healthy/);
 });
@@ -145,7 +173,9 @@ test('preserves existing Claude and Copilot instructions and emits reviewable ad
   assert.equal(await readFile(path.join(root, '.github', 'copilot-instructions.md'), 'utf8'), copilot);
   assert.equal(await readFile(path.join(root, '.codex', 'hooks.json'), 'utf8'), codexHooks);
   assert.match(await readFile(path.join(root, '.harness', 'CLAUDE.addition.md'), 'utf8'), /@AGENTS\.md/);
+  assert.match(await readFile(path.join(root, '.harness', 'CLAUDE.addition.md'), 'utf8'), /Development-Harness Boundary/);
   assert.match(await readFile(path.join(root, '.harness', 'copilot-instructions.addition.md'), 'utf8'), /Project Harness/);
+  assert.match(await readFile(path.join(root, '.harness', 'copilot-instructions.addition.md'), 'utf8'), /Development-Harness Boundary/);
   assert.match(await readFile(path.join(root, '.harness', 'codex-hooks.addition.json'), 'utf8'), /precompact-handoff\.mjs/);
 });
 
@@ -605,17 +635,63 @@ test('recovers a lock owned by a process that no longer exists', async () => {
   assert.equal(state.features[0].id, 'feat-001');
 });
 
-test('sync flags stale canonical instructions for a continuity-contract merge', async () => {
+test('sync flags routed canonical instructions that lack the development boundary', async () => {
   const root = await project('instruction-continuity-sync');
-  await writeFile(path.join(root, 'AGENTS.md'), '# Legacy instructions\nRead `.harness/config.json` and `.harness/features.json`.\n');
+  await writeFile(path.join(root, 'AGENTS.md'), '# Legacy instructions\nRead `.harness/config.json`, `.harness/features.json`, and `.harness/continuity.json`. A fresh task runs `.harness/run.mjs resume`.\n');
+  await assert.rejects(
+    () => runtime(root, 'doctor'),
+    (error) => /missing the canonical Development-Harness Boundary|does not route/.test(`${error.stdout ?? ''}\n${error.stderr ?? ''}`)
+  );
   const result = await syncHarness(root);
   assert.ok(result.repairs.includes('.harness/AGENTS.addition.md'));
   const addition = await readFile(path.join(root, '.harness', 'AGENTS.addition.md'), 'utf8');
+  assert.match(addition, /^## Development-Harness Boundary$/m);
   assert.match(addition, /\.harness\/continuity\.json/);
   assert.match(addition, /\.harness\/run\.mjs resume/);
   const audit = await auditHarness(root);
   assert.ok(audit.criticalFailures > 0);
   assert.match(JSON.stringify(audit), /Unresolved instruction additions/);
+});
+
+test('selective agent initialization and sync never recreate a disabled Claude adapter', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'codex-harness-selective-agents-'));
+  temporary.push(root);
+  await writeFile(path.join(root, 'package.json'), '{"name":"selective-agents","scripts":{"test":"node -e \\\"process.exit(0)\\\""}}\n');
+  await writeFile(path.join(root, 'README.md'), '# selective agents\n');
+  await initHarness(root, {
+    name: 'selective-agents',
+    purpose: 'Exercises selective coding-agent surfaces.',
+    agents: 'codex,github-copilot'
+  });
+  const config = JSON.parse(await readFile(path.join(root, '.harness', 'config.json'), 'utf8'));
+  assert.deepEqual(config.agents.enabled, ['codex', 'github-copilot']);
+  assert.equal(await readFile(path.join(root, 'AGENTS.md'), 'utf8').then(() => true), true);
+  assert.equal(await readFile(path.join(root, '.github', 'copilot-instructions.md'), 'utf8').then(() => true), true);
+  await assert.rejects(() => readFile(path.join(root, 'CLAUDE.md'), 'utf8'), /ENOENT/);
+  await syncHarness(root);
+  await assert.rejects(() => readFile(path.join(root, 'CLAUDE.md'), 'utf8'), /ENOENT/);
+  await assert.rejects(
+    () => initHarness(path.join(root, 'invalid'), { purpose: 'Invalid surface selection.', agents: 'codex,product-agent' }),
+    /Unknown coding-agent surface/
+  );
+});
+
+test('init and sync preserve a seeded product-agent runtime byte-for-byte', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'codex-harness-product-agent-boundary-'));
+  temporary.push(root);
+  const runtimeDir = path.join(root, 'src', 'product-agent');
+  const runtimePath = path.join(runtimeDir, 'orchestrator.mjs');
+  const runtimeBytes = Buffer.from('export const runtime = { state: "product-owned", telemetry: [] };\n', 'utf8');
+  await mkdir(runtimeDir, { recursive: true });
+  await writeFile(runtimePath, runtimeBytes);
+  await writeFile(path.join(root, 'package.json'), '{"name":"product-agent-boundary","scripts":{"test":"node -e \\\"process.exit(0)\\\""}}\n');
+  await writeFile(path.join(root, 'README.md'), '# product agent boundary\n');
+  await initHarness(root, { name: 'product-agent-boundary', purpose: 'Keeps product runtime separate.' });
+  assert.deepEqual(await readFile(runtimePath), runtimeBytes);
+  assert.doesNotMatch((await readFile(runtimePath, 'utf8')), /\.harness/);
+  await syncHarness(root);
+  assert.deepEqual(await readFile(runtimePath), runtimeBytes);
+  assert.doesNotMatch((await readFile(runtimePath, 'utf8')), /\.harness/);
 });
 
 test('sync preserves a pending handoff barrier and refuses to erase a corrupt one', async () => {
@@ -681,7 +757,7 @@ test('sync is idempotent and migrates legacy state without discarding project fa
   const migratedState = JSON.parse(await readFile(statePath, 'utf8'));
   assert.equal(migratedState.revision, 0);
   assert.equal(JSON.parse(await readFile(path.join(root, '.harness', 'continuity.json'), 'utf8')).phase, 'working');
-  assert.match(await readFile(runtimePath, 'utf8'), /HARNESS_RUNTIME_VERSION = 4/);
+  assert.match(await readFile(runtimePath, 'utf8'), /HARNESS_RUNTIME_VERSION = 5/);
 
   const second = await syncHarness(root);
   assert.equal(second.result.status, 'unchanged');
@@ -704,6 +780,7 @@ test('skill metadata satisfies the dependency-free package contract', async () =
   assert.ok(fields.description.length > 0 && fields.description.length <= 1024);
   assert.doesNotMatch(fields.description, /[<>]/);
   const metadata = await readFile(path.join(skillRoot, 'agents', 'openai.yaml'), 'utf8');
-  assert.match(metadata, /display_name: "Agent Harness"/);
+  assert.match(metadata, /display_name: "Development Harness"/);
   assert.match(metadata, /default_prompt: "Use \$codex-harness/);
+  assert.match(metadata, /product-runtime agents independent/);
 });

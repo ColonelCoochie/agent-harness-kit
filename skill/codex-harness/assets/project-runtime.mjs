@@ -16,7 +16,7 @@ const HANDOFF_PATH = path.join(HARNESS_DIR, 'handoff.md');
 const CONTINUITY_HISTORY_DIR = path.join(HARNESS_DIR, 'history', 'progress');
 const EVIDENCE_DIR = path.join(HARNESS_DIR, 'evidence');
 const CREDENTIAL_STATE_PATH = path.join(HARNESS_DIR, 'credentials-state.json');
-const HARNESS_RUNTIME_VERSION = 4;
+const HARNESS_RUNTIME_VERSION = 5;
 const STATE_SCHEMA_VERSION = 1;
 const CONTINUITY_SCHEMA_VERSION = 1;
 const STATES = new Set(['not_started', 'active', 'blocked', 'passing']);
@@ -39,6 +39,7 @@ const AGENT_INSTRUCTIONS = {
   claude: 'CLAUDE.md',
   'github-copilot': '.github/copilot-instructions.md'
 };
+const DEVELOPMENT_HARNESS_BOUNDARY = '## Development-Harness Boundary';
 
 try {
   if (!command || command === 'help') printHelp();
@@ -289,6 +290,7 @@ function validCommandEntry(entry) {
 }
 
 function instructionRoutes(agent, content) {
+  if (!content.includes(DEVELOPMENT_HARNESS_BOUNDARY)) return false;
   if (agent === 'codex') {
     return content.includes('.harness/config.json')
       && content.includes('.harness/features.json')
@@ -456,6 +458,11 @@ async function doctor() {
     if (!await exists(path.join(ROOT, required))) warnings.push(`Declared document is missing: ${required}`);
   }
   const enabledAgents = Array.isArray(config.agents?.enabled) ? config.agents.enabled : ['codex'];
+  const canonicalInstructionsPath = path.join(ROOT, 'AGENTS.md');
+  const canonicalInstructions = await exists(canonicalInstructionsPath) ? await readFile(canonicalInstructionsPath, 'utf8') : '';
+  if (!canonicalInstructions.includes(DEVELOPMENT_HARNESS_BOUNDARY)) {
+    errors.push('AGENTS.md is missing the canonical Development-Harness Boundary. Run sync and merge .harness/AGENTS.addition.md.');
+  }
   for (const agent of enabledAgents) {
     const relative = config.agents?.instructions?.[agent] ?? AGENT_INSTRUCTIONS[agent];
     if (!relative || !Object.hasOwn(AGENT_INSTRUCTIONS, agent)) {
@@ -1046,13 +1053,27 @@ function redact(value, secrets = []) {
     .replace(/(authorization:\s*(?:bearer|basic)\s+)[^\s]+/gi, '$1[REDACTED]');
 }
 
+function platformCommand(commandText) {
+  if (process.platform !== 'win32') return commandText;
+  return commandText.replace(/^(\s*)(?:"([^"]+)"|'([^']+)'|(\S+))/, (match, leading, doubleQuoted, singleQuoted, bare) => {
+    const executable = doubleQuoted ?? singleQuoted ?? bare;
+    if (!executable.includes('/') && !executable.includes('\\')) return match;
+    const windowsPath = executable.replaceAll('/', '\\');
+    if (/^(?:\.\.?\\|[A-Za-z]:\\|\\\\)/.test(windowsPath)) {
+      return `${leading}${doubleQuoted !== undefined ? `"${windowsPath}"` : singleQuoted !== undefined ? `'${windowsPath}'` : windowsPath}`;
+    }
+    const normalized = `.\\${windowsPath}`;
+    return `${leading}${doubleQuoted !== undefined ? `"${normalized}"` : singleQuoted !== undefined ? `'${normalized}'` : normalized}`;
+  });
+}
+
 function capture(commandText, timeoutMs, security = null, environment = {}, explicitSecrets = []) {
   return new Promise((resolve) => {
     const baseEnvironment = security?.environmentAllow
       ? Object.fromEntries(security.environmentAllow.filter((key) => process.env[key] !== undefined).map((key) => [key, process.env[key]]))
       : process.env;
     const env = { ...baseEnvironment, ...environment };
-    const child = spawn(commandText, { cwd: ROOT, env, shell: true, windowsHide: true });
+    const child = spawn(platformCommand(commandText), { cwd: ROOT, env, shell: true, windowsHide: true });
     let stdout = '';
     let stderr = '';
     let originalBytes = 0;

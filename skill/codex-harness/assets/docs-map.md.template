@@ -4,10 +4,13 @@ Project: {{PROJECT_NAME}}
 
 Use this as a router, not a manual. Load only the documents relevant to the active feature.
 
+The `.harness/` routes below describe the outer repository-development control plane only. Product-runtime agents, loops, schedulers, and orchestrators belong in application documentation and keep state, configuration, telemetry, and operations separate from `.harness/`.
+
 | Need | Source | Status |
 |---|---|---|
 | Product purpose and user behavior | `README.md` or project product docs | Confirm for this project |
 | Architecture and boundaries | `docs/ARCHITECTURE.md` or equivalent | Confirm for this project |
+| Product-runtime agents or orchestration | Product architecture and operations docs outside `.harness/` | Application-owned; never depend on, read, or write `.harness/` |
 | Reliability and operations | `docs/RELIABILITY.md` or equivalent | Add when material |
 | Security constraints | `docs/SECURITY.md` or equivalent | Add when material |
 | Product, legal/data-rights, provider, or deployment gates | Project ADRs or decision records | Confirm when applicable |
@@ -30,3 +33,4 @@ A new Codex session should be able to answer from repository contents:
 5. Which recorded gates constrain implementation or delivery?
 6. Which commands prove completion?
 7. What should happen next?
+8. Does any product-runtime agent or orchestration remain independent of `.harness/`?

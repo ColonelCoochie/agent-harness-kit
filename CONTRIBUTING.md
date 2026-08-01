@@ -1,6 +1,6 @@
 # Contributing
 
-Changes should preserve the zero-dependency Node.js 20+ runtime, non-destructive initialization, write-once verification evidence, and compatibility with Codex, Claude Code, and GitHub Copilot instruction surfaces.
+Changes should preserve the zero-dependency Node.js 20+ runtime, non-destructive initialization, write-once verification evidence, selective compatibility with Codex, Claude Code, and GitHub Copilot instruction surfaces, and the development-only boundary. Never make product-runtime agents, loops, schedulers, or orchestrators depend on, read, or write `.harness/`; disabled coding-agent adapters must remain absent across `sync`.
 
 Run before submitting a change:
 

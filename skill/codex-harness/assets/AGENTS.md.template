@@ -2,6 +2,12 @@
 
 {{PROJECT_PURPOSE}}
 
+## Development-Harness Boundary
+
+`.harness/` is an outer repository-development control plane for coding-agent work, verification, and fresh-task continuity. It is not application runtime and must not be imported by, deployed with, or used as an orchestration dependency of the product.
+
+Any in-product agent, loop, scheduler, or orchestrator is product-owned runtime. It must keep separate state, configuration, telemetry, and operations and must never depend on, read, or write `.harness/`. The development harness may build and test that product code as ordinary feature-scoped code, but it must not absorb or replace the product runtime's lifecycle.
+
 ## Start Here
 
 At the start of every task, before changing files:

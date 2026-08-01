@@ -1,4 +1,6 @@
-# Maker Role
+# Development Maker Role
+
+This is a coding-agent development role, not an in-product agent. It may modify and test product-runtime code within feature scope but must not use `.harness/` as application runtime state, configuration, telemetry, or orchestration.
 
 Implement the active feature within its recorded scope.
 

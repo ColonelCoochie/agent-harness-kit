@@ -75,6 +75,8 @@ working generation N
 
 ## Loop use
 
-Use `.harness/loops/goal.md` for one durable objective with acceptance and stop conditions. Use separate maker and checker prompts when the loop may modify code autonomously. Persist each completed round with a bounded `checkpoint`; do not rely on conversation memory. Use terminal `handoff` and fresh-task `resume` when the conversation must change.
+These loops coordinate coding-agent repository development only. They are never product-runtime agents, schedulers, or orchestration and must not own application state or operations.
 
-Stop when acceptance passes, max attempts are reached, the same failure repeats, or a human decision is required. Read the append-only trace before resuming blocked work. Scheduling and parallel worktrees are optional layers above this harness, not prerequisites.
+Use `.harness/loops/goal.md` for one durable development objective with acceptance and stop conditions. Use separate development maker and checker prompts when the loop may modify code autonomously. Persist each completed round with a bounded `checkpoint`; do not rely on conversation memory. Use terminal `handoff` and fresh-task `resume` when the coding conversation must change.
+
+Stop when acceptance passes, max attempts are reached, the same failure repeats, or a human decision is required. Read the append-only trace before resuming blocked work. Coding-agent scheduling and parallel development worktrees are optional layers above this harness, not prerequisites; application scheduling belongs to product runtime.

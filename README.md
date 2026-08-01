@@ -1,8 +1,8 @@
 # Agent Harness Kit
 
-A zero-dependency, evidence-gated project harness for OpenAI Codex, Anthropic Claude Code, and GitHub Copilot.
+A zero-dependency, evidence-gated repository-development harness for OpenAI Codex, Anthropic Claude Code, and GitHub Copilot.
 
-The kit installs one checked-in control plane for feature state, bounded scope, verification, evidence, and fresh-task continuity. Each coding agent receives a native instruction entry point, but `AGENTS.md` remains the canonical workflow so the agents do not drift.
+The kit installs one checked-in development control plane for feature state, bounded scope, verification, evidence, and fresh-task continuity. It never becomes application runtime. Any in-product agent, loop, scheduler, or orchestrator remains product-owned, with state, configuration, telemetry, and operations separate from `.harness/`; product runtime must never depend on, read, or write `.harness/`. The harness may build and test that code as ordinary feature-scoped code. Each enabled coding agent receives a native instruction entry point, but `AGENTS.md` remains the canonical workflow and boundary router.
 
 ## What gets installed
 
@@ -22,13 +22,13 @@ CLAUDE.md                         Claude Code adapter that imports AGENTS.md
   history/progress/              Archived progress projections at handoff boundaries
   quality.md                     Module quality ledger
   docs-map.md                    Repository knowledge map
-  loops/                         Goal, maker, and checker templates
+  loops/                         Development goal, maker, and checker templates
   evidence/                      Write-once verification records
   events.jsonl                   Append-only lifecycle trace
   hooks/precompact-handoff.mjs   Shared automatic terminal-handoff hook
 ```
 
-Existing instruction and Codex hook files are never overwritten. When one does not route to the harness, initialization writes a reviewable addition under `.harness/` for manual merging, including `.harness/codex-hooks.addition.json` when an existing `.codex/hooks.json` needs the guard.
+Existing instruction and Codex hook files are never overwritten. When an enabled surface does not route to the harness or inherit the canonical development boundary, initialization writes a reviewable addition under `.harness/` for manual merging. Disabled surfaces are preserved and never created by `sync`; this prevents product SDKs from accidentally loading an unwanted coding-agent adapter.
 
 ## Quick start
 
@@ -37,7 +37,8 @@ Node.js 20 or newer is the only runtime dependency.
 ```bash
 node bin/agent-harness.mjs init /path/to/project \
   --name "My Project" \
-  --purpose "What the project does"
+  --purpose "What the project does" \
+  --agents "codex,github-copilot"
 
 node /path/to/project/.harness/run.mjs session
 node /path/to/project/.harness/run.mjs doctor
@@ -45,11 +46,13 @@ node /path/to/project/.harness/run.mjs status
 node /path/to/project/.harness/run.mjs next
 ```
 
+Omit `--agents` to scaffold all three coding-agent surfaces. Select only the surfaces safe for the repository; for example, omit a root Claude adapter when an in-product Claude SDK could load it as product prompt context.
+
 The generic scaffold deliberately leaves `verification.full` unconfigured. Set it to the project's real completion command before expecting `doctor` to pass; the failure is a setup gate, not a broken installation.
 
 Install the package locally or globally to use `agent-harness`. The previous `codex-harness` command remains as a compatibility alias.
 
-Day-to-day work uses the checked-in project runtime:
+Day-to-day development work uses the checked-in harness controller:
 
 ```bash
 node .harness/run.mjs add feat-001 \
@@ -81,7 +84,7 @@ The adapters follow the current official conventions for [Codex `AGENTS.md`](htt
 
 ## Fresh-task continuity
 
-Runtime v4 makes the conversation boundary explicit and repository-backed:
+Runtime v5 makes the coding-task boundary explicit and repository-backed:
 
 ```text
 working generation N
@@ -194,10 +197,10 @@ Edit `.harness/config.json` for project facts:
 - `docs.required`: knowledge a fresh agent must be able to find.
 - `policies.wipLimit`: defaults to one; raise only with isolated ownership.
 - `policies.maxAttempts` and `maxRepeatedFailures`: bounded stop conditions.
-- `execution`: setup, start, health, shutdown, and runtime declarations.
+- `execution`: development/test setup, start, health, shutdown, and harness-runtime declarations; these do not become the deployed product's operational control plane.
 - `security.environmentAllow`: ordinary non-secret environment passed to commands.
 - `security.credentials.providers`: explicit, opt-in key pools.
-- `agents`: enabled instruction surfaces and their checked-in paths.
+- `agents`: enabled coding-agent instruction surfaces and their checked-in paths. Disabled adapters remain absent across `sync`.
 
 Feature-specific acceptance commands and scope live in `.harness/features.json`. Only successful cumulative verification can transition an active feature to `passing`.
 
@@ -207,11 +210,13 @@ Feature-specific acceptance commands and scope live in `.harness/features.json`.
 node bin/agent-harness.mjs sync /path/to/project
 ```
 
-`sync` is idempotent. Runtime v4 migrates legacy configuration, creates or repairs `.harness/continuity.json`, removes the obsolete clean-worktree handoff gate, installs the credential cursor without secret material, installs the Codex compaction guard non-destructively, adds missing agent adapters, and preserves project facts and historical evidence.
+`sync` is idempotent. Runtime v5 migrates legacy configuration, creates or repairs `.harness/continuity.json`, installs the canonical development-only boundary through non-destructive merge additions, repairs only enabled coding-agent adapters, and preserves product code, project facts, and historical evidence.
 
 ## Design guarantees
 
 - Initialization detects commands but does not install dependencies or run project scripts.
+- `.harness/` governs repository development only; product-runtime agents and orchestration remain application-owned and independent.
+- On Windows, relative executable paths in initializer command overrides are normalized for `cmd.exe` (for example, `.venv/Scripts/python.exe` becomes `.\.venv\Scripts\python.exe`); generated runtimes apply the same compatibility rule to existing configuration. POSIX command text is unchanged.
 - Git-backed scope is checked before and after verification and fails closed when unavailable.
 - Evidence is write-once JSON bound to the frozen feature contract and exact verification plan.
 - Command environments are allowlisted; provider keys are injected only by explicit request.
@@ -220,6 +225,6 @@ node bin/agent-harness.mjs sync /path/to/project
 - Checkpoints remain bounded; terminal handoffs preserve dirty work and block harness mutations until an ID-bound fresh-task resume.
 - The reviewed Codex `PreCompact` hook turns automatic compaction into a terminal handoff and stop; Claude Code can opt into the same guard.
 - `passing` is terminal; regressions become new features.
-- The project runtime is checked in and works on Windows, macOS, and Linux.
+- The development-harness controller is checked in and works on Windows, macOS, and Linux.
 
 See [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md), [ANALYSIS.md](ANALYSIS.md), and [REVIEW-2026-07-20.md](REVIEW-2026-07-20.md).

@@ -2,6 +2,8 @@
 
 ## Layer boundary
 
+`.harness/` is strictly an outer repository-development control plane. Product-runtime agents, loops, schedulers, and orchestrators are application-owned, keep separate state/configuration/telemetry/operations, and never depend on, read, or write `.harness/`. The harness may build and verify them only as ordinary feature-scoped product code.
+
 Keep invariant workflow in the reusable skill and CLI:
 
 - scaffolding and upgrades
@@ -26,7 +28,7 @@ Do not copy project architecture into the skill. Do not encode generic state-mac
 |---|---|---|
 | Instructions | `AGENTS.md`, `CLAUDE.md`, Copilot instructions, `.harness/docs-map.md` | Native startup routers backed by one discoverable project workflow |
 | Tools | `.harness/run.mjs`, command policies | Deterministic, bounded, redacted execution |
-| Environment | `config.json.execution`, Git identity | Reproducible runtime, setup, start, and health surfaces |
+| Environment | `config.json.execution`, Git identity | Reproducible development/test setup, start, and health surfaces; never the deployed product control plane |
 | State | `features.json`, `continuity.json`, `events.jsonl`, progress/handoff projections | Durable contracts, transitions, decisions, and fresh-task recovery |
 | Feedback | verification config, `evidence/*.json` | Cumulative gates and provenance-bound objective proof |
 
@@ -39,9 +41,9 @@ Scope and lifecycle are cross-cutting enforcement planes: WIP, dependencies, all
 - Use `.github/copilot-instructions.md` as a short Copilot adapter and keep it consistent with `AGENTS.md`.
 - Use `.codex/hooks.json` for the reviewed automatic compaction guard; keep unrelated Codex settings out of the harness.
 - Use this skill for the reusable workflow.
-- Use MCP/connectors for live external systems, not for local project state.
+- Use development MCP/connectors for live external systems needed by coding work, not for local project state or product-runtime orchestration.
 - Use hooks only for mechanical lifecycle enforcement that cannot be expressed safely by the checked-in runtime.
-- Use automations for scheduled triggers after the single-run harness is reliable.
+- Use automations only for scheduled coding-agent development triggers after the single-run harness is reliable; application scheduling stays in product runtime.
 
 ## Progressive disclosure
 

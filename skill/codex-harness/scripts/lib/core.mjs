@@ -7,9 +7,10 @@ import { fileURLToPath } from 'node:url';
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const SKILL_DIR = path.resolve(SCRIPT_DIR, '..', '..');
 export const ASSET_DIR = path.join(SKILL_DIR, 'assets');
-export const HARNESS_VERSION = 4;
+export const HARNESS_VERSION = 5;
 export const STATE_SCHEMA_VERSION = 1;
 export const STATES = ['not_started', 'active', 'blocked', 'passing'];
+const DEVELOPMENT_HARNESS_BOUNDARY = '## Development-Harness Boundary';
 const DEFAULT_ENVIRONMENT_ALLOW = [
   'PATH', 'Path', 'PATHEXT', 'SystemRoot', 'ComSpec', 'TEMP', 'TMP',
   'HOME', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'CI', 'NODE_ENV'
@@ -37,20 +38,23 @@ const AGENT_SURFACES = [
       && content.includes('.harness/features.json')
       && content.includes('.harness/continuity.json')
       && content.includes('.harness/run.mjs resume')
+      && content.includes(DEVELOPMENT_HARNESS_BOUNDARY)
   },
   {
     id: 'claude',
     path: 'CLAUDE.md',
     template: 'CLAUDE.md.template',
     addition: 'CLAUDE.addition.md.template',
-    routed: (content) => content.includes('@AGENTS.md') || (content.includes('.harness/config.json') && content.includes('.harness/features.json'))
+    routed: (content) => content.includes(DEVELOPMENT_HARNESS_BOUNDARY)
+      && (content.includes('@AGENTS.md') || (content.includes('.harness/config.json') && content.includes('.harness/features.json')))
   },
   {
     id: 'github-copilot',
     path: '.github/copilot-instructions.md',
     template: 'copilot-instructions.md.template',
     addition: 'copilot-instructions.addition.md.template',
-    routed: (content) => content.includes('AGENTS.md') || (content.includes('.harness/config.json') && content.includes('.harness/features.json'))
+    routed: (content) => content.includes(DEVELOPMENT_HARNESS_BOUNDARY)
+      && (content.includes('AGENTS.md') || (content.includes('.harness/config.json') && content.includes('.harness/features.json')))
   }
 ];
 const CODEX_HOOK_SURFACE = {
@@ -125,6 +129,21 @@ function runCommand(packageManager, script) {
   if (packageManager === 'npm') return script === 'test' ? 'npm test' : `npm run ${script}`;
   if (packageManager === 'yarn') return `yarn ${script}`;
   return `${packageManager} run ${script}`;
+}
+
+export function normalizeCommandForPlatform(command, platform = process.platform) {
+  const text = String(command);
+  if (platform !== 'win32') return text;
+  return text.replace(/^(\s*)(?:"([^"]+)"|'([^']+)'|(\S+))/, (match, leading, doubleQuoted, singleQuoted, bare) => {
+    const executable = doubleQuoted ?? singleQuoted ?? bare;
+    if (!executable.includes('/') && !executable.includes('\\')) return match;
+    const windowsPath = executable.replaceAll('/', '\\');
+    if (/^(?:\.\.?\\|[A-Za-z]:\\|\\\\)/.test(windowsPath)) {
+      return `${leading}${doubleQuoted !== undefined ? `"${windowsPath}"` : singleQuoted !== undefined ? `'${windowsPath}'` : windowsPath}`;
+    }
+    const normalized = `.\\${windowsPath}`;
+    return `${leading}${doubleQuoted !== undefined ? `"${normalized}"` : singleQuoted !== undefined ? `'${normalized}'` : normalized}`;
+  });
 }
 
 function unique(values) {
@@ -210,8 +229,9 @@ function commandCredentials(entry) {
   return Array.isArray(entry.credentials) ? entry.credentials : [entry.credentials];
 }
 
-async function ensureAgentSurfaces(target, harnessDir, results, replacements = {}) {
-  for (const surface of AGENT_SURFACES) {
+async function ensureAgentSurfaces(target, harnessDir, results, replacements = {}, enabledAgents = AGENT_SURFACES.map((surface) => surface.id)) {
+  const selected = new Set(['codex', ...enabledAgents]);
+  for (const surface of AGENT_SURFACES.filter((candidate) => selected.has(candidate.id))) {
     const destination = path.join(target, surface.path);
     if (!await exists(destination)) {
       results.push(await copyAsset(surface.template, destination, { replacements }));
@@ -219,10 +239,23 @@ async function ensureAgentSurfaces(target, harnessDir, results, replacements = {
     }
     const content = await readText(destination);
     if (!surface.routed(content)) {
-      results.push(await copyAsset(surface.addition, path.join(harnessDir, path.basename(surface.addition, '.template'))));
+      results.push(await copyAsset(surface.addition, path.join(harnessDir, path.basename(surface.addition, '.template')), { force: true }));
     }
     results.push({ path: destination, status: 'preserved' });
   }
+}
+
+function parseEnabledAgents(value) {
+  if (value === undefined || value === true) return AGENT_SURFACES.map((surface) => surface.id);
+  const enabled = unique((Array.isArray(value) ? value : [value])
+    .flatMap((item) => String(item).split(','))
+    .map((item) => item.trim())
+    .filter(Boolean));
+  if (enabled.length === 0) throw new Error('--agents must name at least one coding-agent surface.');
+  const known = new Set(AGENT_SURFACES.map((surface) => surface.id));
+  const unknown = enabled.filter((agent) => !known.has(agent));
+  if (unknown.length > 0) throw new Error(`Unknown coding-agent surface(s): ${unknown.join(', ')}.`);
+  return enabled;
 }
 
 async function ensureCodexHookSurface(target, harnessDir, results) {
@@ -317,9 +350,10 @@ export async function initHarness(root, options = {}) {
   const verification = detectVerification(profile);
   const harnessDir = path.join(target, '.harness');
   const projectName = String(options.name || profile.packageJson?.name || path.basename(target));
-  const projectPurpose = String(options.purpose || `Project harness for ${projectName}. Replace this sentence with the project's user-facing purpose.`);
+  const projectPurpose = String(options.purpose || `TODO: describe ${projectName}'s user-facing product purpose; do not describe the development harness here.`);
+  const enabledAgents = parseEnabledAgents(options.agents);
   const commandsOverride = options.commands
-    ? String(options.commands).split(',').map((item) => item.trim()).filter(Boolean)
+    ? String(options.commands).split(',').map((item) => normalizeCommandForPlatform(item.trim())).filter(Boolean)
     : null;
   if (commandsOverride) verification.full = commandsOverride;
 
@@ -371,8 +405,8 @@ export async function initHarness(root, options = {}) {
       }
     },
     agents: {
-      enabled: AGENT_SURFACES.map((surface) => surface.id),
-      instructions: Object.fromEntries(AGENT_SURFACES.map((surface) => [surface.id, surface.path]))
+      enabled: enabledAgents,
+      instructions: Object.fromEntries(AGENT_SURFACES.filter((surface) => enabledAgents.includes(surface.id)).map((surface) => [surface.id, surface.path]))
     },
     docs: {
       required: detectDocs(target, profile.rootNames),
@@ -421,8 +455,8 @@ export async function initHarness(root, options = {}) {
   results.push(await copyAsset('checker.md', path.join(harnessDir, 'loops', 'checker.md'), { force: Boolean(options.force) }));
   results.push(await copyAsset('precompact-handoff.mjs', path.join(harnessDir, 'hooks', 'precompact-handoff.mjs'), { force: Boolean(options.force) }));
 
-  await ensureAgentSurfaces(target, harnessDir, results, { PROJECT_PURPOSE: projectPurpose });
-  await ensureCodexHookSurface(target, harnessDir, results);
+  await ensureAgentSurfaces(target, harnessDir, results, { PROJECT_PURPOSE: projectPurpose }, enabledAgents);
+  if (enabledAgents.includes('codex')) await ensureCodexHookSurface(target, harnessDir, results);
 
   await atomicWrite(path.join(harnessDir, 'evidence', '.gitkeep'), '');
   if (!await exists(path.join(harnessDir, 'credentials-state.json'))) {
@@ -500,8 +534,9 @@ export async function syncHarness(root) {
     repairs.push('.harness/credentials-state.json');
   }
   const instructionResults = [];
-  await ensureAgentSurfaces(target, harnessDir, instructionResults, { PROJECT_PURPOSE: config.project?.purpose ?? '' });
-  await ensureCodexHookSurface(target, harnessDir, instructionResults);
+  const enabledAgents = Array.isArray(config.agents?.enabled) ? config.agents.enabled : AGENT_SURFACES.map((surface) => surface.id);
+  await ensureAgentSurfaces(target, harnessDir, instructionResults, { PROJECT_PURPOSE: config.project?.purpose ?? '' }, enabledAgents);
+  if (enabledAgents.includes('codex')) await ensureCodexHookSurface(target, harnessDir, instructionResults);
   for (const instruction of instructionResults) {
     if (instruction.status === 'written') repairs.push(normalizeRelative(target, instruction.path));
   }
@@ -752,11 +787,16 @@ export async function auditHarness(root) {
   const groups = {
     instructions: [
       ...instructionChecks,
+      check(
+        await exists(path.join(target, 'AGENTS.md'))
+          && (await readText(path.join(target, 'AGENTS.md'))).includes(DEVELOPMENT_HARNESS_BOUNDARY),
+        'Canonical AGENTS.md declares the Development-Harness Boundary'
+      ),
       check(await exists(path.join(harnessDir, 'docs-map.md')), 'Documentation router exists'),
       ...instructionLineChecks,
       ...instructionRouteChecks,
       check(unresolvedInstructionAdditions.length === 0, unresolvedInstructionAdditions.length ? `Unresolved instruction additions: ${unresolvedInstructionAdditions.join(', ')}` : 'No unresolved instruction merge additions remain'),
-      check(Boolean(config?.project?.purpose) && !String(config?.project?.purpose).includes('Replace this sentence'), 'Project purpose is concrete'),
+      check(Boolean(config?.project?.purpose) && !String(config?.project?.purpose).includes('TODO:'), 'Project purpose is concrete'),
       check(Array.isArray(config?.docs?.required) && config.docs.required.length > 0, 'Required project docs are declared'),
       check(missingDocs.length === 0, missingDocs.length ? `Declared docs are missing: ${missingDocs.join(', ')}` : 'Declared project docs exist', 'warning')
     ],

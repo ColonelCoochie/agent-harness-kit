@@ -1,5 +1,7 @@
 @AGENTS.md
 
+Inherit and enforce the canonical `## Development-Harness Boundary` section from `AGENTS.md`. Claude Code uses `.harness/` only to govern repository-development work; any product-runtime agent or orchestration remains application-owned and independent of `.harness/`.
+
 ## Claude Code
 
 Use the checked-in `.harness/run.mjs` controller for feature state, verification, and fresh-task continuity. Keep project-wide workflow in `AGENTS.md`; add only Claude-specific guidance here so the two instruction surfaces cannot drift.

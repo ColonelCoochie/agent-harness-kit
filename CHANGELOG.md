@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+## 0.5.0
+
+- Normalize relative executable paths used by Windows verification commands so local virtual-environment Python commands run through `cmd.exe`, while preserving POSIX command text.
+- Define and enforce the canonical `Development-Harness Boundary`: `.harness/` governs repository development only and never supplies product-runtime agent state or orchestration.
+- Fail audit and runtime doctor when canonical instructions lack that boundary; `sync` emits non-destructive merge additions for stale user files.
+- Make coding-agent surfaces selectable with `--agents`; `sync` repairs only enabled adapters and does not recreate a deliberately absent Claude adapter.
+- Label goal, maker, and checker templates as development roles and add a documentation route for application-owned agent runtime.
+- Add regressions proving boundary generation, stale-route repair, adapter inheritance, selective surfaces, and byte-for-byte preservation of seeded product-agent runtime.
+
 ## 0.4.0
 
 - Add `.harness/continuity.json` as the machine-readable lifecycle state for working and awaiting-resume generations.

@@ -14,4 +14,4 @@
 | 10 | Make full-pipeline, architecture, E2E, and behavior checks cumulative. |
 | 11 | Capture correlated events, redacted stdout/stderr, truncation, and repository identity. |
 | 12 | Require restartability, evidence, handoff, quality tracking, and periodic simplification. |
-| 13 | Add locks, retry budgets, goal/maker/checker templates, and external loop state above the reliable single-run harness. |
+| 13 | Add locks, retry budgets, development goal/maker/checker templates, and external coding-loop state above the reliable single-run harness; product-runtime agents remain independent. |
