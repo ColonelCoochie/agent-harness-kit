@@ -2,6 +2,8 @@
 
 Source: [walkinglabs/learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering), cloned and analyzed on 2026-07-20.
 
+Runtime v6 superseding note (2026-08-07): the v4/v5 fresh-task and terminal-handoff model described later in this historical derivation is no longer the current operating procedure. The `Orchestrated-Worker Protocol` keeps one user-facing development orchestrator chat open for intent, decisions, concise status, and routing. Fresh bounded workers reconstruct repository context; normal results and user-input pauses use `worker_yield` or `needs_input` checkpoints. Only true context/ownership transfers use ID-bound `handoff`/`resume`, delegated by the orchestrator to a fresh worker. Successful reviewed `PreCompact` persistence permits the chat to compact and continue; failure remains fail-closed. A fresh user task is only the no-subagent fallback. Product-runtime orchestration remains independent of `.harness/`.
+
 ## Coverage method
 
 The repository contains 2,363 non-git files and 1,737 unique SHA-256 contents; 626 file instances are exact duplicates. The large surface is mainly 15 localized documentation trees and repeated starter/solution application snapshots. The analysis used three lanes:

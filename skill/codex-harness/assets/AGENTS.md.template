@@ -4,40 +4,52 @@
 
 ## Development-Harness Boundary
 
-`.harness/` is an outer repository-development control plane for coding-agent work, verification, and fresh-task continuity. It is not application runtime and must not be imported by, deployed with, or used as an orchestration dependency of the product.
+`.harness/` is an outer repository-development control plane for coding-agent work, verification, and orchestrated worker continuity. It is not application runtime and must not be imported by, deployed with, or used as an orchestration dependency of the product.
 
-Any in-product agent, loop, scheduler, or orchestrator is product-owned runtime. It must keep separate state, configuration, telemetry, and operations and must never depend on, read, or write `.harness/`. The development harness may build and test that product code as ordinary feature-scoped code, but it must not absorb or replace the product runtime's lifecycle.
+Any in-product agent, loop, scheduler, or orchestrator is product-owned runtime. It keeps separate state, configuration, telemetry, and operations and never depends on, reads, or writes `.harness/`. The development harness may build and test that product code as ordinary feature-scoped code, but it must not absorb or replace the product runtime lifecycle.
 
-## Start Here
+## Orchestrated-Worker Protocol
 
-At the start of every task, before changing files:
+Protocol marker: `ORCHESTRATED_WORKER_CONTINUITY_V1`.
 
-1. Confirm the repository root.
-2. Run `node .harness/run.mjs session` and inspect `.harness/continuity.json`.
-3. If the repository is `awaiting_resume`, continue only in a genuinely fresh chat or task. Run the exact `node .harness/run.mjs resume <handoff-id>` command printed by `session`. If this is the handing-off conversation, stop and open a fresh task instead.
-4. Read `.harness/config.json`, `.harness/features.json`, `.harness/progress.md`, and `.harness/handoff.md`.
-5. Use `.harness/docs-map.md` to load only relevant project documentation.
-6. Run `node .harness/run.mjs doctor`.
-7. Run `node .harness/run.mjs status`.
-8. Run `node .harness/run.mjs next` to identify dependency-ready work.
+The persistent development orchestrator keeps the user-facing chat open. It owns user intent, decisions, concise status, and routing only. Delegate repository implementation to fresh bounded workers so implementation context does not accumulate in the orchestrator. Allow one mutating worker at a time; independent read-only explorers may run in parallel.
 
-If the baseline is unhealthy, record the failure with a bounded `checkpoint` before adding feature scope. Never use context compaction, transcript continuation, or a same-task `resume` as a substitute for the required fresh-task boundary.
+### Worker startup
 
-## Working Invariants
+Before changing files, a worker:
+
+1. Confirms the repository root.
+2. Runs `node .harness/run.mjs session --json` for the bounded continuity view.
+3. Claims working ownership or resumes the explicitly delegated transfer, then runs `bootstrap --json`; reads `.harness/config.json` and task-relevant routes from `.harness/docs-map.md`.
+4. Runs `node .harness/run.mjs doctor`, `status`, and `next` after any required resume.
+
+If continuity is `awaiting_resume`, only a fresh worker explicitly delegated that transfer may run the exact printed `node .harness/run.mjs resume <handoff-id>` command. Otherwise return the pending transfer ID to the orchestrator without loading its implementation packet. The orchestrator delegates the exact command and must not resume or absorb the packet itself. Use a fresh user chat/task only when the host cannot delegate a subagent.
+
+### Worker invariants
 
 - Work on one active feature unless `.harness/config.json` explicitly allows more.
-- Start work with `node .harness/run.mjs start <feature-id>`.
-- Stay inside the feature's allow/deny scope.
-- Do not refactor unrelated code while completing a feature.
-- Treat `.harness/features.json` as the source of truth for work state.
-- Treat `.harness/continuity.json` as the source of truth for whether work may mutate.
-- Never hand-edit a feature to `passing`.
-- Never hand-edit continuity from `awaiting_resume` to `working`.
+- Start work with `node .harness/run.mjs start <feature-id>` and stay inside its allow/deny scope.
+- Treat `.harness/features.json` as the work-state authority and `.harness/continuity.json` as the mutation authority.
+- Never hand-edit a feature to `passing` or continuity to `working`.
 - Run `node .harness/run.mjs verify <feature-id>` to create evidence and pass a feature.
-- Use `node .harness/run.mjs checkpoint --summary "<current facts>" --next "<next executable step>"` for meaningful in-task milestones. Keep it bounded; it is not a transcript or task boundary.
-- Consult project docs before making architecture or product decisions.
-- Ask the user when a required decision is not established in repository state.
-- After `handoff`, the harness mutation barrier is active. Do not change files or run feature/verification mutations until a fresh task successfully resumes the exact handoff ID.
+- Consult routed project docs before architecture or product decisions; ask the user when required authority is missing.
+- Return only the result, verification, risks, and next routing decision the orchestrator needs.
+
+### Normal worker yield
+
+Normal completion is not a handoff. Verify or block as appropriate, then run:
+
+```bash
+node .harness/run.mjs checkpoint --reason worker_yield --summary "<current facts>" --next "<next executable step>"
+```
+
+Return a concise result and yield to the persistent orchestrator. When a user decision is required, use `--reason needs_input`, return one concise question, and yield. Neither path requires `handoff`, `resume`, or a new user chat.
+
+### Worker transfer boundary
+
+Use `node .harness/run.mjs handoff --summary "<current facts>" --next "<next executable step>"` only when implementation context or ownership must transfer to another worker. It records a bounded ID-bound packet, preserves dirty state, and parks harness mutations. The handing-off worker yields; the orchestrator delegates the exact resume command to a fresh worker.
+
+A reviewed project-local Codex `PreCompact` hook is defense in depth. On success it persists the worker packet so the persistent chat may compact and continue routing through a fresh worker. On failure it remains fail-closed. The hook does not turn the development harness into product-runtime orchestration.
 
 ## Project Gates
 
@@ -58,23 +70,25 @@ Verification levels and commands live in `.harness/config.json`:
 
 Command success and captured evidence—not model confidence—determine completion.
 
-## End of Session
-
-1. Run the widest relevant verification.
-2. Leave the repository restartable through the standard startup path.
-3. Run `node .harness/run.mjs handoff --summary "<current facts>" --next "<next executable step>"`, adding bounded blocker, decision, and evidence entries when useful.
-4. Treat `HANDOFF_READY` and `STOP_CURRENT_CHAT` as terminal. Stop the current conversation and use the printed bootstrap only in a genuinely fresh task.
-
-`handoff` records dirty project files and hashes without cleaning, staging, or committing them. Dirty state remains subject to feature scope during later verification. The runtime can park its own state and print a bootstrap, but it cannot universally create or terminate chats or prove that a task is fresh; the agent and platform must honor the boundary. Codex's project-local `PreCompact` hook adds a defense in depth by writing an automatic handoff and returning `continue: false`; review and trust project-local hooks before enabling them.
-
 ## Detailed Guidance
 
 - Project profile: `.harness/config.json`
 - Feature and scope state: `.harness/features.json`
 - Documentation routes: `.harness/docs-map.md`
 - Continuity authority: `.harness/continuity.json`
-- Current and terminal projections: `.harness/progress.md` and `.harness/handoff.md`
+- Current and transfer projections: `.harness/progress.md` and `.harness/handoff.md`
 - Archived progress projections: `.harness/history/progress/`
 - Quality ledger: `.harness/quality.md`
-- Loop templates: `.harness/loops/`
+- Development loop templates: `.harness/loops/`
 - Verification evidence: `.harness/evidence/`
+
+
+## Bounded worker startup and ownership
+
+Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim`, or runs the exact delegated pending resume command. Then run `node .harness/run.mjs bootstrap --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
+
+The harness binds mutations to host `CODEX_THREAD_ID`, not shared `CODEX_SESSION_ID`. Other hosts must supply `--worker-id` on mutations as an explicit attestation. Normal worker_yield and needs_input revoke the owner; a retired worker cannot reclaim or resume. This is cooperative CLI enforcement, not protection against direct file edits or forged environments. The orchestrator cannot claim a child worker's ID.
+
+Use `migrate` once after a runtime update to move legacy inline baselines into immutable content-addressed references without changing historical contracts or evidence. `doctor` authenticates referenced blobs.
+
+PreCompact output systemMessage is UI text only. The SessionStart(compact) adapter emits supported additionalContext with routing; it does not load the transfer packet or resume mutations. Hook behavior is fixture-tested; per-invocation CODEX_THREAD_ID delivery to native hooks still requires host validation. Unknown hook identity with an active owner fails closed; another identified actor leaves that worker unchanged.

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "files": {
+    ".harness/run.mjs": "f63d31711e6d05a02041cb6ecb74f72ebff3b95ad68dfa4827d01a16d619af73",
+    ".harness/hooks/precompact-handoff.mjs": "c51cdec732354dd2853cd213ca6964aa06055bf1e882cfccb07cf7e0f6911b48",
+    ".harness/hooks/sessionstart-routing.mjs": "c8283edd52da6d8de46e43819c34ad69f1d32004401ddbcf413de5b187167ae7",
+    ".harness/hooks/claude-worker-identity.mjs": "f369fa710f92ccde64b9424ad4c936542d6a36698876658b978be387028ab802"
+  }
+}

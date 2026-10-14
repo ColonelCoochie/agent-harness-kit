@@ -35,7 +35,7 @@ Run `node .harness/run.mjs doctor`, then add a concrete feature.
 
 ## Changed project files
 
-Not yet captured. Run `checkpoint` or terminal `handoff` to record the current worktree.
+Not yet captured. Run a reasoned `checkpoint` or worker-transfer `handoff` to record the current worktree.
 
 ## Latest evidence
 

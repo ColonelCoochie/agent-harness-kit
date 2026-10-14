@@ -2,7 +2,7 @@
 
 Project: {{PROJECT_NAME}}
 
-Use this as a router, not a manual. Load only the documents relevant to the active feature.
+Use this as a router, not a manual. A fresh bounded worker loads only the documents relevant to its task. The persistent development orchestrator keeps only user intent, decisions, concise status, and routing.
 
 The `.harness/` routes below describe the outer repository-development control plane only. Product-runtime agents, loops, schedulers, and orchestrators belong in application documentation and keep state, configuration, telemetry, and operations separate from `.harness/`.
 
@@ -16,21 +16,29 @@ The `.harness/` routes below describe the outer repository-development control p
 | Product, legal/data-rights, provider, or deployment gates | Project ADRs or decision records | Confirm when applicable |
 | Current scope and state | `.harness/features.json` | Authoritative |
 | Verification commands | `.harness/config.json` | Authoritative |
-| Continuity phase and pending handoff capsule | `.harness/continuity.json` | Machine-authoritative |
-| Current checkpoint and fresh-task bootstrap | `.harness/progress.md`, `.harness/handoff.md` | Bounded projections |
+| Continuity phase and pending worker transfer | `.harness/continuity.json` | Machine-authoritative |
+| Current checkpoint and worker packet | `.harness/progress.md`, `.harness/handoff.md` | Bounded projections |
 | Older continuity history | `.harness/history/progress/`, `.harness/events.jsonl` | Append/archive record |
-| Codex compaction stop guard | `.codex/hooks.json`, `.harness/hooks/precompact-handoff.mjs` | Review and trust before enabling project-local hooks |
+| Codex compaction persistence | `.codex/hooks.json`, `.harness/hooks/precompact-handoff.mjs` | Review and trust before enabling project-local hooks |
+| Claude worker identity and compaction routing | `.claude/settings.json`, `.harness/hooks/claude-worker-identity.mjs`, `CLAUDE.md` | Review/trust locally; fixture coverage requires native host smoke validation |
 | Objective evidence | `.harness/evidence/` | Machine-written |
 
-## Fresh-session test
+## Orchestrated-worker reconstruction test
 
-A new Codex session should be able to answer from repository contents:
+A fresh worker should be able to answer from repository contents:
 
-1. What does this project do?
-2. How is it structured?
-3. What is the active work item and its scope?
-4. Is continuity `working` or `awaiting_resume`, and what exact resume command applies?
-5. Which recorded gates constrain implementation or delivery?
-6. Which commands prove completion?
-7. What should happen next?
-8. Does any product-runtime agent or orchestration remain independent of `.harness/`?
+1. What does this project do and how is it structured?
+2. What is the active work item and its scope?
+3. Is continuity `working` or `awaiting_resume`, and what exact resume command applies to a pending transfer?
+4. Which recorded gates constrain implementation or delivery?
+5. Which commands prove completion, and what should happen next?
+6. Does every product-runtime agent or orchestrator remain independent of `.harness/`?
+
+## Compact orchestrator routing test
+
+Without loading implementation history, the persistent orchestrator should be able to answer:
+
+1. What user intent and decisions must be preserved?
+2. Is one mutating worker active, while any parallel explorers remain read-only?
+3. Should it delegate ordinary work, ask the user a checkpointed `needs_input` question, or send an exact pending resume command to a fresh worker?
+4. Can the user continue in this chat, using a new chat/task only as the no-subagent fallback?

@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "project": {
+    "name": "agent-harness-kit",
+    "purpose": "Agent Harness Kit is a zero-dependency, evidence-gated repository-development harness for Codex, Claude Code, and GitHub Copilot.",
+    "stack": "node"
+  },
+  "policies": {
+    "wipLimit": 1,
+    "maxAttempts": 3,
+    "maxRepeatedFailures": 2,
+    "commandTimeoutMs": 600000,
+    "passingIsTerminal": true,
+    "requireEvidence": true
+  },
+  "verification": {
+    "quick": [
+      "node --check bin/agent-harness.mjs",
+      "node --check bin/codex-harness.mjs",
+      "node --check skill/codex-harness/scripts/harness.mjs",
+      "node --check skill/codex-harness/scripts/lib/core.mjs",
+      "node --check skill/codex-harness/assets/project-runtime.mjs",
+      "node --check skill/codex-harness/assets/precompact-handoff.mjs",
+      "node --check .harness/run.mjs",
+      "node --check .harness/hooks/precompact-handoff.mjs"
+    ],
+    "full": [
+      "node --test tests/harness.test.mjs"
+    ],
+    "e2e": [],
+    "architecture": [
+      "node bin/agent-harness.mjs audit . --min-score 95"
+    ],
+    "clean": []
+  },
+  "completion": {
+    "baseLayers": [
+      "full"
+    ],
+    "alwaysRunWhenConfigured": [
+      "quick",
+      "architecture"
+    ],
+    "requireAcceptanceCommands": true
+  },
+  "execution": {
+    "harnessRuntime": {
+      "command": "node",
+      "minimumMajorVersion": 20
+    },
+    "packageManager": "npm",
+    "setup": [],
+    "start": [],
+    "health": [],
+    "shutdown": []
+  },
+  "scope": {
+    "enforcement": "required",
+    "defaultAllow": [
+      "**/*"
+    ],
+    "defaultDeny": [
+      ".git/**",
+      ".env",
+      ".env.*",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**"
+    ]
+  },
+  "continuity": {
+    "mode": "orchestrated_worker",
+    "dirtyWorktree": "record",
+    "blockMutationsAfterHandoff": true
+  },
+  "security": {
+    "environmentAllow": [
+      "PATH",
+      "Path",
+      "PATHEXT",
+      "SystemRoot",
+      "ComSpec",
+      "TEMP",
+      "TMP",
+      "HOME",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "CI",
+      "NODE_ENV",
+      "GIT_CONFIG_COUNT",
+      "GIT_CONFIG_KEY_0",
+      "GIT_CONFIG_VALUE_0"
+    ],
+    "redactOutput": true,
+    "credentials": {
+      "stateFile": ".harness/credentials-state.json",
+      "providers": {
+        "openai": {
+          "targetEnvironment": "OPENAI_API_KEY",
+          "sources": [
+            "OPENAI_API_KEY",
+            "OPENAI_API_KEY_2",
+            "OPENAI_API_KEY_3",
+            "OPENAI_API_KEY_4"
+          ],
+          "selection": "round_robin"
+        },
+        "anthropic": {
+          "targetEnvironment": "ANTHROPIC_API_KEY",
+          "sources": [
+            "ANTHROPIC_API_KEY",
+            "ANTHROPIC_API_KEY_2",
+            "ANTHROPIC_API_KEY_3",
+            "ANTHROPIC_API_KEY_4"
+          ],
+          "selection": "round_robin"
+        }
+      }
+    }
+  },
+  "agents": {
+    "enabled": [
+      "codex",
+      "claude",
+      "github-copilot"
+    ],
+    "instructions": {
+      "codex": "AGENTS.md",
+      "claude": "CLAUDE.md",
+      "github-copilot": ".github/copilot-instructions.md"
+    }
+  },
+  "docs": {
+    "required": [
+      "README.md",
+      "CONTRIBUTING.md",
+      "SECURITY.md",
+      "ANALYSIS.md",
+      "CHANGELOG.md",
+      "REVIEW-2026-07-20.md",
+      "skill/codex-harness/references/architecture.md",
+      "skill/codex-harness/references/operations.md",
+      "skill/codex-harness/references/audit-model.md"
+    ],
+    "router": ".harness/docs-map.md"
+  }
+}

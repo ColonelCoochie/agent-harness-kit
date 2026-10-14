@@ -1,19 +1,19 @@
-# Fresh-task Handoff
+# Worker Transfer
 
 Generated: not yet generated
 
-- Status: no terminal handoff is pending
+- Status: no pending worker transfer
 
-## Terminal boundary
+## Worker transfer boundary
 
-When generated, this file contains an exact handoff ID, resume command, bounded repository capsule, and bootstrap prompt. `handoff` is terminal for the current conversation even when the worktree is dirty. Stop after `STOP_CURRENT_CHAT`; do not call `resume` in the same transcript or substitute context compaction.
+When generated, this file contains an exact handoff ID, resume command, and bounded repository context packet. `handoff` is only for a true context or ownership transfer. It preserves dirty state, parks harness mutations, and tells the handing-off worker to yield.
 
-The runtime can park harness mutations and print a bootstrap, but it cannot universally create a new platform chat, terminate the current one, or prove task freshness.
+The persistent development orchestrator delegates the exact resume command to a fresh worker without consuming the implementation packet. A fresh user chat/task is required only when the host has no subagent capability.
 
 ## Summary
 
-Harness initialized; no working task has been handed off yet.
+Harness initialized; no worker transfer is pending.
 
 ## Next action
 
-Run `node .harness/run.mjs session`, then `doctor`, `status`, and `next` before defining the first feature.
+Delegate a bounded worker to run `node .harness/run.mjs session`, then `doctor`, `status`, and `next` before defining the first feature.

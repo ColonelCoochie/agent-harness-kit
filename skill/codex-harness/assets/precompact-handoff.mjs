@@ -3,6 +3,7 @@
 import { spawn } from 'node:child_process';
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const platform = process.argv.includes('--platform')
   ? process.argv[process.argv.indexOf('--platform') + 1]
@@ -13,10 +14,22 @@ try {
   if (String(input.hook_event_name || '').toLowerCase() !== 'precompact' || input.trigger !== 'auto') {
     emitContinue();
   } else {
-    const root = await findProjectRoot(input.cwd || process.cwd());
+    const root = await findProjectRoot(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'));
     const runtime = path.join(root, '.harness', 'run.mjs');
     const continuityPath = path.join(root, '.harness', 'continuity.json');
     const continuity = JSON.parse(await readFile(continuityPath, 'utf8'));
+    // session_id is shared by parent and subagents. Only a per-invocation
+    // worker identity can decide whether this is the owner or routing parent.
+    const manualIndex = process.argv.indexOf('--worker-id');
+    const explicit = manualIndex >= 0 ? process.argv[manualIndex + 1] : null;
+    const nativeClaude = typeof input.agent_id === 'string' && /^[a-zA-Z0-9_./:-]{1,180}$/.test(input.agent_id) ? 'claude-agent:' + input.agent_id : null;
+    const actor = platform === 'claude' ? nativeClaude || explicit : process.env.CODEX_THREAD_ID;
+    if (platform === 'claude' && nativeClaude && explicit && nativeClaude !== explicit) throw new Error('explicit worker identity conflicts with Claude agent_id');
+    if (continuity.phase !== 'awaiting_resume') {
+      if (!continuity.owner) { emitContinue(); process.exit(0); }
+      if (!actor) throw new Error('hook has no per-worker identity (CODEX_THREAD_ID or Claude agent_id); owner left unchanged');
+      if (actor !== continuity.owner.id) { emitContinue(); process.exit(0); }
+    }
     let handoffId = continuity.handoff?.id ?? null;
     if (continuity.phase !== 'awaiting_resume') {
       const result = await run(process.execPath, [
@@ -29,14 +42,16 @@ try {
         '--agent',
         platform,
         '--automatic',
-        '--json'
-      ], root);
+        '--json',
+        ...(platform === 'claude' ? ['--worker-id', actor] : [])
+      ], root, platform);
       if (result.exitCode !== 0) throw new Error(result.stderr.trim() || result.stdout.trim() || 'automatic handoff failed');
       handoffId = JSON.parse(result.stdout).id;
     }
-    const reason = `Automatic compaction was stopped after writing handoff ${handoffId}. End this conversation, start a fresh task in the same worktree, and run: node .harness/run.mjs resume ${handoffId}`;
-    if (platform === 'claude') console.log(JSON.stringify({ decision: 'block', reason }));
-    else console.log(JSON.stringify({ continue: false, stopReason: reason, systemMessage: reason }));
+    if (!handoffId) throw new Error('awaiting-resume continuity is missing its handoff ID');
+    const message = `Worker handoff ${handoffId} is safely parked. Keep this development orchestrator chat active and delegate one fresh worker without inherited implementation history (Codex fork_turns="none"; Claude fresh non-fork Agent) to run exactly \`node .harness/run.mjs resume ${handoffId}\` before edits; non-Codex workers append their own unique --worker-id to every mutation. The handing-off worker must yield.`;
+    if (platform === 'claude') emitContinue();
+    else console.log(JSON.stringify({ continue: true, systemMessage: message }));
   }
 } catch (error) {
   const reason = `Could not create the required pre-compaction handoff: ${error.message}. Stop and run node .harness/run.mjs handoff manually before continuing.`;
@@ -64,9 +79,11 @@ async function findProjectRoot(start) {
   }
 }
 
-function run(command, commandArgs, cwd) {
+function run(command, commandArgs, cwd, host) {
   return new Promise((resolve) => {
-    const child = spawn(command, commandArgs, { cwd, windowsHide: true });
+    const env = { ...process.env };
+    if (host === 'claude') delete env.CODEX_THREAD_ID;
+    const child = spawn(command, commandArgs, { cwd, windowsHide: true, env });
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', (chunk) => { stdout += chunk; });

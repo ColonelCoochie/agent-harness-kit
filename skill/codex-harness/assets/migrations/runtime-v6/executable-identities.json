@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "files": {
+    "project-runtime.mjs": [
+      "6222e555877ff097c253566f6c242fbccdafbd17b4384060193b68154e4ec37d"
+    ],
+    "precompact-handoff.mjs": [
+      "c51cdec732354dd2853cd213ca6964aa06055bf1e882cfccb07cf7e0f6911b48"
+    ],
+    "sessionstart-routing.mjs": [
+      "c8283edd52da6d8de46e43819c34ad69f1d32004401ddbcf413de5b187167ae7"
+    ],
+    "claude-worker-identity.mjs": [
+      "f369fa710f92ccde64b9424ad4c936542d6a36698876658b978be387028ab802"
+    ]
+  }
+}

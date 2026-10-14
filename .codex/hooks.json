@@ -1,0 +1,33 @@
+{
+  "description": "Agent Harness worker-transfer persistence for automatic context compaction.",
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "^auto$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const marker='HARNESS_HOOK_LAUNCHER_V1';const fs=require('node:fs'),p=require('node:path'),cp=require('node:child_process');try{const raw=fs.readFileSync(0,'utf8'),input=JSON.parse(raw||'{}');let root=p.resolve(input.cwd||process.cwd());while(!fs.existsSync(p.join(root,'.harness/run.mjs'))){const parent=p.dirname(root);if(parent===root)throw new Error('No nearest harness installation');root=parent;}const result=cp.spawnSync(process.execPath,[p.join(root,'.harness/hooks/precompact-handoff.mjs'),'--platform','codex'],{cwd:root,input:raw,encoding:'utf8',windowsHide:true});if(result.error||result.status!==0)throw new Error(result.error?.message||result.stderr||'Hook adapter failed');process.stdout.write(result.stdout||'{}');}catch(e){process.stdout.write(JSON.stringify({continue:false,stopReason:e.message}));}\"",
+            "commandWindows": "node -e \"const marker='HARNESS_HOOK_LAUNCHER_V1';const fs=require('node:fs'),p=require('node:path'),cp=require('node:child_process');try{const raw=fs.readFileSync(0,'utf8'),input=JSON.parse(raw||'{}');let root=p.resolve(input.cwd||process.cwd());while(!fs.existsSync(p.join(root,'.harness/run.mjs'))){const parent=p.dirname(root);if(parent===root)throw new Error('No nearest harness installation');root=parent;}const result=cp.spawnSync(process.execPath,[p.join(root,'.harness/hooks/precompact-handoff.mjs'),'--platform','codex'],{cwd:root,input:raw,encoding:'utf8',windowsHide:true});if(result.error||result.status!==0)throw new Error(result.error?.message||result.stderr||'Hook adapter failed');process.stdout.write(result.stdout||'{}');}catch(e){process.stdout.write(JSON.stringify({continue:false,stopReason:e.message}));}\"",
+            "timeout": 600,
+            "statusMessage": "Persisting an orchestrated-worker packet before compaction"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "^compact$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const marker='HARNESS_HOOK_LAUNCHER_V1';const fs=require('node:fs'),p=require('node:path'),cp=require('node:child_process');try{const raw=fs.readFileSync(0,'utf8'),input=JSON.parse(raw||'{}');let root=p.resolve(input.cwd||process.cwd());while(!fs.existsSync(p.join(root,'.harness/run.mjs'))){const parent=p.dirname(root);if(parent===root)throw new Error('No nearest harness installation');root=parent;}const result=cp.spawnSync(process.execPath,[p.join(root,'.harness/hooks/sessionstart-routing.mjs'),'--platform','codex'],{cwd:root,input:raw,encoding:'utf8',windowsHide:true});if(result.error||result.status!==0)throw new Error(result.error?.message||result.stderr||'Hook adapter failed');process.stdout.write(result.stdout||'{}');}catch(e){process.stdout.write(JSON.stringify({continue:false,stopReason:e.message}));}\"",
+            "commandWindows": "node -e \"const marker='HARNESS_HOOK_LAUNCHER_V1';const fs=require('node:fs'),p=require('node:path'),cp=require('node:child_process');try{const raw=fs.readFileSync(0,'utf8'),input=JSON.parse(raw||'{}');let root=p.resolve(input.cwd||process.cwd());while(!fs.existsSync(p.join(root,'.harness/run.mjs'))){const parent=p.dirname(root);if(parent===root)throw new Error('No nearest harness installation');root=parent;}const result=cp.spawnSync(process.execPath,[p.join(root,'.harness/hooks/sessionstart-routing.mjs'),'--platform','codex'],{cwd:root,input:raw,encoding:'utf8',windowsHide:true});if(result.error||result.status!==0)throw new Error(result.error?.message||result.stderr||'Hook adapter failed');process.stdout.write(result.stdout||'{}');}catch(e){process.stdout.write(JSON.stringify({continue:false,stopReason:e.message}));}\"",
+            "timeout": 30,
+            "statusMessage": "Restoring bounded worker routing after compaction"
+          }
+        ]
+      }
+    ]
+  }
+}

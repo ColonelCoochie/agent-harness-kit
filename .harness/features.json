@@ -1,0 +1,1616 @@
+{
+  "version": 1,
+  "revision": 53,
+  "features": [
+    {
+      "id": "harness-self-host",
+      "title": "Dogfood the development harness",
+      "description": "This repository uses its own checked-in harness with Codex-native instructions, executable validation, and durable evidence.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          ".harness/**",
+          ".codex/**",
+          "AGENTS.md",
+          "CLAUDE.md",
+          ".github/copilot-instructions.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "The self-hosted harness passes its structural and runtime health checks.",
+          "command": "node .harness/run.mjs doctor"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-01T20-11-53-870Z-harness-self-host.json",
+        ".harness/evidence/2026-08-01T20-14-58-729Z-harness-self-host.json"
+      ],
+      "blocker": null,
+      "attempts": 2,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-01T19:59:45.718Z",
+      "updatedAt": "2026-08-01T20:14:58.730Z",
+      "contract": {
+        "hash": "925ab4e25bcf6358e4a07220b6ad60b4f7e153b770be7c42a079d8b1e7ea541f",
+        "snapshot": {
+          "id": "harness-self-host",
+          "title": "Dogfood the development harness",
+          "description": "This repository uses its own checked-in harness with Codex-native instructions, executable validation, and durable evidence.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              ".harness/**",
+              ".codex/**",
+              "AGENTS.md",
+              "CLAUDE.md",
+              ".github/copilot-instructions.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "The self-hosted harness passes its structural and runtime health checks.",
+              "command": "node .harness/run.mjs doctor"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-01T19:59:49.358Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-01T20:14:58.730Z",
+        "pass": true
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/828dfae4889cda33691e131e5d0fba98dbfccdc83e36df6d78045879a1cedad2.json",
+        "sha256": "828dfae4889cda33691e131e5d0fba98dbfccdc83e36df6d78045879a1cedad2",
+        "bytes": 3130,
+        "baselineHash": null
+      }
+    },
+    {
+      "id": "harness-quality-record",
+      "title": "Record self-host validation",
+      "description": "The quality ledger reflects the passing self-host feature and preserves concrete follow-up risks.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          ".harness/quality.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "The updated quality record keeps the self-hosted harness structurally healthy.",
+          "command": "node .harness/run.mjs doctor"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-01T20-17-44-856Z-harness-quality-record.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-01T20:16:22.230Z",
+      "updatedAt": "2026-08-01T20:17:44.857Z",
+      "contract": {
+        "hash": "86a3b50ff07ec647501036f7fd847b755251c3d96531cc0ad26c447483ce6ac8",
+        "snapshot": {
+          "id": "harness-quality-record",
+          "title": "Record self-host validation",
+          "description": "The quality ledger reflects the passing self-host feature and preserves concrete follow-up risks.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              ".harness/quality.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "The updated quality record keeps the self-hosted harness structurally healthy.",
+              "command": "node .harness/run.mjs doctor"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-01T20:16:27.218Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-01T20:17:44.857Z",
+        "pass": true
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/4ffc8cf60d18d972273bd3e3bc3275f8ccdd5c263a97ebedd883e777945e74e4.json",
+        "sha256": "4ffc8cf60d18d972273bd3e3bc3275f8ccdd5c263a97ebedd883e777945e74e4",
+        "bytes": 3649,
+        "baselineHash": null
+      }
+    },
+    {
+      "id": "orchestrated-worker-continuity",
+      "title": "Keep the orchestrator chat alive across worker handoffs",
+      "description": "Handoffs transfer repository work between fresh bounded workers while the user-facing development orchestrator remains in the same chat.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          "tests/**",
+          "README.md",
+          "CHANGELOG.md",
+          "ANALYSIS.md",
+          "REVIEW-2026-07-20.md",
+          "package.json",
+          "AGENTS.md",
+          "CLAUDE.md",
+          ".github/copilot-instructions.md",
+          ".codex/**",
+          ".harness/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "A generated harness emits compact delegated-worker handoffs while keeping the orchestrator chat active and safely parking mutations with a manual fresh-task fallback when subagents are unavailable.",
+          "command": "node --test tests/harness.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-07T23-40-17-853Z-orchestrated-worker-continuity.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-07T23:19:17.721Z",
+      "updatedAt": "2026-08-07T23:40:17.853Z",
+      "contract": {
+        "hash": "7c90dde85105336094bddcb4a8063e13dd36d470bdc4d3ccd22f87648987bde1",
+        "snapshot": {
+          "id": "orchestrated-worker-continuity",
+          "title": "Keep the orchestrator chat alive across worker handoffs",
+          "description": "Handoffs transfer repository work between fresh bounded workers while the user-facing development orchestrator remains in the same chat.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              "tests/**",
+              "README.md",
+              "CHANGELOG.md",
+              "ANALYSIS.md",
+              "REVIEW-2026-07-20.md",
+              "package.json",
+              "AGENTS.md",
+              "CLAUDE.md",
+              ".github/copilot-instructions.md",
+              ".codex/**",
+              ".harness/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "A generated harness emits compact delegated-worker handoffs while keeping the orchestrator chat active and safely parking mutations with a manual fresh-task fallback when subagents are unavailable.",
+              "command": "node --test tests/harness.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-07T23:19:20.553Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-07T23:40:17.853Z",
+        "pass": true
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/bfbd7d64fc0f02d5970c6be835e833c8b460207d20636a73f2d881aa65190520.json",
+        "sha256": "bfbd7d64fc0f02d5970c6be835e833c8b460207d20636a73f2d881aa65190520",
+        "bytes": 4125,
+        "baselineHash": null
+      }
+    },
+    {
+      "id": "lock-ownership-sync-serialization",
+      "title": "Owner-safe lock ownership and sync serialization",
+      "description": "Runtime mutations and reusable sync share an atomic, live-owner-safe lock whose unique owner token prevents stale cleanup from deleting a replacement.",
+      "dependencies": [],
+      "status": "blocked",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "tests/harness.test.mjs",
+          "skill/codex-harness/references/operations.md",
+          ".harness/run.mjs"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Live owners remain protected while dead or orphaned locks recover conservatively and token-safe release preserves replacements and concurrent sync/runtime mutations cannot overlap or corrupt state.",
+          "command": "node --test --test-name-pattern lock|sync tests/harness.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-08T03-15-39-255Z-lock-ownership-sync-serialization.json"
+      ],
+      "blocker": "The frozen acceptance command lost its shell quotes during feature creation and is not portable on Windows. Superseded by a corrected verification-only successor; implementation and all configured gates passed.",
+      "attempts": 1,
+      "repeatedFailures": 1,
+      "lastFailureFingerprint": "da737e68247dad6e1dbe6855c4c679eb99d0cc41633623987ae3026a60826fa1",
+      "createdAt": "2026-08-08T02:52:40.180Z",
+      "updatedAt": "2026-08-08T03:18:01.932Z",
+      "contract": {
+        "hash": "9ade64264e6adc2f5070307b6068eeed53ec56bef6eebf8ec259d581b40dd453",
+        "snapshot": {
+          "id": "lock-ownership-sync-serialization",
+          "title": "Owner-safe lock ownership and sync serialization",
+          "description": "Runtime mutations and reusable sync share an atomic, live-owner-safe lock whose unique owner token prevents stale cleanup from deleting a replacement.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "tests/harness.test.mjs",
+              "skill/codex-harness/references/operations.md",
+              ".harness/run.mjs"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Live owners remain protected while dead or orphaned locks recover conservatively and token-safe release preserves replacements and concurrent sync/runtime mutations cannot overlap or corrupt state.",
+              "command": "node --test --test-name-pattern lock|sync tests/harness.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-08T02:52:45.699Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-08T03:15:39.256Z",
+        "pass": false
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/91de9540f73663e84736175222aa198fc03d74b8e04671ea015f273393bb34dd.json",
+        "sha256": "91de9540f73663e84736175222aa198fc03d74b8e04671ea015f273393bb34dd",
+        "bytes": 9529,
+        "baselineHash": null
+      }
+    },
+    {
+      "id": "lock-ownership-sync-verification",
+      "title": "Verify owner-safe lock ownership and sync serialization",
+      "description": "This verification-only successor corrects the shell quoting error in the frozen Feature 1 acceptance command while preserving the implemented scope and behavior.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "tests/harness.test.mjs",
+          "skill/codex-harness/references/operations.md",
+          ".harness/run.mjs"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Focused tests prove live owner protection and conservative recovery and token-safe replacement release and runtime-sync mutual exclusion and concurrent-sync integrity.",
+          "command": "node --test --test-name-pattern lock tests/harness.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-08T03-19-29-413Z-lock-ownership-sync-verification.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-08T03:18:09.802Z",
+      "updatedAt": "2026-08-08T03:19:29.414Z",
+      "contract": {
+        "hash": "192153b36bb1f888cc0840176c988e3730d9dce8546dbb045041035d7867e04f",
+        "snapshot": {
+          "id": "lock-ownership-sync-verification",
+          "title": "Verify owner-safe lock ownership and sync serialization",
+          "description": "This verification-only successor corrects the shell quoting error in the frozen Feature 1 acceptance command while preserving the implemented scope and behavior.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "tests/harness.test.mjs",
+              "skill/codex-harness/references/operations.md",
+              ".harness/run.mjs"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Focused tests prove live owner protection and conservative recovery and token-safe replacement release and runtime-sync mutual exclusion and concurrent-sync integrity.",
+              "command": "node --test --test-name-pattern lock tests/harness.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-08T03:18:15.542Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-08T03:19:29.414Z",
+        "pass": true
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/8bf3ba4b17f94043441ce4d0fbbd520d758c76f6ca70b22bec5a9e6d24846bfa.json",
+        "sha256": "8bf3ba4b17f94043441ce4d0fbbd520d758c76f6ca70b22bec5a9e6d24846bfa",
+        "bytes": 9796,
+        "baselineHash": null
+      }
+    },
+    {
+      "id": "repository-snapshot-scope-completeness",
+      "title": "Complete repository snapshots and scope enforcement",
+      "description": "Feature scope and continuity drift use complete Git snapshots plus committed changes without blaming unchanged baseline dirt.",
+      "dependencies": [],
+      "status": "blocked",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          "tests/harness.test.mjs",
+          "skill/codex-harness/references/operations.md",
+          "README.md",
+          ".harness/run.mjs"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Repository snapshot and scope regression tests pass.",
+          "command": "node --test --test-name-pattern repository-snapshot tests/harness.test.mjs"
+        }
+      ],
+      "evidence": [],
+      "blocker": "Started under the legacy unbound scope baseline; implementation is preserved and verification continues in a v2-baseline successor without backfill or waiver.",
+      "attempts": 0,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-08T03:25:06.530Z",
+      "updatedAt": "2026-08-08T04:07:56.516Z",
+      "contract": {
+        "hash": "7bb273df773e3267f00e59dc77fc1b10ceac28514256d00afe5c997cba2599fc",
+        "snapshot": {
+          "id": "repository-snapshot-scope-completeness",
+          "title": "Complete repository snapshots and scope enforcement",
+          "description": "Feature scope and continuity drift use complete Git snapshots plus committed changes without blaming unchanged baseline dirt.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              "tests/harness.test.mjs",
+              "skill/codex-harness/references/operations.md",
+              "README.md",
+              ".harness/run.mjs"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Repository snapshot and scope regression tests pass.",
+              "command": "node --test --test-name-pattern repository-snapshot tests/harness.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-08T03:25:09.241Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/98d6eb370ad26bf093535002f5685e2ecd5623a6ccd44fc68c1e56c17562a7d2.json",
+        "sha256": "98d6eb370ad26bf093535002f5685e2ecd5623a6ccd44fc68c1e56c17562a7d2",
+        "bytes": 10061,
+        "baselineHash": null
+      }
+    },
+    {
+      "id": "repository-snapshot-scope-verification",
+      "title": "Verify complete repository snapshots and scope enforcement",
+      "description": "The reviewed repository-snapshot implementation passes all cumulative gates from an authenticated v2 starting baseline.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          "tests/harness.test.mjs",
+          "skill/codex-harness/references/operations.md",
+          "README.md",
+          ".harness/run.mjs"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Complete repository snapshot and scope regressions pass from a v2 baseline.",
+          "command": "node --test --test-name-pattern=repository-snapshot tests/harness.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-08T04-09-59-297Z-repository-snapshot-scope-verification.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-08T04:08:05.191Z",
+      "updatedAt": "2026-08-08T04:09:59.298Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "63318423f4304242352e7a0c5b6a69c1f00a0dc8e5b9ec99006b199758e13d9a",
+        "hash": "5b2ed558376295553a2c25af5c488a7f2857f72e907950c435aa758888aee39d",
+        "snapshot": {
+          "id": "repository-snapshot-scope-verification",
+          "title": "Verify complete repository snapshots and scope enforcement",
+          "description": "The reviewed repository-snapshot implementation passes all cumulative gates from an authenticated v2 starting baseline.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              "tests/harness.test.mjs",
+              "skill/codex-harness/references/operations.md",
+              "README.md",
+              ".harness/run.mjs"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Complete repository snapshot and scope regressions pass from a v2 baseline.",
+              "command": "node --test --test-name-pattern=repository-snapshot tests/harness.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-08T04:08:13.896Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-08T04:09:59.298Z",
+        "pass": true
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/d00cbd27d6ea17b92588dfde79228c12cc944556385de78eb288152ebaa11860.json",
+        "sha256": "d00cbd27d6ea17b92588dfde79228c12cc944556385de78eb288152ebaa11860",
+        "bytes": 10598,
+        "baselineHash": "63318423f4304242352e7a0c5b6a69c1f00a0dc8e5b9ec99006b199758e13d9a"
+      }
+    },
+    {
+      "id": "credential-opt-in-isolation",
+      "title": "Credential opt-in isolation",
+      "description": "Configured provider source and target environment names stay outside the ordinary command environment and only explicitly requested providers inject one selected target.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "tests/harness.test.mjs",
+          "README.md",
+          "SECURITY.md",
+          "skill/codex-harness/references/operations.md",
+          ".harness/run.mjs"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Doctor and reusable audit and command execution enforce provider environment isolation without changing selection or redaction or missing-key or no-retry behavior.",
+          "command": "node --test tests/harness.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-08T04-26-29-328Z-credential-opt-in-isolation.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-08T04:13:52.583Z",
+      "updatedAt": "2026-08-08T04:26:29.329Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "665d311a070b49791f391a8f7f1be5c89383f683a297257023e2fdfa7ae35f22",
+        "hash": "2709bd0b6e6b3808a450eb4007953a2b5feebd581e3d2fcd0497ef846f985c32",
+        "snapshot": {
+          "id": "credential-opt-in-isolation",
+          "title": "Credential opt-in isolation",
+          "description": "Configured provider source and target environment names stay outside the ordinary command environment and only explicitly requested providers inject one selected target.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "tests/harness.test.mjs",
+              "README.md",
+              "SECURITY.md",
+              "skill/codex-harness/references/operations.md",
+              ".harness/run.mjs"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Doctor and reusable audit and command execution enforce provider environment isolation without changing selection or redaction or missing-key or no-retry behavior.",
+              "command": "node --test tests/harness.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-08T04:13:52.736Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-08T04:26:29.329Z",
+        "pass": true
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/bb1851138e690f70d3a0fc80364a237c4e3ab7b7af51c4d5628cde756e52ae5b.json",
+        "sha256": "bb1851138e690f70d3a0fc80364a237c4e3ab7b7af51c4d5628cde756e52ae5b",
+        "bytes": 10875,
+        "baselineHash": "665d311a070b49791f391a8f7f1be5c89383f683a297257023e2fdfa7ae35f22"
+      }
+    },
+    {
+      "id": "help-dominant-option-validation",
+      "title": "Non-mutating command help and strict option validation",
+      "description": "Reusable and generated CLIs provide command-specific help before all state access and reject unknown mutator flags before mutation.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/scripts/harness.mjs",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "skill/codex-harness/assets/project-runtime.mjs",
+          "tests/harness.test.mjs",
+          "README.md",
+          "skill/codex-harness/references/operations.md",
+          "skill/codex-harness/SKILL.md",
+          ".harness/run.mjs"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Focused CLI regressions prove help dominance and state immutability and strict mutator schemas and stable output and alias equivalence.",
+          "command": "node --test --test-name-pattern=cli-help-option-validation tests/harness.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-08T15-40-34-256Z-help-dominant-option-validation.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-08T04:32:23.108Z",
+      "updatedAt": "2026-08-08T15:40:34.257Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "5ff1cf1d00071a685a8fc90958782854c8934442e5da5f9269907ec1ea4e4e37",
+        "hash": "e939d9927d0259115959daf3b659a70ca71e2cddac598da09d09484e076da0c2",
+        "snapshot": {
+          "id": "help-dominant-option-validation",
+          "title": "Non-mutating command help and strict option validation",
+          "description": "Reusable and generated CLIs provide command-specific help before all state access and reject unknown mutator flags before mutation.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/scripts/harness.mjs",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "skill/codex-harness/assets/project-runtime.mjs",
+              "tests/harness.test.mjs",
+              "README.md",
+              "skill/codex-harness/references/operations.md",
+              "skill/codex-harness/SKILL.md",
+              ".harness/run.mjs"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Focused CLI regressions prove help dominance and state immutability and strict mutator schemas and stable output and alias equivalence.",
+              "command": "node --test --test-name-pattern=cli-help-option-validation tests/harness.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-08T04:32:32.612Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-08T15:40:34.257Z",
+        "pass": true
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/458e74a4b9816ab2dffb526cb59f0d68d856e19f53c37c311e59f588a61caff3.json",
+        "sha256": "458e74a4b9816ab2dffb526cb59f0d68d856e19f53c37c311e59f588a61caff3",
+        "bytes": 11257,
+        "baselineHash": "5ff1cf1d00071a685a8fc90958782854c8934442e5da5f9269907ec1ea4e4e37"
+      }
+    },
+    {
+      "id": "canonical-v5-asset-migration",
+      "title": "Conservatively migrate canonical v5 worker and docs assets",
+      "description": "Sync upgrades only explicit known v5 goal, maker, checker, and documentation-map copies while preserving customized files with reviewable v6 additions.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          ".harness/**",
+          "skill/codex-harness/**",
+          "tests/**",
+          "README.md",
+          "CHANGELOG.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Exact or line-ending-normalized known v5 assets upgrade to canonical v6; current v6 remains unchanged; customized or unknown copies are preserved with actionable additions; repeated sync is idempotent.",
+          "command": "node --test tests/harness.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-08T15-58-42-288Z-canonical-v5-asset-migration.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-08T15:45:23.388Z",
+      "updatedAt": "2026-08-08T15:58:42.289Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "12a4ff3343eb5a123a4ada430bc073b1ac9483dc5c427b5952c9773d2b95517a",
+        "hash": "10b75cc4dd021bf828fb14109a1cec03d8da002ac189876b92c90d442fefca8e",
+        "snapshot": {
+          "id": "canonical-v5-asset-migration",
+          "title": "Conservatively migrate canonical v5 worker and docs assets",
+          "description": "Sync upgrades only explicit known v5 goal, maker, checker, and documentation-map copies while preserving customized files with reviewable v6 additions.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              ".harness/**",
+              "skill/codex-harness/**",
+              "tests/**",
+              "README.md",
+              "CHANGELOG.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Exact or line-ending-normalized known v5 assets upgrade to canonical v6; current v6 remains unchanged; customized or unknown copies are preserved with actionable additions; repeated sync is idempotent.",
+              "command": "node --test tests/harness.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-08T15:45:28.397Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-08T15:58:42.289Z",
+        "pass": true
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/a4c54f7d86026ae34a4f02ffa0a9489100709033529404d9c791663c57622623.json",
+        "sha256": "a4c54f7d86026ae34a4f02ffa0a9489100709033529404d9c791663c57622623",
+        "bytes": 11703,
+        "baselineHash": "12a4ff3343eb5a123a4ada430bc073b1ac9483dc5c427b5952c9773d2b95517a"
+      }
+    },
+    {
+      "id": "verification-evidence-plan-integrity",
+      "title": "Validate verification evidence against its captured plan",
+      "description": "Passing evidence embeds a canonical historical verification plan whose hash and exact result coverage are structurally validated without consulting later mutable configuration.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "tests/harness.test.mjs",
+          "README.md",
+          "CHANGELOG.md",
+          "skill/codex-harness/SKILL.md",
+          "skill/codex-harness/references/architecture.md",
+          "skill/codex-harness/references/operations.md",
+          "skill/codex-harness/references/audit-model.md",
+          ".harness/run.mjs"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Evidence plan manifests plus tamper checks plus historical config evolution plus legacy policy are enforced by focused regressions.",
+          "command": "node --test --test-name-pattern=evidence-plan tests/harness.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-08-08T16-18-07-241Z-verification-evidence-plan-integrity.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-08-08T16:03:17.970Z",
+      "updatedAt": "2026-08-08T16:18:07.242Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "398fce5ecc0d301bab1212695f9fce484162c232432c7764b4221db7e66cea1d",
+        "hash": "7b8689b886cc5924aa56e9aaf1168b014df12b5e6e0ecf90b32df6cf6ea0f63d",
+        "snapshot": {
+          "id": "verification-evidence-plan-integrity",
+          "title": "Validate verification evidence against its captured plan",
+          "description": "Passing evidence embeds a canonical historical verification plan whose hash and exact result coverage are structurally validated without consulting later mutable configuration.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "tests/harness.test.mjs",
+              "README.md",
+              "CHANGELOG.md",
+              "skill/codex-harness/SKILL.md",
+              "skill/codex-harness/references/architecture.md",
+              "skill/codex-harness/references/operations.md",
+              "skill/codex-harness/references/audit-model.md",
+              ".harness/run.mjs"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Evidence plan manifests plus tamper checks plus historical config evolution plus legacy policy are enforced by focused regressions.",
+              "command": "node --test --test-name-pattern=evidence-plan tests/harness.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-08-08T16:03:26.158Z"
+      },
+      "lastVerification": {
+        "at": "2026-08-08T16:18:07.242Z",
+        "pass": true
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/548b18795c48912759e8af41cd84457faa3727fb6910114556dab15af778d91c.json",
+        "sha256": "548b18795c48912759e8af41cd84457faa3727fb6910114556dab15af778d91c",
+        "bytes": 13031,
+        "baselineHash": "398fce5ecc0d301bab1212695f9fce484162c232432c7764b4221db7e66cea1d"
+      }
+    },
+    {
+      "id": "harness-worker-boundary-001",
+      "title": "Bounded-worker-startup-and-ownership",
+      "description": "Authorized-harness-only-baseline-migration-owner-lifecycle-and-compact-routing-repair",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          "tests/harness*",
+          "AGENTS.md",
+          "README.md",
+          ".harness/**",
+          ".codex/hooks.json"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Regression-suite-covers-lossless-baselines-bounded-bootstrap-worker-ownership-and-hook-context",
+          "command": "node --test tests/harness-continuity.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-07T00-42-46-007Z-harness-worker-boundary-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-07T00:32:20.463Z",
+      "updatedAt": "2026-10-07T00:42:46.008Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "e380839dd24e92c0ef976aa8432859171199884234e0f3f5240c03ee420a743e",
+        "hash": "4baf918f36b6dded58e2967db1f3ee6295478da6abffbb994099745f34fed292",
+        "snapshot": {
+          "id": "harness-worker-boundary-001",
+          "title": "Bounded-worker-startup-and-ownership",
+          "description": "Authorized-harness-only-baseline-migration-owner-lifecycle-and-compact-routing-repair",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              "tests/harness*",
+              "AGENTS.md",
+              "README.md",
+              ".harness/**",
+              ".codex/hooks.json"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Regression-suite-covers-lossless-baselines-bounded-bootstrap-worker-ownership-and-hook-context",
+              "command": "node --test tests/harness-continuity.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-07T00:32:20.662Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/753cf5a25ba4dc2411b5bc6918c32cb996b783ca422b4a3fc46a121905da3570.json",
+        "sha256": "753cf5a25ba4dc2411b5bc6918c32cb996b783ca422b4a3fc46a121905da3570",
+        "bytes": 13304,
+        "baselineHash": "e380839dd24e92c0ef976aa8432859171199884234e0f3f5240c03ee420a743e"
+      },
+      "lastVerification": {
+        "at": "2026-10-07T00:42:46.008Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "audit-hardening-001",
+      "title": "Audit hardening and Claude worker compatibility",
+      "description": "Prevent output leaks and orphaned commands, preserve migrations and future schemas, and bind reviewed native hook routing to bounded worker identity.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/**",
+          "tests/**",
+          "README.md",
+          "AGENTS.md",
+          "CLAUDE.md",
+          ".github/copilot-instructions.md",
+          "SECURITY.md",
+          "CHANGELOG.md",
+          ".harness/**",
+          ".codex/**",
+          ".claude/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Audit regressions and native hook fixtures pass",
+          "command": "node --test tests/harness-hardening.test.mjs tests/harness-continuity.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-14T01-22-24-356Z-audit-hardening-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-14T00:57:19.792Z",
+      "updatedAt": "2026-10-14T01:22:24.357Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "73bccd345dd8bd80c3519a15637b54292edbdd59bbc6097cb1b40a8f5021f3df",
+        "hash": "3c63add0843fd510d3e2c90d464d312ace157612ac58caa8bc5cc9d9183cb8c6",
+        "snapshot": {
+          "id": "audit-hardening-001",
+          "title": "Audit hardening and Claude worker compatibility",
+          "description": "Prevent output leaks and orphaned commands, preserve migrations and future schemas, and bind reviewed native hook routing to bounded worker identity.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/**",
+              "tests/**",
+              "README.md",
+              "AGENTS.md",
+              "CLAUDE.md",
+              ".github/copilot-instructions.md",
+              "SECURITY.md",
+              "CHANGELOG.md",
+              ".harness/**",
+              ".codex/**",
+              ".claude/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Audit regressions and native hook fixtures pass",
+              "command": "node --test tests/harness-hardening.test.mjs tests/harness-continuity.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-14T00:57:20.478Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/9fcefb57d08e53b55a53c9c224d6db728cdd628c86be87465847f1de17fdc418.json",
+        "sha256": "9fcefb57d08e53b55a53c9c224d6db728cdd628c86be87465847f1de17fdc418",
+        "bytes": 14120,
+        "baselineHash": "73bccd345dd8bd80c3519a15637b54292edbdd59bbc6097cb1b40a8f5021f3df"
+      },
+      "lastVerification": {
+        "at": "2026-10-14T01:22:24.357Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-claude-smoke-001",
+      "title": "Validate native Claude child identity delivery",
+      "description": "Exercise the installed Claude Code CLI in an isolated temporary harness with local mock Messages responses; confirm native hook payloads and child-only worker identity without external model calls.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "tests/claude-native-smoke.mjs",
+          "README.md",
+          "skill/codex-harness/references/operations.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Installed CLI runs startup and fresh child hooks with native payload and isolated child context",
+          "command": "node tests/claude-native-smoke.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-14T01-34-23-674Z-native-claude-smoke-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-14T01:25:24.757Z",
+      "updatedAt": "2026-10-14T01:34:23.675Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "2e98e9ef12de2bcd525c498b4ef935fac9125a0942d22b72a637a50e8f9658f2",
+        "hash": "1771383fb04f179e8f60905fd6fbec04a7ffa8438d84bdcf693b639e47d0437f",
+        "snapshot": {
+          "id": "native-claude-smoke-001",
+          "title": "Validate native Claude child identity delivery",
+          "description": "Exercise the installed Claude Code CLI in an isolated temporary harness with local mock Messages responses; confirm native hook payloads and child-only worker identity without external model calls.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "tests/claude-native-smoke.mjs",
+              "README.md",
+              "skill/codex-harness/references/operations.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Installed CLI runs startup and fresh child hooks with native payload and isolated child context",
+              "command": "node tests/claude-native-smoke.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-14T01:25:25.309Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/f4f234d44a477bddfed1282f5c007674b1aea640a3fc057dc0652635197a66f7.json",
+        "sha256": "f4f234d44a477bddfed1282f5c007674b1aea640a3fc057dc0652635197a66f7",
+        "bytes": 15513,
+        "baselineHash": "2e98e9ef12de2bcd525c498b4ef935fac9125a0942d22b72a637a50e8f9658f2"
+      },
+      "lastVerification": {
+        "at": "2026-10-14T01:34:23.675Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "collector-safe-sync-001",
+      "title": "Bounded repository capture and reviewed safe runtime sync",
+      "description": "Reusable capture inventories untracked descendants with bounded streaming hashes; sync previews guarded plans and preserves customized executables; redaction handles long whitespace within deadlines.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          "tests/**",
+          "README.md",
+          "CHANGELOG.md",
+          ".harness/run.mjs",
+          ".harness/hooks/**",
+          ".harness/managed-files.json"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Collector plus sync planning plus redaction regressions pass",
+          "command": "node --test tests/harness-capture-sync.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-14T01-56-05-438Z-collector-safe-sync-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-14T01:37:33.606Z",
+      "updatedAt": "2026-10-14T01:56:05.439Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "065a696e104825ee30b420d50ba5ea655f0505f59d6089f7c70c061344106911",
+        "hash": "61ec44545633ab84a98ab6a38457f1728b840e5bad83b3d561bcc4db58568eba",
+        "snapshot": {
+          "id": "collector-safe-sync-001",
+          "title": "Bounded repository capture and reviewed safe runtime sync",
+          "description": "Reusable capture inventories untracked descendants with bounded streaming hashes; sync previews guarded plans and preserves customized executables; redaction handles long whitespace within deadlines.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              "tests/**",
+              "README.md",
+              "CHANGELOG.md",
+              ".harness/run.mjs",
+              ".harness/hooks/**",
+              ".harness/managed-files.json"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Collector plus sync planning plus redaction regressions pass",
+              "command": "node --test tests/harness-capture-sync.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-14T01:37:34.295Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/34b3fcd4c962b9286ce8b9854d0f74c6a455dc708355d097dad05cb83debff22.json",
+        "sha256": "34b3fcd4c962b9286ce8b9854d0f74c6a455dc708355d097dad05cb83debff22",
+        "bytes": 15923,
+        "baselineHash": "065a696e104825ee30b420d50ba5ea655f0505f59d6089f7c70c061344106911"
+      },
+      "lastVerification": {
+        "at": "2026-10-14T01:56:05.439Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "precompact-timeout-001",
+      "title": "Allow bounded PreCompact capture to finish",
+      "description": "Generated Codex and Claude PreCompact hooks use 600 seconds and exact generated predecessors upgrade safely while custom settings and runtime bytes stay intact.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "skill/codex-harness/assets/*hooks*.json.template",
+          "tests/harness-hook-timeout.test.mjs",
+          "tests/harness.test.mjs",
+          "README.md",
+          "CHANGELOG.md",
+          "skill/codex-harness/references/operations.md",
+          ".codex/hooks.json",
+          ".claude/settings.json",
+          ".harness/*hooks.addition.json"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Hook timeout migration preserves canonical defaults and custom settings and runtime bytes across initialization and repeated sync",
+          "command": "node --test tests/harness-hook-timeout.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-14T02-48-41-250Z-precompact-timeout-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-14T02:38:50.816Z",
+      "updatedAt": "2026-10-14T02:48:41.251Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "940a394ade9b6815621c1b03a21e76f1d9d690b9b556b120ab16df4f687fe247",
+        "hash": "9397860af31b3a3a617c86b3bad24cde3381c2291e9e64911ce18f56ba8ce558",
+        "snapshot": {
+          "id": "precompact-timeout-001",
+          "title": "Allow bounded PreCompact capture to finish",
+          "description": "Generated Codex and Claude PreCompact hooks use 600 seconds and exact generated predecessors upgrade safely while custom settings and runtime bytes stay intact.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "skill/codex-harness/assets/*hooks*.json.template",
+              "tests/harness-hook-timeout.test.mjs",
+              "tests/harness.test.mjs",
+              "README.md",
+              "CHANGELOG.md",
+              "skill/codex-harness/references/operations.md",
+              ".codex/hooks.json",
+              ".claude/settings.json",
+              ".harness/*hooks.addition.json"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Hook timeout migration preserves canonical defaults and custom settings and runtime bytes across initialization and repeated sync",
+              "command": "node --test tests/harness-hook-timeout.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-14T02:38:51.338Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/385b4a23257b6fc119aee8e0b0873d05848754e3845372c546a2f9f2ba2f1781.json",
+        "sha256": "385b4a23257b6fc119aee8e0b0873d05848754e3845372c546a2f9f2ba2f1781",
+        "bytes": 16759,
+        "baselineHash": "940a394ade9b6815621c1b03a21e76f1d9d690b9b556b120ab16df4f687fe247"
+      },
+      "lastVerification": {
+        "at": "2026-10-14T02:48:41.251Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "startup-upgrade-docs-001",
+      "title": "Document safe startup and legacy controller upgrades",
+      "description": "Clarify Git HEAD prerequisites and owned bounded startup with a reviewed legacy bootstrap path without changing the installed runtime.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "README.md",
+          "skill/codex-harness/SKILL.md",
+          "skill/codex-harness/references/operations.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Startup and legacy upgrade guidance preserve ownership and scope with historical evidence",
+          "command": "node bin/agent-harness.mjs audit . --min-score 95"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-14T03-53-34-732Z-startup-upgrade-docs-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-14T03:45:12.110Z",
+      "updatedAt": "2026-10-14T03:53:34.733Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "672303b5d72071d5533216f13e4ca4db61f9049fa9b9abb14c6fff18394baa4e",
+        "hash": "27aad22693dcb669f058def144acfa0962c37b76f1b431722b93d1acd5f3ce1a",
+        "snapshot": {
+          "id": "startup-upgrade-docs-001",
+          "title": "Document safe startup and legacy controller upgrades",
+          "description": "Clarify Git HEAD prerequisites and owned bounded startup with a reviewed legacy bootstrap path without changing the installed runtime.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "README.md",
+              "skill/codex-harness/SKILL.md",
+              "skill/codex-harness/references/operations.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Startup and legacy upgrade guidance preserve ownership and scope with historical evidence",
+              "command": "node bin/agent-harness.mjs audit . --min-score 95"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-14T03:45:12.680Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/f05867356c9729f85a86e20443bf916e72a06989ab0fabf377d44a5e6bdebf6c.json",
+        "sha256": "f05867356c9729f85a86e20443bf916e72a06989ab0fabf377d44a5e6bdebf6c",
+        "bytes": 17179,
+        "baselineHash": "672303b5d72071d5533216f13e4ca4db61f9049fa9b9abb14c6fff18394baa4e"
+      },
+      "lastVerification": {
+        "at": "2026-10-14T03:53:34.733Z",
+        "pass": true
+      }
+    }
+  ]
+}

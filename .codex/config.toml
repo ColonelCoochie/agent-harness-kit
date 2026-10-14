@@ -1,0 +1,6 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+# Reuse the canonical skill from this repository; do not duplicate it under another skill root.
+[[skills.config]]
+path = "../skill/codex-harness/SKILL.md"
+enabled = true

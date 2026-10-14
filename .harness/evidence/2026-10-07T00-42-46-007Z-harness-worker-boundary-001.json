@@ -1,0 +1,523 @@
+{
+  "harnessVersion": 6,
+  "featureId": "harness-worker-boundary-001",
+  "schemaVersion": 4,
+  "requiredLayers": [
+    "quick",
+    "architecture",
+    "full"
+  ],
+  "executedLayers": [
+    "quick",
+    "architecture",
+    "full",
+    "acceptance"
+  ],
+  "contractHash": "4baf918f36b6dded58e2967db1f3ee6295478da6abffbb994099745f34fed292",
+  "configHash": "9f50f7f92a47f3a168bad6d52bfc114a8fe97b90b0f35bd37d3e4917d54f83c5",
+  "verificationHash": "305687c61d22c17382654dd318b35b15a16be095550de238ef27ab55a39296ae",
+  "verificationPlan": {
+    "schemaVersion": 1,
+    "evidenceSchemaVersion": 4,
+    "harnessVersion": 6,
+    "feature": {
+      "id": "harness-worker-boundary-001",
+      "contractHash": "4baf918f36b6dded58e2967db1f3ee6295478da6abffbb994099745f34fed292"
+    },
+    "config": {
+      "hash": "9f50f7f92a47f3a168bad6d52bfc114a8fe97b90b0f35bd37d3e4917d54f83c5"
+    },
+    "requiredLayers": [
+      {
+        "id": "quick",
+        "order": 0
+      },
+      {
+        "id": "architecture",
+        "order": 1
+      },
+      {
+        "id": "full",
+        "order": 2
+      }
+    ],
+    "executions": [
+      {
+        "id": "layer:quick:1",
+        "order": 0,
+        "kind": "layer",
+        "layer": "quick",
+        "criterionId": null,
+        "command": "node --check bin/agent-harness.mjs",
+        "commandHash": "2cba605662495bbc7c8a69a7cf8b2eb907cf2b19e7f78a48dcd087fa488a60d6",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      },
+      {
+        "id": "layer:quick:2",
+        "order": 1,
+        "kind": "layer",
+        "layer": "quick",
+        "criterionId": null,
+        "command": "node --check bin/codex-harness.mjs",
+        "commandHash": "7a21ffc68dbb9904747abbae3a95c25388d0f575dfa52505be79e2c169e6a86c",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      },
+      {
+        "id": "layer:quick:3",
+        "order": 2,
+        "kind": "layer",
+        "layer": "quick",
+        "criterionId": null,
+        "command": "node --check skill/codex-harness/scripts/harness.mjs",
+        "commandHash": "593a04941efdde64664a264d5bcd98afdf3a5a1a840799bd17d8104353c101ef",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      },
+      {
+        "id": "layer:quick:4",
+        "order": 3,
+        "kind": "layer",
+        "layer": "quick",
+        "criterionId": null,
+        "command": "node --check skill/codex-harness/scripts/lib/core.mjs",
+        "commandHash": "90d950172fcd52fbac34b3ad809c47809e11d05a49ad0767fd6eef55277e6bfd",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      },
+      {
+        "id": "layer:quick:5",
+        "order": 4,
+        "kind": "layer",
+        "layer": "quick",
+        "criterionId": null,
+        "command": "node --check skill/codex-harness/assets/project-runtime.mjs",
+        "commandHash": "715eeccdade09fec192aa7d9473a3813eec70675b0d5cf1af9a2ecd26d5806de",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      },
+      {
+        "id": "layer:quick:6",
+        "order": 5,
+        "kind": "layer",
+        "layer": "quick",
+        "criterionId": null,
+        "command": "node --check skill/codex-harness/assets/precompact-handoff.mjs",
+        "commandHash": "b5c2a600e54b347e07e1f2ffc3185a201b1f91178e15eca11580fa2837540625",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      },
+      {
+        "id": "layer:quick:7",
+        "order": 6,
+        "kind": "layer",
+        "layer": "quick",
+        "criterionId": null,
+        "command": "node --check .harness/run.mjs",
+        "commandHash": "ab3ad0b9491eebd4f7c047a1d0ad2370c840df322f30ebceb3316e85feb98d4c",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      },
+      {
+        "id": "layer:quick:8",
+        "order": 7,
+        "kind": "layer",
+        "layer": "quick",
+        "criterionId": null,
+        "command": "node --check .harness/hooks/precompact-handoff.mjs",
+        "commandHash": "a829ee1f8cf21000a17db3df7f89f116321d5394007b21bce286b52f89e61e4d",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      },
+      {
+        "id": "layer:architecture:1",
+        "order": 8,
+        "kind": "layer",
+        "layer": "architecture",
+        "criterionId": null,
+        "command": "node bin/agent-harness.mjs audit . --min-score 95",
+        "commandHash": "bff6803a4d5838a35f67c4d917bd9cf926e9eff525e1c97fa5a106dc17f3f4cd",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      },
+      {
+        "id": "layer:full:1",
+        "order": 9,
+        "kind": "layer",
+        "layer": "full",
+        "criterionId": null,
+        "command": "node --test tests/harness.test.mjs",
+        "commandHash": "f40bb7156a72a1a2c844faebe4135273d929499b91f37f789a3c049973490c1c",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      },
+      {
+        "id": "acceptance:ac-1:1",
+        "order": 10,
+        "kind": "acceptance",
+        "layer": "acceptance",
+        "criterionId": "ac-1",
+        "command": "node --test tests/harness-continuity.test.mjs",
+        "commandHash": "40dd28691eff83c00ddbd446b9038972cc87d275157f95440c323d853616a656",
+        "commandRedacted": false,
+        "credentials": [],
+        "expected": {
+          "pass": true,
+          "exitCode": 0,
+          "timedOut": false
+        }
+      }
+    ],
+    "acceptanceCriteria": [
+      {
+        "id": "ac-1",
+        "order": 0,
+        "description": "Regression-suite-covers-lossless-baselines-bounded-bootstrap-worker-ownership-and-hook-context",
+        "executionId": "acceptance:ac-1:1",
+        "command": "node --test tests/harness-continuity.test.mjs",
+        "commandHash": "40dd28691eff83c00ddbd446b9038972cc87d275157f95440c323d853616a656",
+        "commandRedacted": false,
+        "credentials": []
+      }
+    ],
+    "scope": {
+      "enforcement": "required",
+      "allow": [
+        "skill/codex-harness/**",
+        "tests/harness*",
+        "AGENTS.md",
+        "README.md",
+        ".harness/**",
+        ".codex/hooks.json"
+      ],
+      "deny": [
+        ".git/**",
+        ".env",
+        ".env.*",
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/build/**"
+      ],
+      "baselineHash": "e380839dd24e92c0ef976aa8432859171199884234e0f3f5240c03ee420a743e",
+      "expectedViolations": []
+    },
+    "executionPolicy": {
+      "commandTimeoutMs": 600000
+    },
+    "evidencePolicy": {
+      "redactOutput": true,
+      "environmentAllow": [
+        "PATH",
+        "Path",
+        "PATHEXT",
+        "SystemRoot",
+        "ComSpec",
+        "TEMP",
+        "TMP",
+        "HOME",
+        "USERPROFILE",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "CI",
+        "NODE_ENV",
+        "GIT_CONFIG_COUNT",
+        "GIT_CONFIG_KEY_0",
+        "GIT_CONFIG_VALUE_0"
+      ]
+    }
+  },
+  "startedAt": "2026-10-07T00:40:43.419Z",
+  "finishedAt": "2026-10-07T00:42:46.008Z",
+  "pass": true,
+  "commands": [
+    {
+      "executionId": "layer:quick:1",
+      "executionOrder": 0,
+      "command": "node --check bin/agent-harness.mjs",
+      "layer": "quick",
+      "criterionId": null,
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 59,
+      "stdout": "",
+      "stderr": "",
+      "output": "",
+      "truncated": false,
+      "originalBytes": 0
+    },
+    {
+      "executionId": "layer:quick:2",
+      "executionOrder": 1,
+      "command": "node --check bin/codex-harness.mjs",
+      "layer": "quick",
+      "criterionId": null,
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 57,
+      "stdout": "",
+      "stderr": "",
+      "output": "",
+      "truncated": false,
+      "originalBytes": 0
+    },
+    {
+      "executionId": "layer:quick:3",
+      "executionOrder": 2,
+      "command": "node --check skill/codex-harness/scripts/harness.mjs",
+      "layer": "quick",
+      "criterionId": null,
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 57,
+      "stdout": "",
+      "stderr": "",
+      "output": "",
+      "truncated": false,
+      "originalBytes": 0
+    },
+    {
+      "executionId": "layer:quick:4",
+      "executionOrder": 3,
+      "command": "node --check skill/codex-harness/scripts/lib/core.mjs",
+      "layer": "quick",
+      "criterionId": null,
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 57,
+      "stdout": "",
+      "stderr": "",
+      "output": "",
+      "truncated": false,
+      "originalBytes": 0
+    },
+    {
+      "executionId": "layer:quick:5",
+      "executionOrder": 4,
+      "command": "node --check skill/codex-harness/assets/project-runtime.mjs",
+      "layer": "quick",
+      "criterionId": null,
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 65,
+      "stdout": "",
+      "stderr": "",
+      "output": "",
+      "truncated": false,
+      "originalBytes": 0
+    },
+    {
+      "executionId": "layer:quick:6",
+      "executionOrder": 5,
+      "command": "node --check skill/codex-harness/assets/precompact-handoff.mjs",
+      "layer": "quick",
+      "criterionId": null,
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 60,
+      "stdout": "",
+      "stderr": "",
+      "output": "",
+      "truncated": false,
+      "originalBytes": 0
+    },
+    {
+      "executionId": "layer:quick:7",
+      "executionOrder": 6,
+      "command": "node --check .harness/run.mjs",
+      "layer": "quick",
+      "criterionId": null,
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 59,
+      "stdout": "",
+      "stderr": "",
+      "output": "",
+      "truncated": false,
+      "originalBytes": 0
+    },
+    {
+      "executionId": "layer:quick:8",
+      "executionOrder": 7,
+      "command": "node --check .harness/hooks/precompact-handoff.mjs",
+      "layer": "quick",
+      "criterionId": null,
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 62,
+      "stdout": "",
+      "stderr": "",
+      "output": "",
+      "truncated": false,
+      "originalBytes": 0
+    },
+    {
+      "executionId": "layer:architecture:1",
+      "executionOrder": 8,
+      "command": "node bin/agent-harness.mjs audit . --min-score 95",
+      "layer": "architecture",
+      "criterionId": null,
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 105,
+      "stdout": "Harness audit: C:\\Users\\Jason\\Documents\\CoochieHarness\nOverall: 97/100\nCandidate bottleneck: state\nCritical structural failures: 0\n\ninstructions: 100/100 (15/15)\n  PASS codex instructions exist at AGENTS.md\n  PASS claude instructions exist at CLAUDE.md\n  PASS github-copilot instructions exist at .github/copilot-instructions.md\n  PASS Canonical AGENTS.md declares the Development-Harness Boundary\n  PASS Documentation router exists\n  PASS codex root guidance is at most 200 lines\n  PASS claude root guidance is at most 200 lines\n  PASS github-copilot root guidance is at most 200 lines\n  PASS codex instructions route to canonical harness guidance\n  PASS claude instructions route to canonical harness guidance\n  PASS github-copilot instructions route to canonical harness guidance\n  PASS No unresolved instruction merge additions remain\n  PASS Project purpose is concrete\n  PASS Required project docs are declared\n  PASS Declared project docs exist\n\ntools: 100/100 (12/12)\n  PASS Local deterministic runtime exists\n  PASS Local runtime is v6\n  PASS Command environment allowlist is declared\n  PASS Credential [REDACTED] environments are excluded from the ordinary command allowlist\n  PASS Credential [REDACTED] are explicit environment-backed pools\n  PASS Every requested credential [REDACTED] is configured\n  PASS Credential [REDACTED] environments are unique\n  PASS Credential [REDACTED] state is repository-local and non-secret\n  [REDACTED] Credential [REDACTED] state exists\n  PASS Command timeout is explicit\n  PASS Scope enforcement mode is explicit\n  PASS Lifecycle event journal exists\n\nenvironment: 100/100 (6/6)\n  PASS Execution profile exists\n  PASS Coding-agent instruction surfaces are declared\n  PASS Harness runtime is declared\n  PASS Minimum harness runtime version is declared\n  PASS Project stack is declared\n  PASS Setup/start/health surfaces are declared\n\nstate: 87/100 (13/15)\n  PASS config.json is valid JSON\n  PASS features.json is valid JSON\n  PASS continuity.json is valid JSON\n  PASS Every feature has the required typed fields\n  PASS Harness state schema versions are supported\n  PASS Continuity state schema and phase are supported\n  PASS Continuity generation is monotonic\n  PASS Awaiting-resume state has a handoff capsule\n  PASS Pending handoff matches the current feature revision\n  WARN Progress checkpoint matches the current feature revision\n  PASS Feature revision is monotonic state\n  PASS Active work respects the WIP limit\n  PASS Passing evidence chains are valid\n  WARN harness-self-host: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; harness-quality-record: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; orchestrated-worker-continuity: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; lock-ownership-sync-verification: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; repository-snapshot-scope-verification: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; credential-opt-in-isolation: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; help-dominant-option-validation: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; canonical-v5-asset-migration: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified\n  PASS Progress state exists\n\nfeedback: 100/100 (6/6)\n  PASS At least one project verification command is configured\n  PASS Full completion gate is configured\n  PASS Completion requires the full layer\n  PASS Behavior-specific acceptance commands are required\n  PASS Evidence is required by policy\n  PASS At least one evidence record exists\n\nscope: 100/100 (6/6)\n  PASS WIP limit is explicit\n  PASS Scope enforcement fails closed\n  PASS Default allowed scope is declared\n  PASS Default denied scope is declared\n  PASS Feature dependencies are explicit\n  PASS Feature acceptance criteria are explicit\n\nlifecycle: 91/100 (10/11)\n  PASS Handoff state exists\n  PASS Pre-compaction handoff adapter exists\n  PASS Codex automatic compaction routes through the worker-handoff guard\n  PASS No unresolved Codex hook merge addition remains\n  PASS Continuity keeps the development orchestrator active while fresh workers consume handoffs\n  PASS Dirty worktrees are recorded instead of blocking handoff\n  PASS Feature mutations stop after handoff\n  PASS Quality ledger exists\n  PASS Goal loop template exists\n  PASS Independent checker template exists\n  WARN Review and merge canonical runtime-v6 asset additions: .harness/docs-map.v6.addition.md\n\n",
+      "stderr": "",
+      "output": "Harness audit: C:\\Users\\Jason\\Documents\\CoochieHarness\nOverall: 97/100\nCandidate bottleneck: state\nCritical structural failures: 0\n\ninstructions: 100/100 (15/15)\n  PASS codex instructions exist at AGENTS.md\n  PASS claude instructions exist at CLAUDE.md\n  PASS github-copilot instructions exist at .github/copilot-instructions.md\n  PASS Canonical AGENTS.md declares the Development-Harness Boundary\n  PASS Documentation router exists\n  PASS codex root guidance is at most 200 lines\n  PASS claude root guidance is at most 200 lines\n  PASS github-copilot root guidance is at most 200 lines\n  PASS codex instructions route to canonical harness guidance\n  PASS claude instructions route to canonical harness guidance\n  PASS github-copilot instructions route to canonical harness guidance\n  PASS No unresolved instruction merge additions remain\n  PASS Project purpose is concrete\n  PASS Required project docs are declared\n  PASS Declared project docs exist\n\ntools: 100/100 (12/12)\n  PASS Local deterministic runtime exists\n  PASS Local runtime is v6\n  PASS Command environment allowlist is declared\n  PASS Credential [REDACTED] environments are excluded from the ordinary command allowlist\n  PASS Credential [REDACTED] are explicit environment-backed pools\n  PASS Every requested credential [REDACTED] is configured\n  PASS Credential [REDACTED] environments are unique\n  PASS Credential [REDACTED] state is repository-local and non-secret\n  [REDACTED] Credential [REDACTED] state exists\n  PASS Command timeout is explicit\n  PASS Scope enforcement mode is explicit\n  PASS Lifecycle event journal exists\n\nenvironment: 100/100 (6/6)\n  PASS Execution profile exists\n  PASS Coding-agent instruction surfaces are declared\n  PASS Harness runtime is declared\n  PASS Minimum harness runtime version is declared\n  PASS Project stack is declared\n  PASS Setup/start/health surfaces are declared\n\nstate: 87/100 (13/15)\n  PASS config.json is valid JSON\n  PASS features.json is valid JSON\n  PASS continuity.json is valid JSON\n  PASS Every feature has the required typed fields\n  PASS Harness state schema versions are supported\n  PASS Continuity state schema and phase are supported\n  PASS Continuity generation is monotonic\n  PASS Awaiting-resume state has a handoff capsule\n  PASS Pending handoff matches the current feature revision\n  WARN Progress checkpoint matches the current feature revision\n  PASS Feature revision is monotonic state\n  PASS Active work respects the WIP limit\n  PASS Passing evidence chains are valid\n  WARN harness-self-host: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; harness-quality-record: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; orchestrated-worker-continuity: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; lock-ownership-sync-verification: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; repository-snapshot-scope-verification: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; credential-opt-in-isolation: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; help-dominant-option-validation: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified; canonical-v5-asset-migration: legacy evidence schema v3 predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified\n  PASS Progress state exists\n\nfeedback: 100/100 (6/6)\n  PASS At least one project verification command is configured\n  PASS Full completion gate is configured\n  PASS Completion requires the full layer\n  PASS Behavior-specific acceptance commands are required\n  PASS Evidence is required by policy\n  PASS At least one evidence record exists\n\nscope: 100/100 (6/6)\n  PASS WIP limit is explicit\n  PASS Scope enforcement fails closed\n  PASS Default allowed scope is declared\n  PASS Default denied scope is declared\n  PASS Feature dependencies are explicit\n  PASS Feature acceptance criteria are explicit\n\nlifecycle: 91/100 (10/11)\n  PASS Handoff state exists\n  PASS Pre-compaction handoff adapter exists\n  PASS Codex automatic compaction routes through the worker-handoff guard\n  PASS No unresolved Codex hook merge addition remains\n  PASS Continuity keeps the development orchestrator active while fresh workers consume handoffs\n  PASS Dirty worktrees are recorded instead of blocking handoff\n  PASS Feature mutations stop after handoff\n  PASS Quality ledger exists\n  PASS Goal loop template exists\n  PASS Independent checker template exists\n  WARN Review and merge canonical runtime-v6 asset additions: .harness/docs-map.v6.addition.md\n\n",
+      "truncated": false,
+      "originalBytes": 5151
+    },
+    {
+      "executionId": "layer:full:1",
+      "executionOrder": 9,
+      "command": "node --test tests/harness.test.mjs",
+      "layer": "full",
+      "criterionId": null,
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 112472,
+      "stdout": "TAP version 13\n# Subtest: worker boundary: explicit claim, wrong owner, self resume and repeated resume fail without state writes\nok 1 - worker boundary: explicit claim, wrong owner, self resume and repeated resume fail without state writes\n  ---\n  duration_ms: 1732.3346\n  type: 'test'\n  ...\n# Subtest: worker boundary: normal yield and needs input revoke mutation until a distinct worker claims\nok 2 - worker boundary: normal yield and needs input revoke mutation until a distinct worker claims\n  ---\n  duration_ms: 1205.4876\n  type: 'test'\n  ...\n# Subtest: worker boundary: no shared-session identity fallback or host identity override\nok 3 - worker boundary: no shared-session identity fallback or host identity override\n  ---\n  duration_ms: 518.7482\n  type: 'test'\n  ...\n# Subtest: worker baseline: migration is lossless, idempotent and compact, preserving status and contracts\nok 4 - worker baseline: migration is lossless, idempotent and compact, preserving status and contracts\n  ---\n  duration_ms: 1086.9186\n  type: 'test'\n  ...\n# Subtest: worker bootstrap: historical feature volume and baseline maps never enter bounded startup\nok 5 - worker bootstrap: historical feature volume and baseline maps never enter bounded startup\n  ---\n  duration_ms: 504.5097\n  type: 'test'\n  ...\n# Subtest: worker hooks: owner transfer, routing parent isolation, missing identity and compact additionalContext\nok 6 - worker hooks: owner transfer, routing parent isolation, missing identity and compact additionalContext\n  ---\n  duration_ms: 991.957\n  type: 'test'\n  ...\n# Subtest: worker scope: staged rename into reserved baseline directory retains protected source deletion\nok 7 - worker scope: staged rename into reserved baseline directory retains protected source deletion\n  ---\n  duration_ms: 1295.2373\n  type: 'test'\n  ...\n# Subtest: worker routing: current blocked feature and parked decisions remain bounded and actionable\nok 8 - worker routing: current blocked feature and parked decisions remain bounded and actionable\n  ---\n  duration_ms: 1681.6311\n  type: 'test'\n  ...\n# Subtest: cli-help-option-validation: runtime help is command-specific and byte-stable without project state\nok 9 - cli-help-option-validation: runtime help is command-specific and byte-stable without project state\n  ---\n  duration_ms: 2591.5999\n  type: 'test'\n  ...\n# Subtest: cli-help-option-validation: every runtime mutator rejects unknown flags before locks or state reads\nok 10 - cli-help-option-validation: every runtime mutator rejects unknown flags before locks or state reads\n  ---\n  duration_ms: 532.4299\n  type: 'test'\n  ...\n# Subtest: cli-help-option-validation: reusable command help is non-mutating and both aliases are equivalent\nok 11 - cli-help-option-validation: reusable command help is non-mutating and both aliases are equivalent\n  ---\n  duration_ms: 1099.8467\n  type: 'test'\n  ...\n# Subtest: cli-help-option-validation: reusable mutators reject misspelled flags before scaffold or sync writes\nok 12 - cli-help-option-validation: reusable mutators reject misspelled flags before scaffold or sync writes\n  ---\n  duration_ms: 872.8928\n  type: 'test'\n  ...\n# Subtest: normalizes relative executable paths for cmd without changing POSIX commands\nok 13 - normalizes relative executable paths for cmd without changing POSIX commands\n  ---\n  duration_ms: 0.6832\n  type: 'test'\n  ...\n# Subtest: initialization and generated runtime execute a Windows relative-path command\nok 14 - initialization and generated runtime execute a Windows relative-path command\n  ---\n  duration_ms: 219.4412\n  type: 'test'\n  ...\n# Subtest: preserves existing guidance and fails until the harness route is merged\nok 15 - preserves existing guidance and fails until the harness route is merged\n  ---\n  duration_ms: 742.9931\n  type: 'test'\n  ...\n# Subtest: scaffolds native instructions for Codex, Claude Code, and GitHub Copilot\nok 16 - scaffolds native instructions for Codex, Claude Code, and GitHub Copilot\n  ---\n  duration_ms: 624.3383\n  type: 'test'\n  ...\n# Subtest: Codex automatic compaction parks a handoff and returns control to the persistent orchestrator\nok 17 - Codex automatic compaction parks a handoff and returns control to the persistent orchestrator\n  ---\n  duration_ms: 730.0721\n  type: 'test'\n  ...\n# Subtest: Codex compaction hook passes through non-automatic events without mutating continuity\nok 18 - Codex compaction hook passes through non-automatic events without mutating continuity\n  ---\n  duration_ms: 522.1661\n  type: 'test'\n  ...\n# Subtest: Codex compaction hook reuses an already-pending worker handoff idempotently\nok 19 - Codex compaction hook reuses an already-pending worker handoff idempotently\n  ---\n  duration_ms: 735.052\n  type: 'test'\n  ...\n# Subtest: preserves existing Claude and Copilot instructions and emits reviewable additions\nok 20 - preserves existing Claude and Copilot instructions and emits reviewable additions\n  ---\n  duration_ms: 469.8024\n  type: 'test'\n  ...\n# Subtest: requires executable acceptance and bounded scope\nok 21 - requires executable acceptance and bounded scope\n  ---\n  duration_ms: 590.6737\n  type: 'test'\n  ...\n# Subtest: enforces WIP and only cumulative verification can create passing state\nok 22 - enforces WIP and only cumulative verification can create passing state\n  ---\n  duration_ms: 3510.4007\n  type: 'test'\n  ...\n# Subtest: writes a bounded checkpoint without ending the working session\nok 23 - writes a bounded checkpoint without ending the working session\n  ---\n  duration_ms: 990.0309\n  type: 'test'\n  ...\n# Subtest: session --json exposes only the compact delegated-worker routing packet\nok 24 - session --json exposes only the compact delegated-worker routing packet\n  ---\n  duration_ms: 941.2957\n  type: 'test'\n  ...\n# Subtest: needs-input and worker-yield checkpoints keep the orchestrator session working without resume\nok 25 - needs-input and worker-yield checkpoints keep the orchestrator session working without resume\n  ---\n  duration_ms: 2702.3848\n  type: 'test'\n  ...\n# Subtest: makes handoff and resume idempotent when command output is lost\nok 26 - makes handoff and resume idempotent when command output is lost\n  ---\n  duration_ms: 950.8313\n  type: 'test'\n  ...\n# Subtest: repository-snapshot detects user-editable harness drift before consuming a handoff capsule\nok 27 - repository-snapshot detects user-editable harness drift before consuming a handoff capsule\n  ---\n  duration_ms: 991.1622\n  type: 'test'\n  ...\n# Subtest: repository-snapshot keeps durable harness state inside continuity drift hashes\nok 28 - repository-snapshot keeps durable harness state inside continuity drift hashes\n  ---\n  duration_ms: 820.2627\n  type: 'test'\n  ...\n# Subtest: runs configured layers cumulatively instead of selecting an easier tier\nok 29 - runs configured layers cumulatively instead of selecting an easier tier\n  ---\n  duration_ms: 1293.6696\n  type: 'test'\n  ...\n# Subtest: freezes a feature contract when work starts\nok 30 - freezes a feature contract when work starts\n  ---\n  duration_ms: 810.118\n  type: 'test'\n  ...\n# Subtest: repository-snapshot captures status beyond 30 KB and preserves NUL-safe unusual paths\nok 31 - repository-snapshot captures status beyond 30 KB and preserves NUL-safe unusual paths\n  ---\n  duration_ms: 3319.155\n  type: 'test'\n  ...\n# Subtest: repository-snapshot fails closed when exact Git output exceeds its bound\nok 32 - repository-snapshot fails closed when exact Git output exceeds its bound\n  ---\n  duration_ms: 741.5599\n  type: 'test'\n  ...\n# Subtest: repository-snapshot preserves literal POSIX backslashes during scope matching\nok 33 - repository-snapshot preserves literal POSIX backslashes during scope matching # SKIP\n  ---\n  duration_ms: 0.2097\n  type: 'test'\n  ...\n# Subtest: repository-snapshot expands untracked directories and enforces scope on their actual files\nok 34 - repository-snapshot expands untracked directories and enforces scope on their actual files\n  ---\n  duration_ms: 1243.3827\n  type: 'test'\n  ...\n# Subtest: repository-snapshot unions committed paths without blaming unchanged baseline dirt\nok 35 - repository-snapshot unions committed paths without blaming unchanged baseline dirt\n  ---\n  duration_ms: 1525.4481\n  type: 'test'\n  ...\n# Subtest: repository-snapshot does not exempt user-editable harness policy or runtime files from feature scope\nok 36 - repository-snapshot does not exempt user-editable harness policy or runtime files from feature scope\n  ---\n  duration_ms: 1335.8795\n  type: 'test'\n  ...\n# Subtest: repository-snapshot enforces both sides of a staged rename across the scope boundary\nok 37 - repository-snapshot enforces both sides of a staged rename across the scope boundary\n  ---\n  duration_ms: 1540.9348\n  type: 'test'\n  ...\n# Subtest: repository-snapshot enforces a staged deletion across the scope boundary\nok 38 - repository-snapshot enforces a staged deletion across the scope boundary\n  ---\n  duration_ms: 1613.339\n  type: 'test'\n  ...\n# Subtest: failed verification records evidence and bounded repeated failures block work\nok 39 - failed verification records evidence and bounded repeated failures block work\n  ---\n  duration_ms: 3508.8476\n  type: 'test'\n  ...\n# Subtest: detects tampered passing evidence\nok 40 - detects tampered passing evidence\n  ---\n  duration_ms: 2325.7592\n  type: 'test'\n  ...\n# Subtest: evidence-plan writes a canonical historical manifest with exact ordered result coverage\nok 41 - evidence-plan writes a canonical historical manifest with exact ordered result coverage\n  ---\n  duration_ms: 2371.0706\n  type: 'test'\n  ...\n# Subtest: evidence-plan rejects removed extra duplicate or unsuccessful planned command results\n    # Subtest: removed command result\n    ok 1 - removed command result\n      ---\n      duration_ms: 148.621\n      type: 'test'\n      ...\n    # Subtest: extra command result\n    ok 2 - extra command result\n      ---\n      duration_ms: 143.8068\n      type: 'test'\n      ...\n    # Subtest: duplicate command result\n    ok 3 - duplicate command result\n      ---\n      duration_ms: 139.5273\n      type: 'test'\n      ...\n    # Subtest: removed acceptance result\n    ok 4 - removed acceptance result\n      ---\n      duration_ms: 140.5865\n      type: 'test'\n      ...\n    # Subtest: changed exit code\n    ok 5 - changed exit code\n      ---\n      duration_ms: 155.17\n      type: 'test'\n      ...\n    # Subtest: changed result pass flag\n    ok 6 - changed result pass flag\n      ---\n      duration_ms: 155.8159\n      type: 'test'\n      ...\n    1..6\nok 42 - evidence-plan rejects removed extra duplicate or unsuccessful planned command results\n  ---\n  duration_ms: 3059.0489\n  type: 'test'\n  ...\n# Subtest: evidence-plan rejects altered layers criteria hashes scope and relationship fields\n    # Subtest: removed required layer\n    ok 1 - removed required layer\n      ---\n      duration_ms: 147.8721\n      type: 'test'\n      ...\n    # Subtest: altered required layer\n    ok 2 - altered required layer\n      ---\n      duration_ms: 148.4014\n      type: 'test'\n      ...\n    # Subtest: altered planned command\n    ok 3 - altered planned command\n      ---\n      duration_ms: 137.4658\n      type: 'test'\n      ...\n    # Subtest: removed acceptance criterion\n    ok 4 - removed acceptance criterion\n      ---\n      duration_ms: 141.1792\n      type: 'test'\n      ...\n    # Subtest: changed snapshot with stale hash\n    ok 5 - changed snapshot with stale hash\n      ---\n      duration_ms: 134.9937\n      type: 'test'\n      ...\n    # Subtest: changed verification hash\n    ok 6 - changed verification hash\n      ---\n      duration_ms: 152.1689\n      type: 'test'\n      ...\n    # Subtest: nonempty scope violations\n    ok 7 - nonempty scope violations\n      ---\n      duration_ms: 152.7554\n      type: 'test'\n      ...\n    # Subtest: unknown future evidence schema\n    ok 8 - unknown future evidence schema\n      ---\n      duration_ms: 153.4776\n      type: 'test'\n      ...\n    # Subtest: unknown future verification-plan schema\n    ok 9 - unknown future verification-plan schema\n      ---\n      duration_ms: 157.0524\n      type: 'test'\n      ...\n    # Subtest: mismatched feature field\n    ok 10 - mismatched feature field\n      ---\n      duration_ms: 135.3603\n      type: 'test'\n      ...\n    # Subtest: mismatched contract field\n    ok 11 - mismatched contract field\n      ---\n      duration_ms: 140.5018\n      type: 'test'\n      ...\n    # Subtest: mismatched config field\n    ok 12 - mismatched config field\n      ---\n      duration_ms: 148.4648\n      type: 'test'\n      ...\n    1..12\nok 43 - evidence-plan rejects altered layers criteria hashes scope and relationship fields\n  ---\n  duration_ms: 4018.085\n  type: 'test'\n  ...\n# Subtest: evidence-plan keeps legacy evidence usable with an explicit non-plan-verified warning\nok 44 - evidence-plan keeps legacy evidence usable with an explicit non-plan-verified warning\n  ---\n  duration_ms: 2377.1408\n  type: 'test'\n  ...\n# Subtest: redacts common secrets from durable command evidence\nok 45 - redacts common secrets from durable command evidence\n  ---\n  duration_ms: 2219.5306\n  type: 'test'\n  ...\n# Subtest: redacts the values of allowlisted secret [REDACTED] variables\nok 46 - redacts the values of allowlisted secret [REDACTED] variables\n  ---\n  duration_ms: 2247.4568\n  type: 'test'\n  ...\n# Subtest: redacts configured provider values from continuity capsules and projections\nok 47 - redacts configured provider values from continuity capsules and projections\n  ---\n  duration_ms: 972.0668\n  type: 'test'\n  ...\n# Subtest: rejects built-in and custom provider environments in the ordinary allowlist without exposing values\nok 48 - rejects built-in and custom provider environments in the ordinary allowlist without exposing values\n  ---\n  duration_ms: 747.2127\n  type: 'test'\n  ...\n# Subtest: defensively strips every provider source and target from uncredentialed commands\nok 49 - defensively strips every provider source and target from uncredentialed commands\n  ---\n  duration_ms: 2911.5747\n  type: 'test'\n  ...\n# Subtest: injects only the explicitly requested custom provider target without cross-provider leakage\nok 50 - injects only the explicitly requested custom provider target without cross-provider leakage\n  ---\n  duration_ms: 2636.6402\n  type: 'test'\n  ...\n# Subtest: does not retry a failed credentialed command with another available slot\nok 51 - does not retry a failed credentialed command with another available slot\n  ---\n  duration_ms: 2596.1152\n  type: 'test'\n  ...\n# Subtest: keeps provider keys out of commands that do not explicitly request them\nok 52 - keeps provider keys out of commands that do not explicitly request them\n  ---\n  duration_ms: 2263.2381\n  type: 'test'\n  ...\n# Subtest: round-robins multiple Anthropic keys across runs and persists only slot metadata\nok 53 - round-robins multiple Anthropic keys across runs and persists only slot metadata\n  ---\n  duration_ms: 3816.5389\n  type: 'test'\n  ...\n# Subtest: fails before a credentialed command when no provider key is available\nok 54 - fails before a credentialed command when no provider key is available\n  ---\n  duration_ms: 2091.0273\n  type: 'test'\n  ...\n# Subtest: reports provider slot availability without printing key values\nok 55 - reports provider slot availability without printing key values\n  ---\n  duration_ms: 544.2439\n  type: 'test'\n  ...\n# Subtest: redacts custom provider sources even when their environment names do not look secret\n[REDACTED] 56 - redacts custom provider sources even when their environment names do not look secret\n  [REDACTED]\n  duration_ms: 2128.9094\n  type: 'test'\n  ...\n# Subtest: rejects dependency cycles during doctor checks\nok 57 - rejects dependency cycles during doctor checks\n  ---\n  duration_ms: 630.7941\n  type: 'test'\n  ...\n# Subtest: repository-snapshot fails closed when Git-backed scope state is unavailable\nok 58 - repository-snapshot fails closed when Git-backed scope state is unavailable\n  ---\n  duration_ms: 752.9223\n  type: 'test'\n  ...\n# Subtest: repository-snapshot rejects a legacy feature baseline instead of waiving history\nok 59 - repository-snapshot rejects a legacy feature baseline instead of waiving history\n  ---\n  duration_ms: 998.5927\n  type: 'test'\n  ...\n# Subtest: repository-snapshot binds the starting HEAD and tree into the frozen contract\nok 60 - repository-snapshot binds the starting HEAD and tree into the frozen contract\n  ---\n  duration_ms: 1224.8806\n  type: 'test'\n  ...\n# Subtest: repository-snapshot fails closed when Git disappears after feature start\nok 61 - repository-snapshot fails closed when Git disappears after feature start\n  ---\n  duration_ms: 1011.6842\n  type: 'test'\n  ...\n# Subtest: repository-snapshot fails closed for unrelated or rewritten history\nok 62 - repository-snapshot fails closed for unrelated or rewritten history\n  ---\n  duration_ms: 1496.0668\n  type: 'test'\n  ...\n# Subtest: repository-snapshot rejects newly changed files outside feature scope\nok 63 - repository-snapshot rejects newly changed files outside feature scope\n  ---\n  duration_ms: 1609.6635\n  type: 'test'\n  ...\n# Subtest: repository-snapshot keeps transient locks and Git diagnostics out of scope baselines\nok 64 - repository-snapshot keeps transient locks and Git diagnostics out of scope baselines\n  ---\n  duration_ms: 703.0015\n  type: 'test'\n  ...\n# Subtest: suggests the next dependency-ready feature deterministically\nok 65 - suggests the next dependency-ready feature deterministically\n  ---\n  duration_ms: 2378.6735\n  type: 'test'\n  ...\n# Subtest: evidence-plan accepts normal post-pass config evolution without consulting mutable config\nok 66 - evidence-plan accepts normal post-pass config evolution without consulting mutable config\n  ---\n  duration_ms: 2187.4083\n  type: 'test'\n  ...\n# Subtest: serializes mutating operations with a recoverable state lock\nok 67 - serializes mutating operations with a recoverable state lock\n  ---\n  duration_ms: 507.9571\n  type: 'test'\n  ...\n# Subtest: never age-steals a backdated lock whose owner PID is alive\nok 68 - never age-steals a backdated lock whose owner PID is alive\n  ---\n  duration_ms: 512.4672\n  type: 'test'\n  ...\n# Subtest: recovers a lock owned by a process that no longer exists\nok 69 - recovers a lock owned by a process that no longer exists\n  ---\n  duration_ms: 528.002\n  type: 'test'\n  ...\n# Subtest: sync recovers a tokenized lock owned by a process that no longer exists\nok 70 - sync recovers a tokenized lock owned by a process that no longer exists\n  ---\n  duration_ms: 478.8736\n  type: 'test'\n  ...\n# Subtest: recovers an old ownerless lock but preserves a young one\nok 71 - recovers an old ownerless lock but preserves a young one\n  ---\n  duration_ms: 571.4689\n  type: 'test'\n  ...\n# Subtest: an old owner cannot delete a replacement owner lock\nok 72 - an old owner cannot delete a replacement owner lock\n  ---\n  duration_ms: 1381.6284\n  type: 'test'\n  ...\n# Subtest: sync upgrades every exact canonical runtime-v5 worker and docs asset to runtime v6\nok 73 - sync upgrades every exact canonical runtime-v5 worker and docs asset to runtime v6\n  ---\n  duration_ms: 634.1196\n  type: 'test'\n  ...\n# Subtest: sync accepts only CRLF-to-LF normalization for known runtime-v5 asset identities\nok 74 - sync accepts only CRLF-to-LF normalization for known runtime-v5 asset identities\n  ---\n  duration_ms: 563.4066\n  type: 'test'\n  ...\n# Subtest: sync preserves customized and unknown assets with actionable v6 additions and a resolved lifecycle\nok 75 - sync preserves customized and unknown assets with actionable v6 additions and a resolved lifecycle\n  ---\n  duration_ms: 975.0447\n  type: 'test'\n  ...\n# Subtest: sync leaves current canonical runtime-v6 worker and docs assets byte-for-byte unchanged\nok 76 - sync leaves current canonical runtime-v6 worker and docs assets byte-for-byte unchanged\n  ---\n  duration_ms: 686.298\n  type: 'test'\n  ...\n# Subtest: sync respects the runtime state lock and leaves project state untouched on contention\nok 77 - sync respects the runtime state lock and leaves project state untouched on contention\n  ---\n  duration_ms: 1467.756\n  type: 'test'\n  ...\n# Subtest: concurrent syncs have a single atomic state lock owner and preserve valid state\nok 78 - concurrent syncs have a single atomic state lock owner and preserve valid state\n  ---\n  duration_ms: 546.501\n  type: 'test'\n  ...\n# Subtest: sync flags routed canonical instructions that lack the development boundary\nok 79 - sync flags routed canonical instructions that lack the development boundary\n  ---\n  duration_ms: 605.6385\n  type: 'test'\n  ...\n# Subtest: sync flags otherwise-routed v5 instructions that impose a restrictive global chat boundary\nok 80 - sync flags otherwise-routed v5 instructions that impose a restrictive global chat boundary\n  ---\n  duration_ms: 484.5942\n  type: 'test'\n  ...\n# Subtest: sync force-refreshes a stale generated precompact hook\nok 81 - sync force-refreshes a stale generated precompact hook\n  ---\n  duration_ms: 487.4312\n  type: 'test'\n  ...\n# Subtest: selective agent initialization and sync never recreate a disabled Claude adapter\nok 82 - selective agent initialization and sync never recreate a disabled Claude adapter\n  ---\n  duration_ms: 79.352\n  type: 'test'\n  ...\n# Subtest: init and sync preserve a seeded product-agent runtime byte-for-byte\nok 83 - init and sync preserve a seeded product-agent runtime byte-for-byte\n  ---\n  duration_ms: 72.9108\n  type: 'test'\n  ...\n# Subtest: sync preserves a pending handoff barrier and refuses to erase a corrupt one\nok 84 - sync preserves a pending handoff barrier and refuses to erase a corrupt one\n  ---\n  duration_ms: 639.4862\n  type: 'test'\n  ...\n# Subtest: sync is idempotent and migrates legacy state without discarding project facts\nok 85 - sync is idempotent and migrates legacy state without discarding project facts\n  ---\n  duration_ms: 515.0486\n  type: 'test'\n  ...\n# Subtest: skill metadata satisfies the dependency-free package contract\nok 86 - skill metadata satisfies the dependency-free package contract\n  ---\n  duration_ms: 2.5187\n  type: 'test'\n  ...\n1..86\n# tests 104\n# suites 0\n# pass 103\n# fail 0\n# cancelled 0\n# skipped 1\n# todo 0\n# duration_ms 112399.8825\n",
+      "stderr": "",
+      "output": "TAP version 13\n# Subtest: worker boundary: explicit claim, wrong owner, self resume and repeated resume fail without state writes\nok 1 - worker boundary: explicit claim, wrong owner, self resume and repeated resume fail without state writes\n  ---\n  duration_ms: 1732.3346\n  type: 'test'\n  ...\n# Subtest: worker boundary: normal yield and needs input revoke mutation until a distinct worker claims\nok 2 - worker boundary: normal yield and needs input revoke mutation until a distinct worker claims\n  ---\n  duration_ms: 1205.4876\n  type: 'test'\n  ...\n# Subtest: worker boundary: no shared-session identity fallback or host identity override\nok 3 - worker boundary: no shared-session identity fallback or host identity override\n  ---\n  duration_ms: 518.7482\n  type: 'test'\n  ...\n# Subtest: worker baseline: migration is lossless, idempotent and compact, preserving status and contracts\nok 4 - worker baseline: migration is lossless, idempotent and compact, preserving status and contracts\n  ---\n  duration_ms: 1086.9186\n  type: 'test'\n  ...\n# Subtest: worker bootstrap: historical feature volume and baseline maps never enter bounded startup\nok 5 - worker bootstrap: historical feature volume and baseline maps never enter bounded startup\n  ---\n  duration_ms: 504.5097\n  type: 'test'\n  ...\n# Subtest: worker hooks: owner transfer, routing parent isolation, missing identity and compact additionalContext\nok 6 - worker hooks: owner transfer, routing parent isolation, missing identity and compact additionalContext\n  ---\n  duration_ms: 991.957\n  type: 'test'\n  ...\n# Subtest: worker scope: staged rename into reserved baseline directory retains protected source deletion\nok 7 - worker scope: staged rename into reserved baseline directory retains protected source deletion\n  ---\n  duration_ms: 1295.2373\n  type: 'test'\n  ...\n# Subtest: worker routing: current blocked feature and parked decisions remain bounded and actionable\nok 8 - worker routing: current blocked feature and parked decisions remain bounded and actionable\n  ---\n  duration_ms: 1681.6311\n  type: 'test'\n  ...\n# Subtest: cli-help-option-validation: runtime help is command-specific and byte-stable without project state\nok 9 - cli-help-option-validation: runtime help is command-specific and byte-stable without project state\n  ---\n  duration_ms: 2591.5999\n  type: 'test'\n  ...\n# Subtest: cli-help-option-validation: every runtime mutator rejects unknown flags before locks or state reads\nok 10 - cli-help-option-validation: every runtime mutator rejects unknown flags before locks or state reads\n  ---\n  duration_ms: 532.4299\n  type: 'test'\n  ...\n# Subtest: cli-help-option-validation: reusable command help is non-mutating and both aliases are equivalent\nok 11 - cli-help-option-validation: reusable command help is non-mutating and both aliases are equivalent\n  ---\n  duration_ms: 1099.8467\n  type: 'test'\n  ...\n# Subtest: cli-help-option-validation: reusable mutators reject misspelled flags before scaffold or sync writes\nok 12 - cli-help-option-validation: reusable mutators reject misspelled flags before scaffold or sync writes\n  ---\n  duration_ms: 872.8928\n  type: 'test'\n  ...\n# Subtest: normalizes relative executable paths for cmd without changing POSIX commands\nok 13 - normalizes relative executable paths for cmd without changing POSIX commands\n  ---\n  duration_ms: 0.6832\n  type: 'test'\n  ...\n# Subtest: initialization and generated runtime execute a Windows relative-path command\nok 14 - initialization and generated runtime execute a Windows relative-path command\n  ---\n  duration_ms: 219.4412\n  type: 'test'\n  ...\n# Subtest: preserves existing guidance and fails until the harness route is merged\nok 15 - preserves existing guidance and fails until the harness route is merged\n  ---\n  duration_ms: 742.9931\n  type: 'test'\n  ...\n# Subtest: scaffolds native instructions for Codex, Claude Code, and GitHub Copilot\nok 16 - scaffolds native instructions for Codex, Claude Code, and GitHub Copilot\n  ---\n  duration_ms: 624.3383\n  type: 'test'\n  ...\n# Subtest: Codex automatic compaction parks a handoff and returns control to the persistent orchestrator\nok 17 - Codex automatic compaction parks a handoff and returns control to the persistent orchestrator\n  ---\n  duration_ms: 730.0721\n  type: 'test'\n  ...\n# Subtest: Codex compaction hook passes through non-automatic events without mutating continuity\nok 18 - Codex compaction hook passes through non-automatic events without mutating continuity\n  ---\n  duration_ms: 522.1661\n  type: 'test'\n  ...\n# Subtest: Codex compaction hook reuses an already-pending worker handoff idempotently\nok 19 - Codex compaction hook reuses an already-pending worker handoff idempotently\n  ---\n  duration_ms: 735.052\n  type: 'test'\n  ...\n# Subtest: preserves existing Claude and Copilot instructions and emits reviewable additions\nok 20 - preserves existing Claude and Copilot instructions and emits reviewable additions\n  ---\n  duration_ms: 469.8024\n  type: 'test'\n  ...\n# Subtest: requires executable acceptance and bounded scope\nok 21 - requires executable acceptance and bounded scope\n  ---\n  duration_ms: 590.6737\n  type: 'test'\n  ...\n# Subtest: enforces WIP and only cumulative verification can create passing state\nok 22 - enforces WIP and only cumulative verification can create passing state\n  ---\n  duration_ms: 3510.4007\n  type: 'test'\n  ...\n# Subtest: writes a bounded checkpoint without ending the working session\nok 23 - writes a bounded checkpoint without ending the working session\n  ---\n  duration_ms: 990.0309\n  type: 'test'\n  ...\n# Subtest: session --json exposes only the compact delegated-worker routing packet\nok 24 - session --json exposes only the compact delegated-worker routing packet\n  ---\n  duration_ms: 941.2957\n  type: 'test'\n  ...\n# Subtest: needs-input and worker-yield checkpoints keep the orchestrator session working without resume\nok 25 - needs-input and worker-yield checkpoints keep the orchestrator session working without resume\n  ---\n  duration_ms: 2702.3848\n  type: 'test'\n  ...\n# Subtest: makes handoff and resume idempotent when command output is lost\nok 26 - makes handoff and resume idempotent when command output is lost\n  ---\n  duration_ms: 950.8313\n  type: 'test'\n  ...\n# Subtest: repository-snapshot detects user-editable harness drift before consuming a handoff capsule\nok 27 - repository-snapshot detects user-editable harness drift before consuming a handoff capsule\n  ---\n  duration_ms: 991.1622\n  type: 'test'\n  ...\n# Subtest: repository-snapshot keeps durable harness state inside continuity drift hashes\nok 28 - repository-snapshot keeps durable harness state inside continuity drift hashes\n  ---\n  duration_ms: 820.2627\n  type: 'test'\n  ...\n# Subtest: runs configured layers cumulatively instead of selecting an easier tier\nok 29 - runs configured layers cumulatively instead of selecting an easier tier\n  ---\n  duration_ms: 1293.6696\n  type: 'test'\n  ...\n# Subtest: freezes a feature contract when work starts\nok 30 - freezes a feature contract when work starts\n  ---\n  duration_ms: 810.118\n  type: 'test'\n  ...\n# Subtest: repository-snapshot captures status beyond 30 KB and preserves NUL-safe unusual paths\nok 31 - repository-snapshot captures status beyond 30 KB and preserves NUL-safe unusual paths\n  ---\n  duration_ms: 3319.155\n  type: 'test'\n  ...\n# Subtest: repository-snapshot fails closed when exact Git output exceeds its bound\nok 32 - repository-snapshot fails closed when exact Git output exceeds its bound\n  ---\n  duration_ms: 741.5599\n  type: 'test'\n  ...\n# Subtest: repository-snapshot preserves literal POSIX backslashes during scope matching\nok 33 - repository-snapshot preserves literal POSIX backslashes during scope matching # SKIP\n  ---\n  duration_ms: 0.2097\n  type: 'test'\n  ...\n# Subtest: repository-snapshot expands untracked directories and enforces scope on their actual files\nok 34 - repository-snapshot expands untracked directories and enforces scope on their actual files\n  ---\n  duration_ms: 1243.3827\n  type: 'test'\n  ...\n# Subtest: repository-snapshot unions committed paths without blaming unchanged baseline dirt\nok 35 - repository-snapshot unions committed paths without blaming unchanged baseline dirt\n  ---\n  duration_ms: 1525.4481\n  type: 'test'\n  ...\n# Subtest: repository-snapshot does not exempt user-editable harness policy or runtime files from feature scope\nok 36 - repository-snapshot does not exempt user-editable harness policy or runtime files from feature scope\n  ---\n  duration_ms: 1335.8795\n  type: 'test'\n  ...\n# Subtest: repository-snapshot enforces both sides of a staged rename across the scope boundary\nok 37 - repository-snapshot enforces both sides of a staged rename across the scope boundary\n  ---\n  duration_ms: 1540.9348\n  type: 'test'\n  ...\n# Subtest: repository-snapshot enforces a staged deletion across the scope boundary\nok 38 - repository-snapshot enforces a staged deletion across the scope boundary\n  ---\n  duration_ms: 1613.339\n  type: 'test'\n  ...\n# Subtest: failed verification records evidence and bounded repeated failures block work\nok 39 - failed verification records evidence and bounded repeated failures block work\n  ---\n  duration_ms: 3508.8476\n  type: 'test'\n  ...\n# Subtest: detects tampered passing evidence\nok 40 - detects tampered passing evidence\n  ---\n  duration_ms: 2325.7592\n  type: 'test'\n  ...\n# Subtest: evidence-plan writes a canonical historical manifest with exact ordered result coverage\nok 41 - evidence-plan writes a canonical historical manifest with exact ordered result coverage\n  ---\n  duration_ms: 2371.0706\n  type: 'test'\n  ...\n# Subtest: evidence-plan rejects removed extra duplicate or unsuccessful planned command results\n    # Subtest: removed command result\n    ok 1 - removed command result\n      ---\n      duration_ms: 148.621\n      type: 'test'\n      ...\n    # Subtest: extra command result\n    ok 2 - extra command result\n      ---\n      duration_ms: 143.8068\n      type: 'test'\n      ...\n    # Subtest: duplicate command result\n    ok 3 - duplicate command result\n      ---\n      duration_ms: 139.5273\n      type: 'test'\n      ...\n    # Subtest: removed acceptance result\n    ok 4 - removed acceptance result\n      ---\n      duration_ms: 140.5865\n      type: 'test'\n      ...\n    # Subtest: changed exit code\n    ok 5 - changed exit code\n      ---\n      duration_ms: 155.17\n      type: 'test'\n      ...\n    # Subtest: changed result pass flag\n    ok 6 - changed result pass flag\n      ---\n      duration_ms: 155.8159\n      type: 'test'\n      ...\n    1..6\nok 42 - evidence-plan rejects removed extra duplicate or unsuccessful planned command results\n  ---\n  duration_ms: 3059.0489\n  type: 'test'\n  ...\n# Subtest: evidence-plan rejects altered layers criteria hashes scope and relationship fields\n    # Subtest: removed required layer\n    ok 1 - removed required layer\n      ---\n      duration_ms: 147.8721\n      type: 'test'\n      ...\n    # Subtest: altered required layer\n    ok 2 - altered required layer\n      ---\n      duration_ms: 148.4014\n      type: 'test'\n      ...\n    # Subtest: altered planned command\n    ok 3 - altered planned command\n      ---\n      duration_ms: 137.4658\n      type: 'test'\n      ...\n    # Subtest: removed acceptance criterion\n    ok 4 - removed acceptance criterion\n      ---\n      duration_ms: 141.1792\n      type: 'test'\n      ...\n    # Subtest: changed snapshot with stale hash\n    ok 5 - changed snapshot with stale hash\n      ---\n      duration_ms: 134.9937\n      type: 'test'\n      ...\n    # Subtest: changed verification hash\n    ok 6 - changed verification hash\n      ---\n      duration_ms: 152.1689\n      type: 'test'\n      ...\n    # Subtest: nonempty scope violations\n    ok 7 - nonempty scope violations\n      ---\n      duration_ms: 152.7554\n      type: 'test'\n      ...\n    # Subtest: unknown future evidence schema\n    ok 8 - unknown future evidence schema\n      ---\n      duration_ms: 153.4776\n      type: 'test'\n      ...\n    # Subtest: unknown future verification-plan schema\n    ok 9 - unknown future verification-plan schema\n      ---\n      duration_ms: 157.0524\n      type: 'test'\n      ...\n    # Subtest: mismatched feature field\n    ok 10 - mismatched feature field\n      ---\n      duration_ms: 135.3603\n      type: 'test'\n      ...\n    # Subtest: mismatched contract field\n    ok 11 - mismatched contract field\n      ---\n      duration_ms: 140.5018\n      type: 'test'\n      ...\n    # Subtest: mismatched config field\n    ok 12 - mismatched config field\n      ---\n      duration_ms: 148.4648\n      type: 'test'\n      ...\n    1..12\nok 43 - evidence-plan rejects altered layers criteria hashes scope and relationship fields\n  ---\n  duration_ms: 4018.085\n  type: 'test'\n  ...\n# Subtest: evidence-plan keeps legacy evidence usable with an explicit non-plan-verified warning\nok 44 - evidence-plan keeps legacy evidence usable with an explicit non-plan-verified warning\n  ---\n  duration_ms: 2377.1408\n  type: 'test'\n  ...\n# Subtest: redacts common secrets from durable command evidence\nok 45 - redacts common secrets from durable command evidence\n  ---\n  duration_ms: 2219.5306\n  type: 'test'\n  ...\n# Subtest: redacts the values of allowlisted secret [REDACTED] variables\nok 46 - redacts the values of allowlisted secret [REDACTED] variables\n  ---\n  duration_ms: 2247.4568\n  type: 'test'\n  ...\n# Subtest: redacts configured provider values from continuity capsules and projections\nok 47 - redacts configured provider values from continuity capsules and projections\n  ---\n  duration_ms: 972.0668\n  type: 'test'\n  ...\n# Subtest: rejects built-in and custom provider environments in the ordinary allowlist without exposing values\nok 48 - rejects built-in and custom provider environments in the ordinary allowlist without exposing values\n  ---\n  duration_ms: 747.2127\n  type: 'test'\n  ...\n# Subtest: defensively strips every provider source and target from uncredentialed commands\nok 49 - defensively strips every provider source and target from uncredentialed commands\n  ---\n  duration_ms: 2911.5747\n  type: 'test'\n  ...\n# Subtest: injects only the explicitly requested custom provider target without cross-provider leakage\nok 50 - injects only the explicitly requested custom provider target without cross-provider leakage\n  ---\n  duration_ms: 2636.6402\n  type: 'test'\n  ...\n# Subtest: does not retry a failed credentialed command with another available slot\nok 51 - does not retry a failed credentialed command with another available slot\n  ---\n  duration_ms: 2596.1152\n  type: 'test'\n  ...\n# Subtest: keeps provider keys out of commands that do not explicitly request them\nok 52 - keeps provider keys out of commands that do not explicitly request them\n  ---\n  duration_ms: 2263.2381\n  type: 'test'\n  ...\n# Subtest: round-robins multiple Anthropic keys across runs and persists only slot metadata\nok 53 - round-robins multiple Anthropic keys across runs and persists only slot metadata\n  ---\n  duration_ms: 3816.5389\n  type: 'test'\n  ...\n# Subtest: fails before a credentialed command when no provider key is available\nok 54 - fails before a credentialed command when no provider key is available\n  ---\n  duration_ms: 2091.0273\n  type: 'test'\n  ...\n# Subtest: reports provider slot availability without printing key values\nok 55 - reports provider slot availability without printing key values\n  ---\n  duration_ms: 544.2439\n  type: 'test'\n  ...\n# Subtest: redacts custom provider sources even when their environment names do not look secret\n[REDACTED] 56 - redacts custom provider sources even when their environment names do not look secret\n  [REDACTED]\n  duration_ms: 2128.9094\n  type: 'test'\n  ...\n# Subtest: rejects dependency cycles during doctor checks\nok 57 - rejects dependency cycles during doctor checks\n  ---\n  duration_ms: 630.7941\n  type: 'test'\n  ...\n# Subtest: repository-snapshot fails closed when Git-backed scope state is unavailable\nok 58 - repository-snapshot fails closed when Git-backed scope state is unavailable\n  ---\n  duration_ms: 752.9223\n  type: 'test'\n  ...\n# Subtest: repository-snapshot rejects a legacy feature baseline instead of waiving history\nok 59 - repository-snapshot rejects a legacy feature baseline instead of waiving history\n  ---\n  duration_ms: 998.5927\n  type: 'test'\n  ...\n# Subtest: repository-snapshot binds the starting HEAD and tree into the frozen contract\nok 60 - repository-snapshot binds the starting HEAD and tree into the frozen contract\n  ---\n  duration_ms: 1224.8806\n  type: 'test'\n  ...\n# Subtest: repository-snapshot fails closed when Git disappears after feature start\nok 61 - repository-snapshot fails closed when Git disappears after feature start\n  ---\n  duration_ms: 1011.6842\n  type: 'test'\n  ...\n# Subtest: repository-snapshot fails closed for unrelated or rewritten history\nok 62 - repository-snapshot fails closed for unrelated or rewritten history\n  ---\n  duration_ms: 1496.0668\n  type: 'test'\n  ...\n# Subtest: repository-snapshot rejects newly changed files outside feature scope\nok 63 - repository-snapshot rejects newly changed files outside feature scope\n  ---\n  duration_ms: 1609.6635\n  type: 'test'\n  ...\n# Subtest: repository-snapshot keeps transient locks and Git diagnostics out of scope baselines\nok 64 - repository-snapshot keeps transient locks and Git diagnostics out of scope baselines\n  ---\n  duration_ms: 703.0015\n  type: 'test'\n  ...\n# Subtest: suggests the next dependency-ready feature deterministically\nok 65 - suggests the next dependency-ready feature deterministically\n  ---\n  duration_ms: 2378.6735\n  type: 'test'\n  ...\n# Subtest: evidence-plan accepts normal post-pass config evolution without consulting mutable config\nok 66 - evidence-plan accepts normal post-pass config evolution without consulting mutable config\n  ---\n  duration_ms: 2187.4083\n  type: 'test'\n  ...\n# Subtest: serializes mutating operations with a recoverable state lock\nok 67 - serializes mutating operations with a recoverable state lock\n  ---\n  duration_ms: 507.9571\n  type: 'test'\n  ...\n# Subtest: never age-steals a backdated lock whose owner PID is alive\nok 68 - never age-steals a backdated lock whose owner PID is alive\n  ---\n  duration_ms: 512.4672\n  type: 'test'\n  ...\n# Subtest: recovers a lock owned by a process that no longer exists\nok 69 - recovers a lock owned by a process that no longer exists\n  ---\n  duration_ms: 528.002\n  type: 'test'\n  ...\n# Subtest: sync recovers a tokenized lock owned by a process that no longer exists\nok 70 - sync recovers a tokenized lock owned by a process that no longer exists\n  ---\n  duration_ms: 478.8736\n  type: 'test'\n  ...\n# Subtest: recovers an old ownerless lock but preserves a young one\nok 71 - recovers an old ownerless lock but preserves a young one\n  ---\n  duration_ms: 571.4689\n  type: 'test'\n  ...\n# Subtest: an old owner cannot delete a replacement owner lock\nok 72 - an old owner cannot delete a replacement owner lock\n  ---\n  duration_ms: 1381.6284\n  type: 'test'\n  ...\n# Subtest: sync upgrades every exact canonical runtime-v5 worker and docs asset to runtime v6\nok 73 - sync upgrades every exact canonical runtime-v5 worker and docs asset to runtime v6\n  ---\n  duration_ms: 634.1196\n  type: 'test'\n  ...\n# Subtest: sync accepts only CRLF-to-LF normalization for known runtime-v5 asset identities\nok 74 - sync accepts only CRLF-to-LF normalization for known runtime-v5 asset identities\n  ---\n  duration_ms: 563.4066\n  type: 'test'\n  ...\n# Subtest: sync preserves customized and unknown assets with actionable v6 additions and a resolved lifecycle\nok 75 - sync preserves customized and unknown assets with actionable v6 additions and a resolved lifecycle\n  ---\n  duration_ms: 975.0447\n  type: 'test'\n  ...\n# Subtest: sync leaves current canonical runtime-v6 worker and docs assets byte-for-byte unchanged\nok 76 - sync leaves current canonical runtime-v6 worker and docs assets byte-for-byte unchanged\n  ---\n  duration_ms: 686.298\n  type: 'test'\n  ...\n# Subtest: sync respects the runtime state lock and leaves project state untouched on contention\nok 77 - sync respects the runtime state lock and leaves project state untouched on contention\n  ---\n  duration_ms: 1467.756\n  type: 'test'\n  ...\n# Subtest: concurrent syncs have a single atomic state lock owner and preserve valid state\nok 78 - concurrent syncs have a single atomic state lock owner and preserve valid state\n  ---\n  duration_ms: 546.501\n  type: 'test'\n  ...\n# Subtest: sync flags routed canonical instructions that lack the development boundary\nok 79 - sync flags routed canonical instructions that lack the development boundary\n  ---\n  duration_ms: 605.6385\n  type: 'test'\n  ...\n# Subtest: sync flags otherwise-routed v5 instructions that impose a restrictive global chat boundary\nok 80 - sync flags otherwise-routed v5 instructions that impose a restrictive global chat boundary\n  ---\n  duration_ms: 484.5942\n  type: 'test'\n  ...\n# Subtest: sync force-refreshes a stale generated precompact hook\nok 81 - sync force-refreshes a stale generated precompact hook\n  ---\n  duration_ms: 487.4312\n  type: 'test'\n  ...\n# Subtest: selective agent initialization and sync never recreate a disabled Claude adapter\nok 82 - selective agent initialization and sync never recreate a disabled Claude adapter\n  ---\n  duration_ms: 79.352\n  type: 'test'\n  ...\n# Subtest: init and sync preserve a seeded product-agent runtime byte-for-byte\nok 83 - init and sync preserve a seeded product-agent runtime byte-for-byte\n  ---\n  duration_ms: 72.9108\n  type: 'test'\n  ...\n# Subtest: sync preserves a pending handoff barrier and refuses to erase a corrupt one\nok 84 - sync preserves a pending handoff barrier and refuses to erase a corrupt one\n  ---\n  duration_ms: 639.4862\n  type: 'test'\n  ...\n# Subtest: sync is idempotent and migrates legacy state without discarding project facts\nok 85 - sync is idempotent and migrates legacy state without discarding project facts\n  ---\n  duration_ms: 515.0486\n  type: 'test'\n  ...\n# Subtest: skill metadata satisfies the dependency-free package contract\nok 86 - skill metadata satisfies the dependency-free package contract\n  ---\n  duration_ms: 2.5187\n  type: 'test'\n  ...\n1..86\n# tests 104\n# suites 0\n# pass 103\n# fail 0\n# cancelled 0\n# skipped 1\n# todo 0\n# duration_ms 112399.8825\n",
+      "truncated": false,
+      "originalBytes": 22212
+    },
+    {
+      "executionId": "acceptance:ac-1:1",
+      "executionOrder": 10,
+      "command": "node --test tests/harness-continuity.test.mjs",
+      "layer": "acceptance",
+      "criterionId": "ac-1",
+      "credentials": [],
+      "pass": true,
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 9031,
+      "stdout": "TAP version 13\n# Subtest: worker boundary: explicit claim, wrong owner, self resume and repeated resume fail without state writes\nok 1 - worker boundary: explicit claim, wrong owner, self resume and repeated resume fail without state writes\n  ---\n  duration_ms: 1664.422\n  type: 'test'\n  ...\n# Subtest: worker boundary: normal yield and needs input revoke mutation until a distinct worker claims\nok 2 - worker boundary: normal yield and needs input revoke mutation until a distinct worker claims\n  ---\n  duration_ms: 1199.2543\n  type: 'test'\n  ...\n# Subtest: worker boundary: no shared-session identity fallback or host identity override\nok 3 - worker boundary: no shared-session identity fallback or host identity override\n  ---\n  duration_ms: 472.4276\n  type: 'test'\n  ...\n# Subtest: worker baseline: migration is lossless, idempotent and compact, preserving status and contracts\nok 4 - worker baseline: migration is lossless, idempotent and compact, preserving status and contracts\n  ---\n  duration_ms: 1045.6266\n  type: 'test'\n  ...\n# Subtest: worker bootstrap: historical feature volume and baseline maps never enter bounded startup\nok 5 - worker bootstrap: historical feature volume and baseline maps never enter bounded startup\n  ---\n  duration_ms: 482.0332\n  type: 'test'\n  ...\n# Subtest: worker hooks: owner transfer, routing parent isolation, missing identity and compact additionalContext\nok 6 - worker hooks: owner transfer, routing parent isolation, missing identity and compact additionalContext\n  ---\n  duration_ms: 961.1033\n  type: 'test'\n  ...\n# Subtest: worker scope: staged rename into reserved baseline directory retains protected source deletion\nok 7 - worker scope: staged rename into reserved baseline directory retains protected source deletion\n  ---\n  duration_ms: 1301.0539\n  type: 'test'\n  ...\n# Subtest: worker routing: current blocked feature and parked decisions remain bounded and actionable\nok 8 - worker routing: current blocked feature and parked decisions remain bounded and actionable\n  ---\n  duration_ms: 1656.8634\n  type: 'test'\n  ...\n1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 8955.5277\n",
+      "stderr": "",
+      "output": "TAP version 13\n# Subtest: worker boundary: explicit claim, wrong owner, self resume and repeated resume fail without state writes\nok 1 - worker boundary: explicit claim, wrong owner, self resume and repeated resume fail without state writes\n  ---\n  duration_ms: 1664.422\n  type: 'test'\n  ...\n# Subtest: worker boundary: normal yield and needs input revoke mutation until a distinct worker claims\nok 2 - worker boundary: normal yield and needs input revoke mutation until a distinct worker claims\n  ---\n  duration_ms: 1199.2543\n  type: 'test'\n  ...\n# Subtest: worker boundary: no shared-session identity fallback or host identity override\nok 3 - worker boundary: no shared-session identity fallback or host identity override\n  ---\n  duration_ms: 472.4276\n  type: 'test'\n  ...\n# Subtest: worker baseline: migration is lossless, idempotent and compact, preserving status and contracts\nok 4 - worker baseline: migration is lossless, idempotent and compact, preserving status and contracts\n  ---\n  duration_ms: 1045.6266\n  type: 'test'\n  ...\n# Subtest: worker bootstrap: historical feature volume and baseline maps never enter bounded startup\nok 5 - worker bootstrap: historical feature volume and baseline maps never enter bounded startup\n  ---\n  duration_ms: 482.0332\n  type: 'test'\n  ...\n# Subtest: worker hooks: owner transfer, routing parent isolation, missing identity and compact additionalContext\nok 6 - worker hooks: owner transfer, routing parent isolation, missing identity and compact additionalContext\n  ---\n  duration_ms: 961.1033\n  type: 'test'\n  ...\n# Subtest: worker scope: staged rename into reserved baseline directory retains protected source deletion\nok 7 - worker scope: staged rename into reserved baseline directory retains protected source deletion\n  ---\n  duration_ms: 1301.0539\n  type: 'test'\n  ...\n# Subtest: worker routing: current blocked feature and parked decisions remain bounded and actionable\nok 8 - worker routing: current blocked feature and parked decisions remain bounded and actionable\n  ---\n  duration_ms: 1656.8634\n  type: 'test'\n  ...\n1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 8955.5277\n",
+      "truncated": false,
+      "originalBytes": 2176
+    }
+  ],
+  "changedFiles": [
+    ".codex/hooks.json",
+    ".harness/hooks/precompact-handoff.mjs",
+    ".harness/hooks/sessionstart-routing.mjs",
+    ".harness/loops/checker.md",
+    ".harness/loops/goal.md",
+    ".harness/loops/maker.md",
+    ".harness/run.mjs",
+    "AGENTS.md",
+    "README.md",
+    "skill/codex-harness/assets/AGENTS.addition.md.template",
+    "skill/codex-harness/assets/AGENTS.md.template",
+    "skill/codex-harness/assets/checker.md",
+    "skill/codex-harness/assets/codex-hooks.addition.json.template",
+    "skill/codex-harness/assets/codex-hooks.json.template",
+    "skill/codex-harness/assets/goal.md",
+    "skill/codex-harness/assets/maker.md",
+    "skill/codex-harness/assets/precompact-handoff.mjs",
+    "skill/codex-harness/assets/project-runtime.mjs",
+    "skill/codex-harness/assets/sessionstart-routing.mjs",
+    "skill/codex-harness/references/architecture.md",
+    "skill/codex-harness/references/operations.md",
+    "skill/codex-harness/scripts/lib/core.mjs",
+    "skill/codex-harness/SKILL.md",
+    "tests/harness-continuity.test.mjs",
+    "tests/harness.test.mjs"
+  ],
+  "scopeViolations": [],
+  "repository": {
+    "before": {
+      "available": true,
+      "head": "3f3f2a682c362261b3cb2ed5a7e41d108d5bb5fb",
+      "tree": "f52eb029d1cec1d809c143c7b702d737cfe78f46",
+      "branch": "main",
+      "statusHash": "6da606b94257ee8f44556c457d0e0182c9321ab460341bda76e642252123ac7b",
+      "status": "M .github/copilot-instructions.md\n M AGENTS.md\n M ANALYSIS.md\n M CHANGELOG.md\n M CLAUDE.md\n M README.md\n M REVIEW-2026-07-20.md\n M SECURITY.md\n M package.json\n M skill/codex-harness/SKILL.md\n M skill/codex-harness/assets/AGENTS.addition.md.template\n M skill/codex-harness/assets/AGENTS.md.template\n M skill/codex-harness/assets/CLAUDE.addition.md.template\n M skill/codex-harness/assets/CLAUDE.md.template\n M skill/codex-harness/assets/checker.md\n M skill/codex-harness/assets/codex-hooks.addition.json.template\n M skill/codex-harness/assets/codex-hooks.json.template\n M skill/codex-harness/assets/copilot-instructions.addition.md.template\n M skill/codex-harness/assets/copilot-instructions.md.template\n M skill/codex-harness/assets/docs-map.md.template\n M skill/codex-harness/assets/goal.md\n M skill/codex-harness/assets/handoff.md\n M skill/codex-harness/assets/maker.md\n M skill/codex-harness/assets/precompact-handoff.mjs\n M skill/codex-harness/assets/progress.md\n M skill/codex-harness/assets/project-runtime.mjs\n M skill/codex-harness/assets/quality.md\n M skill/codex-harness/references/architecture.md\n M skill/codex-harness/references/audit-model.md\n M skill/codex-harness/references/lecture-map.md\n M skill/codex-harness/references/operations.md\n M skill/codex-harness/scripts/harness.mjs\n M skill/codex-harness/scripts/lib/core.mjs\n M tests/harness.test.mjs\n?? .codex/config.toml\n?? .codex/hooks.json\n?? .harness/config.json\n?? .harness/continuity.json\n?? .harness/credentials-state.json\n?? .harness/docs-map.md\n?? .harness/docs-map.v6.addition.md\n?? .harness/events.jsonl\n?? .harness/evidence/.gitkeep\n?? .harness/evidence/2026-08-01T20-11-53-870Z-harness-self-host.json\n?? .harness/evidence/2026-08-01T20-14-58-729Z-harness-self-host.json\n?? .harness/evidence/2026-08-01T20-17-44-856Z-harness-quality-record.json\n?? .harness/evidence/2026-08-07T23-40-17-853Z-orchestrated-worker-continuity.json\n?? .harness/evidence/2026-08-08T03-15-39-255Z-lock-ownership-sync-serialization.json\n?? .harness/evidence/2026-08-08T03-19-29-413Z-lock-ownership-sync-verification.json\n?? .harness/evidence/2026-08-08T04-09-59-297Z-repository-snapshot-scope-verification.json\n?? .harness/evidence/2026-08-08T04-26-29-328Z-credential-opt-in-isolation.json\n?? .harness/evidence/2026-08-08T15-40-34-256Z-help-dominant-option-validation.json\n?? .harness/evidence/2026-08-08T15-58-42-288Z-canonical-v5-asset-migration.json\n?? .harness/evidence/2026-08-08T16-18-07-241Z-verification-evidence-plan-integrity.json\n?? .harness/features.json\n?? .harness/handoff.md\n?? .harness/history/progress/handoff-20260801201839746-3387d0c4.md\n?? .harness/history/progress/handoff-20260808033722372-37530ccb.md\n?? .harness/hooks/precompact-handoff.mjs\n?? .harness/hooks/sessionstart-routing.mjs\n?? .harness/loops/checker.md\n?? .harness/loops/goal.md\n?? .harness/loops/maker.md\n?? .harness/progress.md\n?? .harness/quality.md\n?? .harness/run.mjs\n?? skill/codex-harness/assets/migrations/runtime-v5/checker.md\n?? skill/codex-harness/assets/migrations/runtime-v5/docs-map.md.template\n?? skill/codex-harness/assets/migrations/runtime-v5/goal.md\n?? skill/codex-harness/assets/migrations/runtime-v5/maker.md\n?? skill/codex-harness/assets/sessionstart-routing.mjs\n?? tests/harness-continuity.test.mjs",
+      "diagnostics": "",
+      "reason": null
+    },
+    "after": {
+      "available": true,
+      "head": "3f3f2a682c362261b3cb2ed5a7e41d108d5bb5fb",
+      "tree": "f52eb029d1cec1d809c143c7b702d737cfe78f46",
+      "branch": "main",
+      "statusHash": "f12c8686e96c91562a65aabf8152970f6f11b8d62edf272b707701bfc569cef6",
+      "status": "M .github/copilot-instructions.md\n M AGENTS.md\n M ANALYSIS.md\n M CHANGELOG.md\n M CLAUDE.md\n M README.md\n M REVIEW-2026-07-20.md\n M SECURITY.md\n M package.json\n M skill/codex-harness/SKILL.md\n M skill/codex-harness/assets/AGENTS.addition.md.template\n M skill/codex-harness/assets/AGENTS.md.template\n M skill/codex-harness/assets/CLAUDE.addition.md.template\n M skill/codex-harness/assets/CLAUDE.md.template\n M skill/codex-harness/assets/checker.md\n M skill/codex-harness/assets/codex-hooks.addition.json.template\n M skill/codex-harness/assets/codex-hooks.json.template\n M skill/codex-harness/assets/copilot-instructions.addition.md.template\n M skill/codex-harness/assets/copilot-instructions.md.template\n M skill/codex-harness/assets/docs-map.md.template\n M skill/codex-harness/assets/goal.md\n M skill/codex-harness/assets/handoff.md\n M skill/codex-harness/assets/maker.md\n M skill/codex-harness/assets/precompact-handoff.mjs\n M skill/codex-harness/assets/progress.md\n M skill/codex-harness/assets/project-runtime.mjs\n M skill/codex-harness/assets/quality.md\n M skill/codex-harness/references/architecture.md\n M skill/codex-harness/references/audit-model.md\n M skill/codex-harness/references/lecture-map.md\n M skill/codex-harness/references/operations.md\n M skill/codex-harness/scripts/harness.mjs\n M skill/codex-harness/scripts/lib/core.mjs\n M tests/harness.test.mjs\n?? .codex/config.toml\n?? .codex/hooks.json\n?? .harness/config.json\n?? .harness/continuity.json\n?? .harness/credentials-state.json\n?? .harness/docs-map.md\n?? .harness/docs-map.v6.addition.md\n?? .harness/events.jsonl\n?? .harness/evidence/.gitkeep\n?? .harness/evidence/2026-08-01T20-11-53-870Z-harness-self-host.json\n?? .harness/evidence/2026-08-01T20-14-58-729Z-harness-self-host.json\n?? .harness/evidence/2026-08-01T20-17-44-856Z-harness-quality-record.json\n?? .harness/evidence/2026-08-07T23-40-17-853Z-orchestrated-worker-continuity.json\n?? .harness/evidence/2026-08-08T03-15-39-255Z-lock-ownership-sync-serialization.json\n?? .harness/evidence/2026-08-08T03-19-29-413Z-lock-ownership-sync-verification.json\n?? .harness/evidence/2026-08-08T04-09-59-297Z-repository-snapshot-scope-verification.json\n?? .harness/evidence/2026-08-08T04-26-29-328Z-credential-opt-in-isolation.json\n?? .harness/evidence/2026-08-08T15-40-34-256Z-help-dominant-option-validation.json\n?? .harness/evidence/2026-08-08T15-58-42-288Z-canonical-v5-asset-migration.json\n?? .harness/evidence/2026-08-08T16-18-07-241Z-verification-evidence-plan-integrity.json\n?? .harness/features.json\n?? .harness/handoff.md\n?? .harness/history/progress/handoff-20260801201839746-3387d0c4.md\n?? .harness/history/progress/handoff-20260808033722372-37530ccb.md\n?? .harness/hooks/precompact-handoff.mjs\n?? .harness/hooks/sessionstart-routing.mjs\n?? .harness/loops/checker.md\n?? .harness/loops/goal.md\n?? .harness/loops/maker.md\n?? .harness/progress.md\n?? .harness/quality.md\n?? .harness/run.mjs\n?? skill/codex-harness/assets/migrations/runtime-v5/checker.md\n?? skill/codex-harness/assets/migrations/runtime-v5/docs-map.md.template\n?? skill/codex-harness/assets/migrations/runtime-v5/goal.md\n?? skill/codex-harness/assets/migrations/runtime-v5/maker.md\n?? skill/codex-harness/assets/sessionstart-routing.mjs\n?? tests/harness-continuity.test.mjs",
+      "diagnostics": "",
+      "reason": null
+    }
+  },
+  "repositoryStatus": "M .github/copilot-instructions.md\n M AGENTS.md\n M ANALYSIS.md\n M CHANGELOG.md\n M CLAUDE.md\n M README.md\n M REVIEW-2026-07-20.md\n M SECURITY.md\n M package.json\n M skill/codex-harness/SKILL.md\n M skill/codex-harness/assets/AGENTS.addition.md.template\n M skill/codex-harness/assets/AGENTS.md.template\n M skill/codex-harness/assets/CLAUDE.addition.md.template\n M skill/codex-harness/assets/CLAUDE.md.template\n M skill/codex-harness/assets/checker.md\n M skill/codex-harness/assets/codex-hooks.addition.json.template\n M skill/codex-harness/assets/codex-hooks.json.template\n M skill/codex-harness/assets/copilot-instructions.addition.md.template\n M skill/codex-harness/assets/copilot-instructions.md.template\n M skill/codex-harness/assets/docs-map.md.template\n M skill/codex-harness/assets/goal.md\n M skill/codex-harness/assets/handoff.md\n M skill/codex-harness/assets/maker.md\n M skill/codex-harness/assets/precompact-handoff.mjs\n M skill/codex-harness/assets/progress.md\n M skill/codex-harness/assets/project-runtime.mjs\n M skill/codex-harness/assets/quality.md\n M skill/codex-harness/references/architecture.md\n M skill/codex-harness/references/audit-model.md\n M skill/codex-harness/references/lecture-map.md\n M skill/codex-harness/references/operations.md\n M skill/codex-harness/scripts/harness.mjs\n M skill/codex-harness/scripts/lib/core.mjs\n M tests/harness.test.mjs\n?? .codex/config.toml\n?? .codex/hooks.json\n?? .harness/config.json\n?? .harness/continuity.json\n?? .harness/credentials-state.json\n?? .harness/docs-map.md\n?? .harness/docs-map.v6.addition.md\n?? .harness/events.jsonl\n?? .harness/evidence/.gitkeep\n?? .harness/evidence/2026-08-01T20-11-53-870Z-harness-self-host.json\n?? .harness/evidence/2026-08-01T20-14-58-729Z-harness-self-host.json\n?? .harness/evidence/2026-08-01T20-17-44-856Z-harness-quality-record.json\n?? .harness/evidence/2026-08-07T23-40-17-853Z-orchestrated-worker-continuity.json\n?? .harness/evidence/2026-08-08T03-15-39-255Z-lock-ownership-sync-serialization.json\n?? .harness/evidence/2026-08-08T03-19-29-413Z-lock-ownership-sync-verification.json\n?? .harness/evidence/2026-08-08T04-09-59-297Z-repository-snapshot-scope-verification.json\n?? .harness/evidence/2026-08-08T04-26-29-328Z-credential-opt-in-isolation.json\n?? .harness/evidence/2026-08-08T15-40-34-256Z-help-dominant-option-validation.json\n?? .harness/evidence/2026-08-08T15-58-42-288Z-canonical-v5-asset-migration.json\n?? .harness/evidence/2026-08-08T16-18-07-241Z-verification-evidence-plan-integrity.json\n?? .harness/features.json\n?? .harness/handoff.md\n?? .harness/history/progress/handoff-20260801201839746-3387d0c4.md\n?? .harness/history/progress/handoff-20260808033722372-37530ccb.md\n?? .harness/hooks/precompact-handoff.mjs\n?? .harness/hooks/sessionstart-routing.mjs\n?? .harness/loops/checker.md\n?? .harness/loops/goal.md\n?? .harness/loops/maker.md\n?? .harness/progress.md\n?? .harness/quality.md\n?? .harness/run.mjs\n?? skill/codex-harness/assets/migrations/runtime-v5/checker.md\n?? skill/codex-harness/assets/migrations/runtime-v5/docs-map.md.template\n?? skill/codex-harness/assets/migrations/runtime-v5/goal.md\n?? skill/codex-harness/assets/migrations/runtime-v5/maker.md\n?? skill/codex-harness/assets/sessionstart-routing.mjs\n?? tests/harness-continuity.test.mjs"
+}
