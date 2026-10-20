@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 166,
+  "revision": 169,
   "features": [
     {
       "id": "harness-self-host",
@@ -4787,6 +4787,90 @@
         "at": "2026-10-20T18:27:08.615Z",
         "pass": true,
         "evidence": ".harness/evidence/2026-10-20T18-27-08-614Z-fast-fingerprints-001.json"
+      }
+    },
+    {
+      "id": "prune-keeps-project-docs-001",
+      "title": "sync --prune keeps project docs",
+      "description": "Pruning .harness keeps root-level project markdown docs and only removes v6 additions, upgrade notes and other non-layout artifacts",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          ".harness/run.mjs",
+          "tests/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "prune keeps project-gates style markdown and removes v6 addition files",
+          "command": "npm test"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-20T18-33-04-754Z-prune-keeps-project-docs-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-20T18:32:14.948Z",
+      "updatedAt": "2026-10-20T18:33:04.756Z",
+      "contract": {
+        "hash": "804b9d5df6d04b3ca6da0095f7045a8a20b399e49976d1ba919f6efc44fb80c2",
+        "snapshot": {
+          "id": "prune-keeps-project-docs-001",
+          "title": "sync --prune keeps project docs",
+          "description": "Pruning .harness keeps root-level project markdown docs and only removes v6 additions, upgrade notes and other non-layout artifacts",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              ".harness/run.mjs",
+              "tests/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "prune keeps project-gates style markdown and removes v6 addition files",
+              "command": "npm test"
+            }
+          ],
+          "requiredLayers": []
+        },
+        "frozenAt": "2026-10-20T18:32:15.022Z"
+      },
+      "baseline": {
+        "version": 2,
+        "head": "f9f45e34f6a948e5e4a8347019d9f83ed3a74b55",
+        "branch": "main",
+        "capturedAt": "2026-10-20T18:32:15.121Z",
+        "dirty": {}
+      },
+      "lastVerification": {
+        "at": "2026-10-20T18:33:04.756Z",
+        "pass": true,
+        "evidence": ".harness/evidence/2026-10-20T18-33-04-754Z-prune-keeps-project-docs-001.json"
       }
     }
   ]

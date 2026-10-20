@@ -291,6 +291,8 @@ Context budget text.
   put(root, '.harness/run.mjs', '// v6 runtime\n');
   for (const legacy of ['context-budget.mjs', 'windows-command.mjs', 'repair.mjs', 'hooks/context-guard.mjs', 'hooks/native-hook-bootstrap-v3.json', 'context/abc.json', 'logs/tool-1.log']) put(root, `.harness/${legacy}`, '{}');
   put(root, '.harness/native-hook-v2-rollout-004-helper-freeze-v9.json', '{}');
+  put(root, '.harness/project-gates.md', '# Project gates');
+  put(root, '.harness/upgrade-v6-review.md', '# v6 upgrade review');
   return root;
 }
 
@@ -328,6 +330,8 @@ test('sync migrates a v6 project: removes per-tool hooks and leftovers, keeps pr
     assert.ok(!existsSync(path.join(root, '.harness', gone)), gone);
   }
   assert.ok(existsSync(path.join(root, '.harness/baselines/abc.json')), 'baseline of an active feature is kept');
+  assert.ok(existsSync(path.join(root, '.harness/project-gates.md')), 'project docs survive prune');
+  assert.ok(!existsSync(path.join(root, '.harness/upgrade-v6-review.md')), 'v6 upgrade notes are pruned');
   assert.equal(readFileSync(path.join(root, '.harness/run.mjs'), 'utf8'), readFileSync(path.join(KIT, 'skill/codex-harness/assets/project-runtime.mjs'), 'utf8'));
   const again = ok(kit(root, 'sync', '.'));
   assert.match(again, /Already current/);

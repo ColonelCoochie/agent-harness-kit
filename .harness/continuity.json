@@ -5,17 +5,17 @@
   "startedAt": "2026-08-01T19:57:53.273Z",
   "resumedAt": "2026-10-20T14:59:21.594Z",
   "checkpoint": {
-    "id": "checkpoint-2026-10-20T18-21-42-762Z",
+    "id": "checkpoint-2026-10-20T18-32-14-719Z",
     "kind": "checkpoint",
     "reason": "worker_yield",
-    "createdAt": "2026-10-20T18:21:42.762Z",
-    "summary": "Kit at v7; two dogfood features passing and committed.",
-    "next": "Migrate product projects with agent-harness sync --prune.",
+    "createdAt": "2026-10-20T18:32:14.719Z",
+    "summary": "fast-fingerprints-001 passing and committed",
+    "next": "Fix sync --prune to keep project docs",
     "decisions": [],
     "blockers": [],
     "activeFeatures": [],
     "repository": {
-      "head": "1f3359420f7d330b94541700344d68dc0fbed382",
+      "head": "f9f45e34f6a948e5e4a8347019d9f83ed3a74b55",
       "branch": "main",
       "dirtyCount": 0
     }
@@ -580,7 +580,7 @@
     "drift": []
   },
   "owner": {
-    "id": "claude-v7-2",
-    "claimedAt": "2026-10-20T18:25:51.399Z"
+    "id": "claude-v7-3",
+    "claimedAt": "2026-10-20T18:32:14.878Z"
   }
 }

@@ -315,6 +315,12 @@ function migrateContinuity(continuity) {
   return next;
 }
 
+// Root-level markdown in .harness is usually a project doc routed from AGENTS.md
+// or docs-map (for example project-gates.md); v6 merge additions and upgrade notes are not.
+function isProjectDoc(name) {
+  return name.endsWith('.md') && !/addition|upgrade|rollout|repair|continuation/i.test(name);
+}
+
 function referencedBaselines(h) {
   try {
     return new Set(readJson(path.join(h, 'features.json')).features.filter(f => f.status !== 'passing' && f.scopeBaselineRef?.path).map(f => path.basename(f.scopeBaselineRef.path)));
@@ -379,7 +385,7 @@ export function syncHarness(rootArg, options = {}) {
   if (options.prune) {
     if (existsSync(logs)) for (const name of readdirSync(logs)) rmSync(path.join(logs, name), { recursive: true, force: true });
     for (const name of readdirSync(h)) {
-      if (KEEP.has(name)) continue;
+      if (KEEP.has(name) || isProjectDoc(name)) continue;
       rmSync(path.join(h, name), { recursive: true, force: true });
       removals.push(`.harness/${name}`);
     }

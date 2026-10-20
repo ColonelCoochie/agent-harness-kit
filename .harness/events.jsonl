@@ -677,3 +677,8 @@
 {"at":"2026-10-20T18:25:51.468Z","type":"feature.added","feature":"fast-fingerprints-001"}
 {"at":"2026-10-20T18:25:51.629Z","type":"feature.started","feature":"fast-fingerprints-001","head":"1f3359420f7d330b94541700344d68dc0fbed382","preexistingDirty":0}
 {"at":"2026-10-20T18:27:08.616Z","type":"feature.verified","feature":"fast-fingerprints-001","pass":true,"evidence":".harness/evidence/2026-10-20T18-27-08-614Z-fast-fingerprints-001.json","attempts":1}
+{"at":"2026-10-20T18:32:14.721Z","type":"checkpoint.written","reason":"worker_yield","worker":"claude-v7-2","checkpoint":"checkpoint-2026-10-20T18-32-14-719Z"}
+{"at":"2026-10-20T18:32:14.880Z","type":"worker.claimed","worker":"claude-v7-3"}
+{"at":"2026-10-20T18:32:14.950Z","type":"feature.added","feature":"prune-keeps-project-docs-001"}
+{"at":"2026-10-20T18:32:15.123Z","type":"feature.started","feature":"prune-keeps-project-docs-001","head":"f9f45e34f6a948e5e4a8347019d9f83ed3a74b55","preexistingDirty":0}
+{"at":"2026-10-20T18:33:04.759Z","type":"feature.verified","feature":"prune-keeps-project-docs-001","pass":true,"evidence":".harness/evidence/2026-10-20T18-33-04-754Z-prune-keeps-project-docs-001.json","attempts":1}
