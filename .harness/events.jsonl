@@ -698,3 +698,4 @@
 {"at":"2026-10-20T19:12:18.893Z","type":"feature.added","feature":"agent-definitions-001"}
 {"at":"2026-10-20T19:12:19.101Z","type":"feature.started","feature":"agent-definitions-001","head":"8080eb297f9a9eb96bc11270c37e8f380c98f5f6","preexistingDirty":0}
 {"at":"2026-10-20T19:14:56.985Z","type":"feature.verified","feature":"agent-definitions-001","pass":true,"evidence":".harness/evidence/2026-10-20T19-14-56-981Z-agent-definitions-001.json","attempts":1}
+{"at":"2026-10-20T19:15:12.484Z","type":"checkpoint.written","reason":"worker_yield","worker":"claude-tier1-1","checkpoint":"checkpoint-2026-10-20T19-15-12-482Z"}

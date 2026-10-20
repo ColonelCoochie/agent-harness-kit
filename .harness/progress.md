@@ -1,19 +1,19 @@
 # Progress
 
-Generated: 2026-10-20T19:14:57.101Z by `.harness/run.mjs`. Current-state snapshot only; Git history, `.harness/events.jsonl` and `.harness/evidence/` hold the past.
+Generated: 2026-10-20T19:15:12.597Z by `.harness/run.mjs`. Current-state snapshot only; Git history, `.harness/events.jsonl` and `.harness/evidence/` hold the past.
 
-- Continuity: working, generation 183, owner claude-tier1-1
+- Continuity: working, generation 183
 - Features: 41 passing, 0 active, 0 not started, 10 blocked
 - Active: none
-- Repository: main @ 8080eb297f9a, 24 changed paths
+- Repository: main @ 46abb115034c, 2 changed paths
 
 ## Summary
 
-doctor checks enabled agents only; committed
+Tier 1 delivered: verify dedupe, brief command, managed harness-worker/checker agents (v0.8.0).
 
 ## Next step
 
-Finish product repo migration
+Roll out with agent-harness sync to the product repos.
 
 ## Decisions to preserve
 

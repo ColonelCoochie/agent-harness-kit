@@ -5,17 +5,17 @@
   "startedAt": "2026-08-01T19:57:53.273Z",
   "resumedAt": "2026-10-20T14:59:21.594Z",
   "checkpoint": {
-    "id": "checkpoint-2026-10-20T18-36-44-012Z",
+    "id": "checkpoint-2026-10-20T19-15-12-482Z",
     "kind": "checkpoint",
     "reason": "worker_yield",
-    "createdAt": "2026-10-20T18:36:44.012Z",
-    "summary": "doctor checks enabled agents only; committed",
-    "next": "Finish product repo migration",
+    "createdAt": "2026-10-20T19:15:12.482Z",
+    "summary": "Tier 1 delivered: verify dedupe, brief command, managed harness-worker/checker agents (v0.8.0).",
+    "next": "Roll out with agent-harness sync to the product repos.",
     "decisions": [],
     "blockers": [],
     "activeFeatures": [],
     "repository": {
-      "head": "e279135c993aaf654aa2e83bbeaa4de8e079ff53",
+      "head": "46abb115034c7fcc8cd32e3096ffc6b409178f1d",
       "branch": "main",
       "dirtyCount": 0
     }
@@ -579,8 +579,5 @@
     "driftAccepted": false,
     "drift": []
   },
-  "owner": {
-    "id": "claude-tier1-1",
-    "claimedAt": "2026-10-20T19:09:02.322Z"
-  }
+  "owner": null
 }
