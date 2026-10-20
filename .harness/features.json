@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 163,
+  "revision": 166,
   "features": [
     {
       "id": "harness-self-host",
@@ -4700,6 +4700,93 @@
         "at": "2026-10-20T18:21:23.156Z",
         "pass": true,
         "evidence": ".harness/evidence/2026-10-20T18-21-23-155Z-commit-synced-paths-001.json"
+      }
+    },
+    {
+      "id": "fast-fingerprints-001",
+      "title": "Cheap fingerprints for large untracked files",
+      "description": "Content-hash dirty files up to 1 MiB; use size+mtime above that, but still hash when comparing against a legacy sha256 baseline",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          ".harness/run.mjs",
+          "tests/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "large untracked files are fingerprinted by metadata and still detected when modified",
+          "command": "npm test"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-20T18-27-08-614Z-fast-fingerprints-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-20T18:25:51.466Z",
+      "updatedAt": "2026-10-20T18:27:08.615Z",
+      "contract": {
+        "hash": "3dc7cbff241afd33323bc0a602d5c2608f56d93526679ea18305d0a885238c66",
+        "snapshot": {
+          "id": "fast-fingerprints-001",
+          "title": "Cheap fingerprints for large untracked files",
+          "description": "Content-hash dirty files up to 1 MiB; use size+mtime above that, but still hash when comparing against a legacy sha256 baseline",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              ".harness/run.mjs",
+              "tests/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "large untracked files are fingerprinted by metadata and still detected when modified",
+              "command": "npm test"
+            }
+          ],
+          "requiredLayers": []
+        },
+        "frozenAt": "2026-10-20T18:25:51.529Z"
+      },
+      "baseline": {
+        "version": 2,
+        "head": "1f3359420f7d330b94541700344d68dc0fbed382",
+        "branch": "main",
+        "capturedAt": "2026-10-20T18:25:51.627Z",
+        "dirty": {}
+      },
+      "syncedPaths": [
+        ".harness/run.mjs"
+      ],
+      "lastVerification": {
+        "at": "2026-10-20T18:27:08.615Z",
+        "pass": true,
+        "evidence": ".harness/evidence/2026-10-20T18-27-08-614Z-fast-fingerprints-001.json"
       }
     }
   ]

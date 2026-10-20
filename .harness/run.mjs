@@ -21,7 +21,9 @@ const OWNED = [
 ];
 const DEFAULT_ENV = ['PATH', 'Path', 'PATHEXT', 'SystemRoot', 'ComSpec', 'TEMP', 'TMP', 'HOME', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'CI', 'NODE_ENV'];
 const DEFAULT_DENY = ['.git/**', '.env', '.env.*', '**/node_modules/**', '**/dist/**', '**/build/**'];
-const HASH_LIMIT_BYTES = 32 * 1024 * 1024;
+// Hash small files exactly; larger dirty files use size+mtime so start/verify stay fast
+// in repositories with big untracked outputs.
+const HASH_LIMIT_BYTES = 1024 * 1024;
 const REPEATABLE = new Set(['criterion', 'command', 'allow', 'deny', 'depends', 'layer', 'credential', 'decision', 'blocker']);
 
 // ---------------------------------------------------------------- basics
@@ -169,12 +171,12 @@ function dirtyPaths() {
   return unique(paths.map(normalizePath));
 }
 
-function fingerprint(relative) {
+function fingerprint(relative, exact = false) {
   const target = path.join(ROOT, relative);
   let info;
   try { info = statSync(target); } catch { return 'deleted'; }
   if (!info.isFile()) return `other:${info.mode}`;
-  if (info.size > HASH_LIMIT_BYTES) return `meta:${info.size}:${Math.round(info.mtimeMs)}`;
+  if (info.size > HASH_LIMIT_BYTES && !exact) return `meta:${info.size}:${Math.round(info.mtimeMs)}`;
   return sha256(readFileSync(target));
 }
 
@@ -228,7 +230,8 @@ export function changedSince(baseline) {
   }
   for (const relative of repo.dirty) {
     const before = baseline.dirty?.[relative];
-    if (before === undefined || before !== fingerprint(relative)) changed.add(relative);
+    // v6 baselines stored sha256 for every file; compare those exactly.
+    if (before === undefined || before !== fingerprint(relative, /^[a-f0-9]{64}$/.test(before))) changed.add(relative);
   }
   for (const relative of Object.keys(baseline.dirty ?? {})) {
     if (!repo.dirty.includes(relative) && !changed.has(relative) && baseline.head === repo.head) changed.add(relative);

@@ -5,19 +5,19 @@
   "startedAt": "2026-08-01T19:57:53.273Z",
   "resumedAt": "2026-10-20T14:59:21.594Z",
   "checkpoint": {
-    "id": "checkpoint-2026-10-20T18-18-13-717Z",
+    "id": "checkpoint-2026-10-20T18-21-42-762Z",
     "kind": "checkpoint",
     "reason": "worker_yield",
-    "createdAt": "2026-10-20T18:18:13.717Z",
-    "summary": "Migrated to runtime v7 (lean overhaul). fix-nine-rollout-001 and earlier native-hook features are superseded and blocked; v6 artifacts archived to Documents/harness-archive.",
-    "next": "Add the next kit feature with node .harness/run.mjs add.",
+    "createdAt": "2026-10-20T18:21:42.762Z",
+    "summary": "Kit at v7; two dogfood features passing and committed.",
+    "next": "Migrate product projects with agent-harness sync --prune.",
     "decisions": [],
     "blockers": [],
     "activeFeatures": [],
     "repository": {
-      "head": "cbae6efa09bfa90b079ec010d0d74fa337e626f6",
+      "head": "1f3359420f7d330b94541700344d68dc0fbed382",
       "branch": "main",
-      "dirtyCount": 239
+      "dirtyCount": 0
     }
   },
   "handoff": null,
@@ -580,7 +580,7 @@
     "drift": []
   },
   "owner": {
-    "id": "claude-v7-1",
-    "claimedAt": "2026-10-20T18:19:08.590Z"
+    "id": "claude-v7-2",
+    "claimedAt": "2026-10-20T18:25:51.399Z"
   }
 }

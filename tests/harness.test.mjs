@@ -136,6 +136,21 @@ test('unchanged pre-existing dirt is not attributed; changed dirt is', () => {
   assert.match(h(root, 'verify', 'feat-2').out, /SCOPE out of scope: scratch\.txt/);
 });
 
+test('large pre-existing files use metadata fingerprints and are still detected when changed', () => {
+  const root = initialized('large');
+  put(root, 'data/big.bin', Buffer.alloc(2 * 1024 * 1024, 1));
+  ok(addFeature(root, 'feat-1'));
+  ok(h(root, 'start', 'feat-1'));
+  const baseline = json(path.join(root, '.harness/features.json')).features[0].baseline;
+  assert.match(baseline.dirty['data/big.bin'], /^meta:2097152:/);
+  put(root, 'src/mul.mjs', 'export const mul = (a, b) => a * b;\n');
+  ok(h(root, 'verify', 'feat-1'));
+  ok(h(root, 'add', 'feat-2', '--title', 'Two', '--description', 'd', '--criterion', 'c', '--command', 'node -e "0"', '--allow', 'src/**'));
+  ok(h(root, 'start', 'feat-2'));
+  put(root, 'data/big.bin', Buffer.alloc(3 * 1024 * 1024, 2));
+  assert.match(h(root, 'verify', 'feat-2').out, /SCOPE out of scope: data\/big\.bin/);
+});
+
 test('WIP limit, dependencies and frozen contracts are enforced', () => {
   const root = initialized('rules');
   ok(addFeature(root, 'a'));
