@@ -699,3 +699,7 @@
 {"at":"2026-10-20T19:12:19.101Z","type":"feature.started","feature":"agent-definitions-001","head":"8080eb297f9a9eb96bc11270c37e8f380c98f5f6","preexistingDirty":0}
 {"at":"2026-10-20T19:14:56.985Z","type":"feature.verified","feature":"agent-definitions-001","pass":true,"evidence":".harness/evidence/2026-10-20T19-14-56-981Z-agent-definitions-001.json","attempts":1}
 {"at":"2026-10-20T19:15:12.484Z","type":"checkpoint.written","reason":"worker_yield","worker":"claude-tier1-1","checkpoint":"checkpoint-2026-10-20T19-15-12-482Z"}
+{"at":"2026-10-20T21:42:14.102Z","type":"worker.claimed","worker":"claude-agents-flag-1"}
+{"at":"2026-10-20T21:42:14.185Z","type":"feature.added","feature":"sync-agents-flag-001"}
+{"at":"2026-10-20T21:42:14.391Z","type":"feature.started","feature":"sync-agents-flag-001","head":"91e0a753c780c8efddd5a8ac8f7262d9af5d77f1","preexistingDirty":0}
+{"at":"2026-10-20T21:43:31.362Z","type":"feature.verified","feature":"sync-agents-flag-001","pass":true,"evidence":".harness/evidence/2026-10-20T21-43-31-359Z-sync-agents-flag-001.json","attempts":1}

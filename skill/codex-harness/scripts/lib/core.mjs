@@ -378,6 +378,12 @@ export function syncHarness(rootArg, options = {}) {
   const actions = [], removals = [];
   const config = readJson(path.join(h, 'config.json'));
   const migrated = migrateConfig(config);
+  if (options.agents !== undefined) {
+    // Explicitly choose instruction surfaces; disabled ones are left in place but no longer synced.
+    if (options.agents === true) throw new Error('--agents needs a list, for example --agents codex,claude');
+    const agents = parseAgents(options.agents);
+    migrated.agents = { ...migrated.agents, enabled: agents, instructions: { ...migrated.agents?.instructions, ...Object.fromEntries(agents.map(agent => [agent, SURFACES[agent].path])) } };
+  }
   const plan = { root, actions, removals, preview: Boolean(options.preview) };
   if (options.preview) {
     plan.note = 'Preview only; run without --preview to apply.';

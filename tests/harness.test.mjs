@@ -79,6 +79,26 @@ test('init scaffolds a v7 harness with one fail-open PreCompact hook', () => {
   assert.equal(JSON.parse(audit.out).score, 100, audit.out);
 });
 
+test('sync --agents enables Claude on a codex-only project without touching active work', () => {
+  const root = initialized('enable-claude', 'codex');
+  ok(addFeature(root, 'feat-1'));
+  ok(h(root, 'start', 'feat-1'));
+  assert.match(kit(root, 'sync', '.', '--agents').out, /--agents needs a list/);
+  const out = ok(kit(root, 'sync', '.', '--agents', 'codex,claude'));
+  assert.match(out, /create CLAUDE\.md/);
+  assert.match(out, /create \.claude\/agents\/harness-worker\.md/);
+  assert.deepEqual(json(path.join(root, '.harness/config.json')).agents.enabled, ['codex', 'claude']);
+  assert.match(readFileSync(path.join(root, 'CLAUDE.md'), 'utf8'), /^@AGENTS\.md/);
+  assert.deepEqual(Object.keys(json(path.join(root, '.claude/settings.json')).hooks), ['PreCompact']);
+  assert.match(ok(kit(root, 'sync', '.')), /Already current/);
+  ok(h(root, 'doctor'));
+  put(root, 'src/mul.mjs', 'export const mul = (a, b) => a * b;\n');
+  const verified = ok(h(root, 'verify', 'feat-1'));
+  assert.doesNotMatch(verified, /SCOPE/);
+  const committed = git(root, 'show', '--name-only', '--format=', 'HEAD').split('\n');
+  assert.ok(committed.includes('CLAUDE.md') && committed.includes('.harness/config.json'));
+});
+
 test('init and sync manage harness-worker and harness-checker agent definitions', () => {
   const root = initialized('agents');
   const files = ['.claude/agents/harness-worker.md', '.claude/agents/harness-checker.md', '.codex/agents/harness-worker.toml', '.codex/agents/harness-checker.toml'];

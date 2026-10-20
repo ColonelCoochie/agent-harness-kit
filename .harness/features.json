@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 181,
+  "revision": 184,
   "features": [
     {
       "id": "harness-self-host",
@@ -5240,6 +5240,94 @@
         "at": "2026-10-20T19:14:56.982Z",
         "pass": true,
         "evidence": ".harness/evidence/2026-10-20T19-14-56-981Z-agent-definitions-001.json"
+      }
+    },
+    {
+      "id": "sync-agents-flag-001",
+      "title": "sync --agents enables instruction surfaces",
+      "description": "agent-harness sync --agents codex,claude[,github-copilot] updates config.agents.enabled and instructions, then installs that surface's instruction file, agent definitions and hook; paths it touches are exempt from active features' scope",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          ".harness/run.mjs",
+          "tests/**",
+          "README.md",
+          "CHANGELOG.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "sync --agents claude on a codex-only project installs CLAUDE.md, Claude agents and the PreCompact hook and records the config change",
+          "command": "npm test"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-20T21-43-31-359Z-sync-agents-flag-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-20T21:42:14.183Z",
+      "updatedAt": "2026-10-20T21:43:31.360Z",
+      "contract": {
+        "hash": "bf2cda561064c6a403663db8549a8842121b26fbdbdd6153f611723a9c493cc9",
+        "snapshot": {
+          "id": "sync-agents-flag-001",
+          "title": "sync --agents enables instruction surfaces",
+          "description": "agent-harness sync --agents codex,claude[,github-copilot] updates config.agents.enabled and instructions, then installs that surface's instruction file, agent definitions and hook; paths it touches are exempt from active features' scope",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              ".harness/run.mjs",
+              "tests/**",
+              "README.md",
+              "CHANGELOG.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "sync --agents claude on a codex-only project installs CLAUDE.md, Claude agents and the PreCompact hook and records the config change",
+              "command": "npm test"
+            }
+          ],
+          "requiredLayers": []
+        },
+        "frozenAt": "2026-10-20T21:42:14.264Z"
+      },
+      "baseline": {
+        "version": 2,
+        "head": "91e0a753c780c8efddd5a8ac8f7262d9af5d77f1",
+        "branch": "main",
+        "capturedAt": "2026-10-20T21:42:14.389Z",
+        "dirty": {}
+      },
+      "lastVerification": {
+        "at": "2026-10-20T21:43:31.360Z",
+        "pass": true,
+        "evidence": ".harness/evidence/2026-10-20T21-43-31-359Z-sync-agents-flag-001.json"
       }
     }
   ]

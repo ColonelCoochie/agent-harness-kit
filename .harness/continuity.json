@@ -579,5 +579,8 @@
     "driftAccepted": false,
     "drift": []
   },
-  "owner": null
+  "owner": {
+    "id": "claude-agents-flag-1",
+    "claimedAt": "2026-10-20T21:42:14.100Z"
+  }
 }

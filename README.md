@@ -97,6 +97,7 @@ Selection is `round_robin` (default) or `first_available`. Commands run with an 
 ```bash
 node bin/agent-harness.mjs sync /path/to/project --preview
 node bin/agent-harness.mjs sync /path/to/project [--prune]
+node bin/agent-harness.mjs sync /path/to/project --agents codex,claude   # enable Claude Code on a Codex-only project
 node bin/agent-harness.mjs audit /path/to/project
 ```
 
