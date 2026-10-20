@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 175,
+  "revision": 178,
   "features": [
     {
       "id": "harness-self-host",
@@ -5045,6 +5045,93 @@
         "at": "2026-10-20T19:10:20.115Z",
         "pass": true,
         "evidence": ".harness/evidence/2026-10-20T19-10-20-114Z-verify-dedupe-001.json"
+      }
+    },
+    {
+      "id": "worker-brief-001",
+      "title": "brief command for delegation",
+      "description": "Read-only 'brief [ID] [--role worker|checker]' prints a self-contained, bounded prompt (contract, scope, verification, last checkpoint, docs, startup and return format) for the orchestrator to pass unchanged to a fresh worker or checker",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          ".harness/run.mjs",
+          "tests/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "brief prints a self-contained worker or checker prompt that reflects contract, scope and continuity",
+          "command": "npm test"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-20T19-12-04-362Z-worker-brief-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-20T19:10:39.136Z",
+      "updatedAt": "2026-10-20T19:12:04.363Z",
+      "contract": {
+        "hash": "87c71f75cfb4f40da00ec2b27736873a5d716ccaee186669ec7410fe907a37e2",
+        "snapshot": {
+          "id": "worker-brief-001",
+          "title": "brief command for delegation",
+          "description": "Read-only 'brief [ID] [--role worker|checker]' prints a self-contained, bounded prompt (contract, scope, verification, last checkpoint, docs, startup and return format) for the orchestrator to pass unchanged to a fresh worker or checker",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              ".harness/run.mjs",
+              "tests/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "brief prints a self-contained worker or checker prompt that reflects contract, scope and continuity",
+              "command": "npm test"
+            }
+          ],
+          "requiredLayers": []
+        },
+        "frozenAt": "2026-10-20T19:10:39.215Z"
+      },
+      "baseline": {
+        "version": 2,
+        "head": "0945158f14e547243f2d7daed49d5f457489ba65",
+        "branch": "main",
+        "capturedAt": "2026-10-20T19:10:39.345Z",
+        "dirty": {}
+      },
+      "syncedPaths": [
+        ".harness/run.mjs"
+      ],
+      "lastVerification": {
+        "at": "2026-10-20T19:12:04.363Z",
+        "pass": true,
+        "evidence": ".harness/evidence/2026-10-20T19-12-04-362Z-worker-brief-001.json"
       }
     }
   ]

@@ -929,6 +929,15 @@ const handlers = {
     if (!view.length) console.log('No credential providers configured.');
   },
 
+  async brief(args) {
+    const config = loadConfig(), state = loadFeatures(), continuity = loadContinuity();
+    const role = args.role ?? 'worker';
+    if (!['worker', 'checker'].includes(role)) throw new Error('--role must be worker or checker.');
+    const feature = args._[1] ? byId(state, args._[1]) : activeFeatures(state)[0] ?? nextCandidates(state)[0];
+    if (!feature) throw new Error('No active or startable feature to brief; add one first.');
+    console.log(renderBrief(config, state, continuity, feature, role));
+  },
+
   async context() {
     console.log('Runtime v7 has no context budgets or forced rotation. Checkpoint at milestones, hand off only for a real transfer, and let the host compact.');
   },
@@ -939,6 +948,74 @@ const handlers = {
 
   async help(args) { printHelp(args._[1]); }
 };
+
+// A self-contained delegation prompt: the orchestrator passes it unchanged to a
+// fresh worker or checker, so neither side needs the other's transcript.
+function renderBrief(config, state, continuity, feature, role) {
+  const items = (values, empty = 'None.') => values?.length ? values.map(v => `- ${v}`).join('\n') : empty;
+  const code = value => `\`${value}\``;
+  const cp = checkpointView(continuity.checkpoint);
+  const pending = continuity.phase === 'awaiting_resume' ? continuity.handoff?.id : null;
+  const layers = verificationLayers(config, feature);
+  const verification = layers.map(layer => `- ${layer}: ${(config.verification?.[layer] ?? []).map(entry => code(commandText(entry))).join(', ') || '(none)'}`);
+  const router = config.docs?.router ?? '.harness/docs-map.md';
+  const docs = (config.docs?.required ?? []).filter(doc => doc !== router);
+  const head = `# Harness ${role} brief: ${feature.id} - ${feature.title}
+
+Project: ${config.project?.name ?? path.basename(ROOT)}${config.project?.purpose ? ` - ${config.project.purpose}` : ''}
+Repository: ${ROOT} (work only inside it; run harness commands from its root)
+Feature status: ${feature.status}${feature.blocker ? ` (blocker: ${typeof feature.blocker === 'string' ? feature.blocker : feature.blocker.reason})` : ''}, attempts ${feature.attempts ?? 0}
+
+## Feature
+
+${feature.description}
+
+Acceptance (each command must pass in verify):
+${items((feature.acceptance ?? []).map(a => `${a.id}: ${a.description}${a.command ? ` -> ${code(a.command)}` : ''}`))}
+
+Scope: allowed ${(feature.scope?.allow ?? []).map(code).join(', ') || '(none)'}; denied ${(feature.scope?.deny ?? []).map(code).join(', ') || '(none)'}
+Depends on: ${(feature.dependencies ?? []).join(', ') || 'nothing'}
+
+Verification layers run by verify:
+${verification.join('\n') || '- (none configured)'}
+
+## Context from the last checkpoint
+
+${cp ? `${cp.summary}\n\nNext: ${cp.next}${cp.decisions.length ? `\n\nDecisions to preserve:\n${items(cp.decisions)}` : ''}${cp.blockers.length ? `\n\nBlockers:\n${items(cp.blockers)}` : ''}` : 'No checkpoint recorded yet.'}
+
+Read only what the task needs. The router is ${code(router)}${docs.length ? `; key project docs: ${docs.map(code).join(', ')}` : ''}.`;
+  if (role === 'checker') {
+    const base = feature.baseline?.head ?? null;
+    return `${head}
+
+## Your job: independent read-only review
+
+1. ${code('node .harness/run.mjs session')} and ${code(`node .harness/run.mjs bootstrap ${feature.id} --json`)}.
+2. Inspect the change: ${base ? code(`git diff ${base.slice(0, 12)}`) + ' plus ' : ''}${code('git log --oneline -5')} and the latest evidence in ${code('.harness/evidence/')}.
+3. Check behavior, edge cases, scope, safety and regression risk. Read-only commands only: ${code('node .harness/run.mjs check quick')} and targeted tests.
+4. Do not edit files and do not run claim, start, verify, checkpoint or handoff.
+
+## Return
+
+At most 15 lines: each issue with location, evidence, severity and a concrete fix direction, then a one-line verdict: pass or changes needed.`;
+  }
+  const startup = pending
+    ? `${code(`node .harness/run.mjs resume ${pending}`)} (a handoff is pending; resume it instead of claim)`
+    : `${code('node .harness/run.mjs claim')}; it prints your worker ID. Unless your host sets CODEX_THREAD_ID, add ${code('--worker-id <that ID>')} to every later mutation`;
+  return `${head}
+
+## Your job: the single mutating worker for ${feature.id}
+
+1. ${code('node .harness/run.mjs session')}, then ${startup}.
+2. ${code(`node .harness/run.mjs bootstrap ${feature.id} --validate --json`)}.
+3. ${feature.status === 'not_started' ? `${code(`node .harness/run.mjs start ${feature.id}`)}, then implement` : 'Implement'} within scope. Use ${code('node .harness/run.mjs check quick')} while working and fix your own reversible failures.
+4. ${code(`node .harness/run.mjs verify ${feature.id}`)}. A pass marks it passing and commits. If the runtime blocks the feature, stop and report.
+5. End with ${code('node .harness/run.mjs checkpoint --reason worker_yield --summary "..." --next "..."')}, or ${code('--reason needs_input')} with one question. Use ${code('handoff')} only if another worker must take over mid-implementation.
+
+## Return
+
+At most 10 lines: outcome (passing, blocked or needs_input), changed files, verification result, risks, suggested next step. Do not paste logs; cite ${code('.harness/logs/')} paths instead.`;
+}
 
 function contractSnapshot(feature) {
   return { id: feature.id, title: feature.title, description: feature.description, dependencies: feature.dependencies ?? [], scope: feature.scope, acceptance: feature.acceptance ?? [], requiredLayers: feature.requiredLayers ?? [] };
@@ -1033,6 +1110,7 @@ Features:         add ID --title T --description D --criterion C --command CMD [
                       [--depends ID] [--layer quick|full|architecture|e2e|clean] [--credential PROVIDER]
                   start ID | block ID --reason R | unblock ID [--reset-attempts] | verify ID [--layer L]
 Inspection:       status [--all] [--json] | next | trace ID | doctor [--json] | check LAYER | credentials
+Delegation:       brief [ID] [--role worker|checker]   (self-contained prompt for a fresh worker or checker)
 Worker boundary:  checkpoint --reason worker_yield|needs_input --summary S --next N [--decision D] [--blocker B]
                   handoff --summary S --next N   (true context/ownership transfer only)
 

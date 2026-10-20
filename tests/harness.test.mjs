@@ -187,6 +187,34 @@ test('WIP limit, dependencies and frozen contracts are enforced', () => {
   assert.match(h(root, 'verify', 'a').out, /frozen contract differs/);
 });
 
+test('brief prints self-contained worker and checker prompts from current state', () => {
+  const root = initialized('brief');
+  assert.match(h(root, 'brief').out, /No active or startable feature/);
+  ok(addFeature(root, 'feat-1', ['--deny', 'src/secret/**']));
+  const fresh = ok(h(root, 'brief'));
+  assert.match(fresh, /# Harness worker brief: feat-1 - Feature feat-1/);
+  assert.match(fresh, /Demo math library/);
+  assert.match(fresh, /ac-1: mul works -> `node -e/);
+  assert.match(fresh, /allowed `src\/\*\*`; denied .*`src\/secret\/\*\*`/);
+  assert.match(fresh, /- full: `npm test`/);
+  assert.match(fresh, /`node \.harness\/run\.mjs claim`; it prints your worker ID/);
+  assert.match(fresh, /`node \.harness\/run\.mjs start feat-1`, then implement/);
+  ok(h(root, 'start', 'feat-1'));
+  ok(h(root, 'checkpoint', '--reason', 'worker_yield', '--summary', 'half done', '--next', 'finish mul', '--decision', 'keep ints'));
+  const resumed = ok(h(root, 'brief', 'feat-1'));
+  assert.match(resumed, /half done\n\nNext: finish mul/);
+  assert.match(resumed, /- keep ints/);
+  assert.doesNotMatch(resumed, /run\.mjs start feat-1/);
+  const checker = ok(h(root, 'brief', 'feat-1', '--role', 'checker'));
+  assert.match(checker, /independent read-only review/);
+  assert.match(checker, /Do not edit files and do not run claim, start, verify/);
+  assert.match(checker, /`git diff [0-9a-f]{12}`/);
+  const parked = ok(h(root, 'handoff', '--summary', 'transfer', '--next', 'continue'));
+  const id = /resume (handoff-\S+)/.exec(parked)[1];
+  assert.match(ok(h(root, 'brief')), new RegExp(`resume ${id}\`[^\\n]*instead of claim`));
+  assert.match(h(root, 'brief', '--role', 'boss').out, /--role must be worker or checker/);
+});
+
 test('checkpoint releases ownership; handoff parks work until a matching resume', () => {
   const root = initialized('continuity');
   ok(h(root, 'claim', '--worker-id', 'w1'));

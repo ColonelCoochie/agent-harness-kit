@@ -692,3 +692,6 @@
 {"at":"2026-10-20T19:09:02.399Z","type":"feature.added","feature":"verify-dedupe-001"}
 {"at":"2026-10-20T19:09:02.598Z","type":"feature.started","feature":"verify-dedupe-001","head":"334b7635caa7dc50c34befce13aa5cd9bf4fabdd","preexistingDirty":0}
 {"at":"2026-10-20T19:10:20.118Z","type":"feature.verified","feature":"verify-dedupe-001","pass":true,"evidence":".harness/evidence/2026-10-20T19-10-20-114Z-verify-dedupe-001.json","attempts":1}
+{"at":"2026-10-20T19:10:39.138Z","type":"feature.added","feature":"worker-brief-001"}
+{"at":"2026-10-20T19:10:39.348Z","type":"feature.started","feature":"worker-brief-001","head":"0945158f14e547243f2d7daed49d5f457489ba65","preexistingDirty":0}
+{"at":"2026-10-20T19:12:04.367Z","type":"feature.verified","feature":"worker-brief-001","pass":true,"evidence":".harness/evidence/2026-10-20T19-12-04-362Z-worker-brief-001.json","attempts":1}

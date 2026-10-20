@@ -1,0 +1,136 @@
+{
+  "schema": 7,
+  "feature": "worker-brief-001",
+  "contractHash": "87c71f75cfb4f40da00ec2b27736873a5d716ccaee186669ec7410fe907a37e2",
+  "pass": true,
+  "failures": [],
+  "layers": [
+    "quick",
+    "full",
+    "architecture"
+  ],
+  "startedAt": "2026-10-20T19:11:35.759Z",
+  "durationMs": 28603,
+  "repository": {
+    "head": "0945158f14e547243f2d7daed49d5f457489ba65",
+    "branch": "main"
+  },
+  "results": [
+    {
+      "layer": "quick",
+      "covers": [
+        "quick"
+      ],
+      "command": "node --check bin/agent-harness.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 68,
+      "timedOut": false,
+      "outputBytes": 0,
+      "outputTail": "",
+      "log": ".harness/logs/2026-10-20T19-11-35-830Z-quick.log",
+      "credentials": []
+    },
+    {
+      "layer": "quick",
+      "covers": [
+        "quick"
+      ],
+      "command": "node --check skill/codex-harness/scripts/harness.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 61,
+      "timedOut": false,
+      "outputBytes": 0,
+      "outputTail": "",
+      "log": ".harness/logs/2026-10-20T19-11-35-892Z-quick.log",
+      "credentials": []
+    },
+    {
+      "layer": "quick",
+      "covers": [
+        "quick"
+      ],
+      "command": "node --check skill/codex-harness/scripts/lib/core.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 63,
+      "timedOut": false,
+      "outputBytes": 0,
+      "outputTail": "",
+      "log": ".harness/logs/2026-10-20T19-11-35-956Z-quick.log",
+      "credentials": []
+    },
+    {
+      "layer": "quick",
+      "covers": [
+        "quick"
+      ],
+      "command": "node --check skill/codex-harness/assets/project-runtime.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 61,
+      "timedOut": false,
+      "outputBytes": 0,
+      "outputTail": "",
+      "log": ".harness/logs/2026-10-20T19-11-36-018Z-quick.log",
+      "credentials": []
+    },
+    {
+      "layer": "quick",
+      "covers": [
+        "quick"
+      ],
+      "command": "node --check skill/codex-harness/assets/precompact.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 59,
+      "timedOut": false,
+      "outputBytes": 0,
+      "outputTail": "",
+      "log": ".harness/logs/2026-10-20T19-11-36-078Z-quick.log",
+      "credentials": []
+    },
+    {
+      "layer": "full",
+      "covers": [
+        "full",
+        "acceptance/ac-1"
+      ],
+      "command": "npm test",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 27695,
+      "timedOut": false,
+      "outputBytes": 3087,
+      "outputTail": "\n> agent-harness-kit@0.7.0 test\n> node --test tests/harness.test.mjs\n\nTAP version 13\n# Subtest: init scaffolds a v7 harness with one fail-open PreCompact hook\nok 1 - init scaffolds a v7 harness with one fail-open PreCompact hook\n  ---\n  duration_ms: 1106.31\n  type: 'test'\n  ...\n# Subtest: verify pass marks the feature passing, writes evidence and commits only scoped changes\nok 2 - verify pass marks the feature passing, writes evidence and commits only scoped changes\n  ---\n  duration_ms: 3218.0368\n  type: 'test'\n  ...\n# Subtest: a command listed by a layer and an acceptance check runs once and covers both\nok 3 - a command listed by a layer and an acceptance check runs once and covers both\n  ---\n  duration_ms: 1822.4638\n  type: 'test'\n  ...\n# Subtest: repeated identical failures block the feature\nok 4 - repeated identical failures block the feature\n  ---\n  duration_ms: 3749.1629\n  type: 'test'\n  ...\n# Subtest: unchanged pre-existing dirt is not attributed; changed dirt is\nok 5 - unchanged pre-existing dirt is not attributed; changed dirt is\n  ---\n  duration_ms: 3242.2885\n  type: 'test'\n  ...\n# Subtest: large pre-existing files use metadata fingerprints and are still detected when changed\nok 6 - large pre-existing files use metadata fingerprints and are still detected when changed\n  ---\n  duration_ms: 3097.0267\n  type: 'test'\n  ...\n# Subtest: WIP limit, dependencies and frozen contracts are enforced\nok 7 - WIP limit, dependencies and frozen contracts are enforced\n  ---\n  duration_ms: 1075.9041\n  type: 'test'\n  ...\n# Subtest: brief prints self-contained worker and checker prompts from current state\nok 8 - brief prints self-contained worker and checker prompts from current state\n  ---\n  duration_ms: 1604.2906\n  type: 'test'\n  ...\n# Subtest: checkpoint releases ownership; handoff parks work until a matching resume\nok 9 - checkpoint releases ownership; handoff parks work until a matching resume\n  ---\n  duration_ms: 2017.3695\n  type: 'test'\n  ...\n# Subtest: credentials reach only commands that request them and are redacted from logs\nok 10 - credentials reach only commands that request them and are redacted from logs\n  ---\n  duration_ms: 712.0034\n  type: 'test'\n  ...\n# Subtest: command timeouts kill the process tree\nok 11 - command timeouts kill the process tree\n  ---\n  duration_ms: 2158.944\n  type: 'test'\n  ...\n# Subtest: PreCompact launcher is fail-open and records the compaction\nok 12 - PreCompact launcher is fail-open and records the compaction\n  ---\n  duration_ms: 730.2486\n  type: 'test'\n  ...\n# Subtest: sync migrates a v6 project: removes per-tool hooks and leftovers, keeps project facts\nok 13 - sync migrates a v6 project: removes per-tool hooks and leftovers, keeps project facts\n  ---\n  duration_ms: 1731.2383\n  type: 'test'\n  ...\n# Subtest: repository passes its own harness doctor and the suite stays fast\nok 14 - repository passes its own harness doctor and the suite stays fast\n  ---\n  duration_ms: 157.6012\n  type: 'test'\n  ...\n1..14\n# tests 14\n# suites 0\n# pass 14\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 27251.7475\n",
+      "log": ".harness/logs/2026-10-20T19-12-03-775Z-full.log",
+      "credentials": []
+    },
+    {
+      "layer": "architecture",
+      "covers": [
+        "architecture"
+      ],
+      "command": "node bin/agent-harness.mjs audit . --min-score 95",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 286,
+      "timedOut": false,
+      "outputBytes": 1010,
+      "outputTail": "Harness audit: C:\\Users\\Jason\\Documents\\CoochieHarness\nScore: 100/100\nPASS [instructions] AGENTS.md exists\nPASS [instructions] AGENTS.md carries the v7 harness block\nPASS [instructions] AGENTS.md stays under 16 KiB\nPASS [instructions] AGENTS.md has no v6 protocol boilerplate\nPASS [instructions] CLAUDE.md routes to AGENTS.md\nPASS [instructions] .github/copilot-instructions.md routes to AGENTS.md\nPASS [tools] .harness/config.json parses\nPASS [tools] .harness/run.mjs matches the v7 runtime\nPASS [tools] .codex/hooks.json has no v6 per-tool hooks\nPASS [tools] .claude/settings.json has no v6 per-tool hooks\nPASS [feedback] verification.full is configured\nPASS [environment] Git repository has a HEAD commit\nPASS [environment] no v6 runtime leftovers in .harness/\nPASS [state] doctor: 0 errors\nWARN 18 passing feature(s) have no evidence file on disk (archived or deleted): capture-policy-performance-001, proactive-context-001, context-rollout-001, native-hook-recovery-001, native-launcher-recovery-001, ...\n",
+      "log": ".harness/logs/2026-10-20T19-12-04-063Z-architecture.log",
+      "credentials": []
+    }
+  ],
+  "scope": {
+    "changed": [
+      "skill/codex-harness/assets/project-runtime.mjs",
+      "tests/harness.test.mjs"
+    ],
+    "synced": [
+      ".harness/run.mjs"
+    ],
+    "violations": []
+  }
+}
