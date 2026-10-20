@@ -1,19 +1,19 @@
 # Progress
 
-Generated: 2026-10-20T18:33:04.854Z by `.harness/run.mjs`. Current-state snapshot only; Git history, `.harness/events.jsonl` and `.harness/evidence/` hold the past.
+Generated: 2026-10-20T18:36:43.518Z by `.harness/run.mjs`. Current-state snapshot only; Git history, `.harness/events.jsonl` and `.harness/evidence/` hold the past.
 
-- Continuity: working, generation 183, owner claude-v7-3
-- Features: 37 passing, 0 active, 0 not started, 10 blocked
+- Continuity: working, generation 183, owner claude-v7-4
+- Features: 38 passing, 0 active, 0 not started, 10 blocked
 - Active: none
-- Repository: main @ f9f45e34f6a9, 7 changed paths
+- Repository: main @ 02be43e7d9d2, 8 changed paths
 
 ## Summary
 
-fast-fingerprints-001 passing and committed
+prune keeps project docs; committed
 
 ## Next step
 
-Fix sync --prune to keep project docs
+Continue product repo migration
 
 ## Decisions to preserve
 

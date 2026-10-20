@@ -963,7 +963,9 @@ export function collectDoctor(config, state, continuity) {
   if (!(config.verification?.full ?? []).length) errors.push('verification.full is not configured');
   if (!['working', 'awaiting_resume'].includes(continuity.phase)) errors.push(`unknown continuity phase ${continuity.phase}`);
   if (continuity.phase === 'awaiting_resume' && !continuity.handoff?.id) errors.push('awaiting_resume without a handoff packet');
-  for (const relative of Object.values(config.agents?.instructions ?? { codex: 'AGENTS.md' })) {
+  const instructions = config.agents?.instructions ?? { codex: 'AGENTS.md' };
+  const enabledAgents = config.agents?.enabled ?? Object.keys(instructions);
+  for (const relative of enabledAgents.map(agent => instructions[agent]).filter(Boolean)) {
     const target = path.join(ROOT, relative);
     if (!existsSync(target)) errors.push(`missing instruction file ${relative}`);
     else if (!/\.harness\/run\.mjs|AGENTS\.md/.test(readFileSync(target, 'utf8'))) warnings.push(`${relative} does not route to AGENTS.md or .harness/run.mjs`);

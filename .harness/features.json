@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 169,
+  "revision": 172,
   "features": [
     {
       "id": "harness-self-host",
@@ -4871,6 +4871,93 @@
         "at": "2026-10-20T18:33:04.756Z",
         "pass": true,
         "evidence": ".harness/evidence/2026-10-20T18-33-04-754Z-prune-keeps-project-docs-001.json"
+      }
+    },
+    {
+      "id": "doctor-enabled-agents-001",
+      "title": "Doctor checks only enabled agent surfaces",
+      "description": "doctor validates instruction files for agents.enabled only, so a disabled surface listed in agents.instructions is not an error",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          ".harness/run.mjs",
+          "tests/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "a disabled agent's missing instruction file is not a doctor error",
+          "command": "npm test"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-20T18-36-43-414Z-doctor-enabled-agents-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-20T18:35:54.210Z",
+      "updatedAt": "2026-10-20T18:36:43.415Z",
+      "contract": {
+        "hash": "d367dea36e8059d5d0d2578daf5da99bea2b2ac8e0603a91fe7eea109aa0d181",
+        "snapshot": {
+          "id": "doctor-enabled-agents-001",
+          "title": "Doctor checks only enabled agent surfaces",
+          "description": "doctor validates instruction files for agents.enabled only, so a disabled surface listed in agents.instructions is not an error",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              ".harness/run.mjs",
+              "tests/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "a disabled agent's missing instruction file is not a doctor error",
+              "command": "npm test"
+            }
+          ],
+          "requiredLayers": []
+        },
+        "frozenAt": "2026-10-20T18:35:54.276Z"
+      },
+      "baseline": {
+        "version": 2,
+        "head": "02be43e7d9d2337b9fa4fd66af82c7fb4e2d16e3",
+        "branch": "main",
+        "capturedAt": "2026-10-20T18:35:54.384Z",
+        "dirty": {}
+      },
+      "syncedPaths": [
+        ".harness/run.mjs"
+      ],
+      "lastVerification": {
+        "at": "2026-10-20T18:36:43.415Z",
+        "pass": true,
+        "evidence": ".harness/evidence/2026-10-20T18-36-43-414Z-doctor-enabled-agents-001.json"
       }
     }
   ]

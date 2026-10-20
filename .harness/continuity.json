@@ -5,17 +5,17 @@
   "startedAt": "2026-08-01T19:57:53.273Z",
   "resumedAt": "2026-10-20T14:59:21.594Z",
   "checkpoint": {
-    "id": "checkpoint-2026-10-20T18-32-14-719Z",
+    "id": "checkpoint-2026-10-20T18-33-05-343Z",
     "kind": "checkpoint",
     "reason": "worker_yield",
-    "createdAt": "2026-10-20T18:32:14.719Z",
-    "summary": "fast-fingerprints-001 passing and committed",
-    "next": "Fix sync --prune to keep project docs",
+    "createdAt": "2026-10-20T18:33:05.343Z",
+    "summary": "prune keeps project docs; committed",
+    "next": "Continue product repo migration",
     "decisions": [],
     "blockers": [],
     "activeFeatures": [],
     "repository": {
-      "head": "f9f45e34f6a948e5e4a8347019d9f83ed3a74b55",
+      "head": "02be43e7d9d2337b9fa4fd66af82c7fb4e2d16e3",
       "branch": "main",
       "dirtyCount": 0
     }
@@ -580,7 +580,7 @@
     "drift": []
   },
   "owner": {
-    "id": "claude-v7-3",
-    "claimedAt": "2026-10-20T18:32:14.878Z"
+    "id": "claude-v7-4",
+    "claimedAt": "2026-10-20T18:35:54.137Z"
   }
 }

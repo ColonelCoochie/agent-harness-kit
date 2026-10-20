@@ -69,6 +69,12 @@ test('init scaffolds a v7 harness with one fail-open PreCompact hook', () => {
   }
   assert.deepEqual(json(path.join(root, '.harness/config.json')).verification.full, ['npm test']);
   ok(h(root, 'doctor'));
+  const configPath = path.join(root, '.harness/config.json');
+  const config = json(configPath);
+  config.agents.instructions['github-copilot'] = '.github/copilot-instructions.md';
+  writeFileSync(configPath, JSON.stringify(config));
+  ok(h(root, 'doctor'));
+  git(root, 'checkout', '--', '.harness/config.json');
   const audit = kit(root, 'audit', '.', '--json');
   assert.equal(JSON.parse(audit.out).score, 100, audit.out);
 });
