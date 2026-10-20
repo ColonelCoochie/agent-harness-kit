@@ -1,19 +1,19 @@
 # Progress
 
-Generated: 2026-10-20T21:43:31.476Z by `.harness/run.mjs`. Current-state snapshot only; Git history, `.harness/events.jsonl` and `.harness/evidence/` hold the past.
+Generated: 2026-10-20T21:43:32.194Z by `.harness/run.mjs`. Current-state snapshot only; Git history, `.harness/events.jsonl` and `.harness/evidence/` hold the past.
 
-- Continuity: working, generation 183, owner claude-agents-flag-1
+- Continuity: working, generation 183
 - Features: 42 passing, 0 active, 0 not started, 10 blocked
 - Active: none
-- Repository: main @ 91e0a753c780, 10 changed paths
+- Repository: main @ a1511044cded, 2 changed paths
 
 ## Summary
 
-Tier 1 delivered: verify dedupe, brief command, managed harness-worker/checker agents (v0.8.0).
+sync --agents shipped
 
 ## Next step
 
-Roll out with agent-harness sync to the product repos.
+Enable Claude in the four Codex-only projects
 
 ## Decisions to preserve
 

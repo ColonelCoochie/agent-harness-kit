@@ -703,3 +703,4 @@
 {"at":"2026-10-20T21:42:14.185Z","type":"feature.added","feature":"sync-agents-flag-001"}
 {"at":"2026-10-20T21:42:14.391Z","type":"feature.started","feature":"sync-agents-flag-001","head":"91e0a753c780c8efddd5a8ac8f7262d9af5d77f1","preexistingDirty":0}
 {"at":"2026-10-20T21:43:31.362Z","type":"feature.verified","feature":"sync-agents-flag-001","pass":true,"evidence":".harness/evidence/2026-10-20T21-43-31-359Z-sync-agents-flag-001.json","attempts":1}
+{"at":"2026-10-20T21:43:32.068Z","type":"checkpoint.written","reason":"worker_yield","worker":"claude-agents-flag-1","checkpoint":"checkpoint-2026-10-20T21-43-32-067Z"}
