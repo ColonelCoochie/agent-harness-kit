@@ -5,17 +5,17 @@
   "startedAt": "2026-08-01T19:57:53.273Z",
   "resumedAt": "2026-10-20T14:59:21.594Z",
   "checkpoint": {
-    "id": "checkpoint-2026-10-20T18-33-05-343Z",
+    "id": "checkpoint-2026-10-20T18-36-44-012Z",
     "kind": "checkpoint",
     "reason": "worker_yield",
-    "createdAt": "2026-10-20T18:33:05.343Z",
-    "summary": "prune keeps project docs; committed",
-    "next": "Continue product repo migration",
+    "createdAt": "2026-10-20T18:36:44.012Z",
+    "summary": "doctor checks enabled agents only; committed",
+    "next": "Finish product repo migration",
     "decisions": [],
     "blockers": [],
     "activeFeatures": [],
     "repository": {
-      "head": "02be43e7d9d2337b9fa4fd66af82c7fb4e2d16e3",
+      "head": "e279135c993aaf654aa2e83bbeaa4de8e079ff53",
       "branch": "main",
       "dirtyCount": 0
     }
@@ -579,8 +579,5 @@
     "driftAccepted": false,
     "drift": []
   },
-  "owner": {
-    "id": "claude-v7-4",
-    "claimedAt": "2026-10-20T18:35:54.137Z"
-  }
+  "owner": null
 }

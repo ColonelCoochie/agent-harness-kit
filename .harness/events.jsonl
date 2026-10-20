@@ -687,3 +687,4 @@
 {"at":"2026-10-20T18:35:54.211Z","type":"feature.added","feature":"doctor-enabled-agents-001"}
 {"at":"2026-10-20T18:35:54.386Z","type":"feature.started","feature":"doctor-enabled-agents-001","head":"02be43e7d9d2337b9fa4fd66af82c7fb4e2d16e3","preexistingDirty":0}
 {"at":"2026-10-20T18:36:43.416Z","type":"feature.verified","feature":"doctor-enabled-agents-001","pass":true,"evidence":".harness/evidence/2026-10-20T18-36-43-414Z-doctor-enabled-agents-001.json","attempts":1}
+{"at":"2026-10-20T18:36:44.014Z","type":"checkpoint.written","reason":"worker_yield","worker":"claude-v7-4","checkpoint":"checkpoint-2026-10-20T18-36-44-012Z"}

@@ -18,10 +18,9 @@ Use this file as a router. The persistent development orchestrator keeps only co
 | Current feature scope and state | `.harness/features.json` | Machine-authoritative |
 | Verification profile and project facts | `.harness/config.json` | Machine-authoritative |
 | Worker continuity phase and pending transfer | `.harness/continuity.json` | Machine-authoritative |
-| Combined validated startup and current checkpoint | `node .harness/run.mjs bootstrap --validate --json`, `.harness/progress.md`, `.harness/handoff.md` | Bounded projections with shared doctor validation |
+| Combined validated startup and current checkpoint | `node .harness/run.mjs bootstrap --validate --json`, `.harness/progress.md`, `.harness/handoff.md` | Bounded projections |
 | Objective completion records | `.harness/evidence/` | Write-once evidence |
-| Codex compaction packet hook | `.codex/hooks.json`, `.harness/hooks/precompact-handoff.mjs` | Review and trust locally |
-| Claude worker identity and compaction routing | `.claude/settings.json`, `.harness/hooks/claude-worker-identity.mjs`, `CLAUDE.md` | Review/trust locally; native host dispatch remains unvalidated |
+| Codex/Claude compaction note | `.codex/hooks.json`, `.claude/settings.json`, `.harness/hooks/precompact.mjs` | Fail-open; review/trust locally |
 
 ## Worker reconstruction and orchestrator routing
 
