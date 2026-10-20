@@ -79,6 +79,33 @@ test('init scaffolds a v7 harness with one fail-open PreCompact hook', () => {
   assert.equal(JSON.parse(audit.out).score, 100, audit.out);
 });
 
+test('init and sync manage harness-worker and harness-checker agent definitions', () => {
+  const root = initialized('agents');
+  const files = ['.claude/agents/harness-worker.md', '.claude/agents/harness-checker.md', '.codex/agents/harness-worker.toml', '.codex/agents/harness-checker.toml'];
+  for (const file of files) assert.match(readFileSync(path.join(root, file), 'utf8'), /agent-harness-managed/, file);
+  assert.match(readFileSync(path.join(root, '.claude/agents/harness-checker.md'), 'utf8'), /^tools: Read, Grep, Glob, Bash$/m);
+  assert.match(readFileSync(path.join(root, '.claude/agents/harness-worker.md'), 'utf8'), /^disallowedTools: Agent$/m);
+  assert.match(readFileSync(path.join(root, '.codex/agents/harness-worker.toml'), 'utf8'), /^name = "harness-worker"$/m);
+  const agents = readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
+  assert.match(agents, /run\.mjs brief \[ID\]` and pass it unchanged to the \*\*`harness-worker`\*\*/);
+  assert.match(agents, /Scale effort to the task/);
+  assert.match(readFileSync(path.join(root, 'CLAUDE.md'), 'utf8'), /harness-worker/);
+  const worker = path.join(root, '.claude/agents/harness-worker.md');
+  const checker = path.join(root, '.claude/agents/harness-checker.md');
+  writeFileSync(worker, readFileSync(worker, 'utf8').replace('single mutating worker', 'stale text'));
+  writeFileSync(checker, 'my own reviewer\n');
+  put(root, '.claude/agents/project-helper.md', 'project agent\n');
+  const out = ok(kit(root, 'sync', '.'));
+  assert.match(out, /update \.claude\/agents\/harness-worker\.md/);
+  assert.match(out, /WARN \.claude\/agents\/harness-checker\.md is customized/);
+  assert.doesNotMatch(readFileSync(worker, 'utf8'), /stale text/);
+  assert.equal(readFileSync(checker, 'utf8'), 'my own reviewer\n');
+  assert.equal(readFileSync(path.join(root, '.claude/agents/project-helper.md'), 'utf8'), 'project agent\n');
+  const codexOnly = initialized('agents-codex', 'codex');
+  assert.ok(existsSync(path.join(codexOnly, '.codex/agents/harness-worker.toml')));
+  assert.ok(!existsSync(path.join(codexOnly, '.claude')));
+});
+
 test('verify pass marks the feature passing, writes evidence and commits only scoped changes', () => {
   const root = initialized('pass');
   ok(h(root, 'claim', '--worker-id', 'w1'));

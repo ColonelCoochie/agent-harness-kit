@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0: delegation helpers
+
+- `verify` and `check` run each identical command once (same text and credentials) and credit the result to every layer or acceptance check that lists it (`covers` in evidence). In this repo, `npm test` as both `full` and the acceptance check had doubled verify time.
+- New read-only `brief [ID] [--role worker|checker]` prints a self-contained delegation prompt: contract, scope, verification, last checkpoint, docs router, startup (`claim` or the pending `resume`) and reply format.
+- `init` and `sync` install fresh-context `harness-worker` and read-only `harness-checker` agents for Claude Code (`.claude/agents/`) and Codex (`.codex/agents/`). Files are refreshed only while they keep the `agent-harness-managed` line, and other agent files are never touched.
+- The harness block in AGENTS.md routes delegation through `brief` and these agents, never through forks (which inherit the transcript), and adds effort scaling: do small, low-risk changes directly.
+
 ## 0.7.0 (runtime v7): lean overhaul
 
 Keeps the long-running-goal workflow (orchestrator + fresh workers, WIP-limited features with frozen contracts, cumulative verification with evidence, scope checks, checkpoints, handoff/resume) and removes the machinery that slowed every session.

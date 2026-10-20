@@ -35,7 +35,15 @@ On pass: status `passing`, then a commit of the feature's attributed changes plu
 
 On failure: `attempts` increments; the same failure signature `policies.maxRepeatedFailures` times in a row, or reaching `policies.maxAttempts`, blocks the feature.
 
+Identical commands (same text and credentials) run once per `verify` or `check`, at their first position, and the result covers every layer or acceptance check that lists them. Evidence records this in each result's `covers`.
+
 `check LAYER` runs one layer without touching state.
+
+## Delegation
+
+`brief [ID] [--role worker|checker]` is read-only. It prints a bounded, self-contained prompt for the active (or next startable) feature: the project, contract, acceptance commands, scope, verification layers, the last checkpoint's summary, next step, decisions and blockers, the docs router, startup steps, and the reply format. The worker brief starts with `claim`, or with `resume HANDOFF_ID` when a handoff is pending. The checker brief points at `git diff <baseline>` and forbids edits and state-changing commands.
+
+The kit installs `harness-worker` (mutating, no nested agents) and `harness-checker` (read-only tools in Claude Code) for Claude Code (`.claude/agents/*.md`) and Codex (`.codex/agents/*.toml`). `sync` updates them only while they keep the `agent-harness-managed` line.
 
 ## Scope
 

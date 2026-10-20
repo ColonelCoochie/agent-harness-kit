@@ -2,7 +2,7 @@
   "version": 1,
   "project": {
     "name": "agent-harness-kit",
-    "purpose": "Agent Harness Kit is a zero-dependency, evidence-gated repository-development harness for Codex, Claude Code, and GitHub Copilot.",
+    "purpose": "Agent Harness Kit is a lean, zero-dependency repository-development harness for long-running coding goals with Codex, Claude Code, and GitHub Copilot.",
     "stack": "node"
   },
   "policies": {

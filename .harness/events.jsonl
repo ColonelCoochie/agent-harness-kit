@@ -695,3 +695,6 @@
 {"at":"2026-10-20T19:10:39.138Z","type":"feature.added","feature":"worker-brief-001"}
 {"at":"2026-10-20T19:10:39.348Z","type":"feature.started","feature":"worker-brief-001","head":"0945158f14e547243f2d7daed49d5f457489ba65","preexistingDirty":0}
 {"at":"2026-10-20T19:12:04.367Z","type":"feature.verified","feature":"worker-brief-001","pass":true,"evidence":".harness/evidence/2026-10-20T19-12-04-362Z-worker-brief-001.json","attempts":1}
+{"at":"2026-10-20T19:12:18.893Z","type":"feature.added","feature":"agent-definitions-001"}
+{"at":"2026-10-20T19:12:19.101Z","type":"feature.started","feature":"agent-definitions-001","head":"8080eb297f9a9eb96bc11270c37e8f380c98f5f6","preexistingDirty":0}
+{"at":"2026-10-20T19:14:56.985Z","type":"feature.verified","feature":"agent-definitions-001","pass":true,"evidence":".harness/evidence/2026-10-20T19-14-56-981Z-agent-definitions-001.json","attempts":1}

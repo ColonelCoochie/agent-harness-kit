@@ -1,6 +1,6 @@
 {
   "name": "agent-harness-kit",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "A lean, zero-dependency repository-development harness for long-running coding goals with Codex, Claude Code, and GitHub Copilot",
   "keywords": [
     "codex",

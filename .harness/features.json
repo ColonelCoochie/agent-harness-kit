@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 178,
+  "revision": 181,
   "features": [
     {
       "id": "harness-self-host",
@@ -5132,6 +5132,114 @@
         "at": "2026-10-20T19:12:04.363Z",
         "pass": true,
         "evidence": ".harness/evidence/2026-10-20T19-12-04-362Z-worker-brief-001.json"
+      }
+    },
+    {
+      "id": "agent-definitions-001",
+      "title": "Managed harness-worker and harness-checker agents",
+      "description": "init/sync install fresh-context harness-worker and read-only harness-checker definitions for Claude Code (.claude/agents) and Codex (.codex/agents), update them only while they keep the managed marker, and the harness block tells the orchestrator to delegate via brief + these agents with effort scaling",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          ".harness/**",
+          "tests/**",
+          "AGENTS.md",
+          "CLAUDE.md",
+          ".github/**",
+          ".claude/agents/**",
+          ".codex/agents/**",
+          "README.md",
+          "CHANGELOG.md",
+          "package.json"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "sync installs and refreshes managed agent files, preserves customized and unrelated ones, and instructions route delegation through brief",
+          "command": "npm test"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-20T19-14-56-981Z-agent-definitions-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-20T19:12:18.891Z",
+      "updatedAt": "2026-10-20T19:14:56.982Z",
+      "contract": {
+        "hash": "c800bc6f35598b8a339a1fa3d4f88b8034904146ce2ccdcbbe74efa41965a3ba",
+        "snapshot": {
+          "id": "agent-definitions-001",
+          "title": "Managed harness-worker and harness-checker agents",
+          "description": "init/sync install fresh-context harness-worker and read-only harness-checker definitions for Claude Code (.claude/agents) and Codex (.codex/agents), update them only while they keep the managed marker, and the harness block tells the orchestrator to delegate via brief + these agents with effort scaling",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              ".harness/**",
+              "tests/**",
+              "AGENTS.md",
+              "CLAUDE.md",
+              ".github/**",
+              ".claude/agents/**",
+              ".codex/agents/**",
+              "README.md",
+              "CHANGELOG.md",
+              "package.json"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "sync installs and refreshes managed agent files, preserves customized and unrelated ones, and instructions route delegation through brief",
+              "command": "npm test"
+            }
+          ],
+          "requiredLayers": []
+        },
+        "frozenAt": "2026-10-20T19:12:18.973Z"
+      },
+      "baseline": {
+        "version": 2,
+        "head": "8080eb297f9a9eb96bc11270c37e8f380c98f5f6",
+        "branch": "main",
+        "capturedAt": "2026-10-20T19:12:19.099Z",
+        "dirty": {}
+      },
+      "syncedPaths": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".codex/agents/harness-worker.toml",
+        ".codex/agents/harness-checker.toml",
+        ".claude/agents/harness-worker.md",
+        ".claude/agents/harness-checker.md"
+      ],
+      "lastVerification": {
+        "at": "2026-10-20T19:14:56.982Z",
+        "pass": true,
+        "evidence": ".harness/evidence/2026-10-20T19-14-56-981Z-agent-definitions-001.json"
       }
     }
   ]

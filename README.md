@@ -14,6 +14,8 @@ CLAUDE.md                        Imports @AGENTS.md; Claude worker-ID note
 .github/copilot-instructions.md  Short adapter to AGENTS.md
 .codex/hooks.json                One fail-open PreCompact hook (Codex)
 .claude/settings.json            Same PreCompact hook (Claude Code)
+.claude/agents/harness-{worker,checker}.md    Fresh-context worker and read-only checker (Claude Code)
+.codex/agents/harness-{worker,checker}.toml   Same roles for Codex
 .harness/
   run.mjs                        The controller (single file, Node 20+)
   config.json                    Commands, scope defaults, policies, credentials, agents
@@ -60,12 +62,25 @@ node .harness/run.mjs verify feat-001         # layers + acceptance + scope; pas
 node .harness/run.mjs checkpoint --reason worker_yield --summary "feat-001 passing" --next "start feat-002"
 ```
 
-- `verify` runs `completion.alwaysRunWhenConfigured` + `completion.baseLayers` + the feature's `--layer`s in order (quick, full, architecture, e2e, clean), then each acceptance command, failing fast. It prints one line per passing command and the tail of a failing one; full output is in `.harness/logs/`.
+- `verify` runs `completion.alwaysRunWhenConfigured` + `completion.baseLayers` + the feature's `--layer`s in order (quick, full, architecture, e2e, clean), then each acceptance command, failing fast. A command listed more than once (for example `npm test` as both `full` and an acceptance check) runs once and its result covers every listing. It prints one line per passing command and the tail of a failing one; full output is in `.harness/logs/`.
 - Scope: everything changed since `start` (commits plus working tree, excluding pre-existing dirt that is unchanged) must match the feature's `--allow` and not its `--deny`. Harness state files are exempt; `config.json` is not, so a feature can't quietly weaken its own checks.
 - On pass the feature becomes `passing` (terminal) and the runtime commits its scoped changes plus harness state. Set `completion.commitOnPass: false` to opt out. It never pushes.
 - Failures count against `policies.maxAttempts` (default 5); the same failure `maxRepeatedFailures` times in a row (default 2) blocks the feature so a worker stops instead of looping.
 - `checkpoint --reason needs_input` pauses for a user decision. `handoff` parks mutations for a true transfer; only a fresh worker runs the printed `resume HANDOFF_ID` (drift in commit, branch, feature revision or config requires `--accept-drift`).
 - Ownership is cooperative: Codex workers are identified by `CODEX_THREAD_ID`; other hosts pass `--worker-id ID`. `claim --force` takes over from a worker that has stopped.
+
+## Delegating to workers
+
+```bash
+node .harness/run.mjs brief feat-001                  # self-contained prompt for the harness-worker agent
+node .harness/run.mjs brief feat-001 --role checker   # read-only review prompt for harness-checker
+```
+
+The orchestrator passes the brief unchanged to the `harness-worker` agent. The brief carries the contract, scope, verification commands, last checkpoint, startup steps (`claim`, or the pending `resume`) and the expected reply format, so the orchestrator never relays implementation context itself. Named agents start with fresh context. In Claude Code a fork would inherit the orchestrator's transcript, so harness work never uses forks. Claude Code enforces the checker's read-only tool list; Codex can't make an agent read-only, so there the restriction is an instruction.
+
+`init` and `sync` install the four agent files. `sync` refreshes them while they keep their `agent-harness-managed` line. Delete that line to customize a file, and sync will leave it alone. Other files in `.claude/agents/` and `.codex/agents/` are never touched.
+
+For a small, low-risk change the orchestrator may act as the worker itself (claim, change, verify, checkpoint); a fresh worker costs a full context.
 
 ## Credentials
 

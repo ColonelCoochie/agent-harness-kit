@@ -10,7 +10,9 @@ Maintain Agent Harness Kit: a lean, zero-dependency Node.js 20+ development harn
 ### Long-running goals: orchestrator and workers
 
 - The user-facing chat is the **orchestrator**. It keeps intent, decisions and compact worker results, and routes work. It does not do large implementation itself.
-- Implementation runs in **fresh workers** (Codex `fork_turns="none"`, Claude Code a fresh non-fork Agent) with a self-contained prompt. One mutating worker at a time; read-only explorers may run in parallel.
+- To delegate, print the prompt with `node .harness/run.mjs brief [ID]` and pass it unchanged to the **`harness-worker`** agent (`.claude/agents/` or `.codex/agents/`). Named agents start with fresh context; never use a fork, which inherits the transcript. For an independent review use `brief ID --role checker` with **`harness-checker`**.
+- One mutating worker at a time; read-only explorers and checkers may run in parallel.
+- Scale effort to the task. A fresh worker costs a full context, so for a small, low-risk change the orchestrator may act as the worker itself (claim, change, verify, checkpoint). Delegate when the work is a whole feature or needs a clean context.
 - Worker startup: `node .harness/run.mjs session`, then `claim` (or the exact `resume HANDOFF_ID` the orchestrator gave you), then `bootstrap --validate --json`. Read only the docs the active feature needs.
 - Hosts without `CODEX_THREAD_ID` pass the same `--worker-id ID` on `claim`/`resume` and later mutations.
 
@@ -46,4 +48,4 @@ When changing the generated runtime, edit the reusable source under `skill/codex
 
 ## Verification
 
-Use the active feature's `node .harness/run.mjs verify <feature-id>`. It runs the quick syntax checks, the Node test suite (`npm test`, about 20 seconds) and the structural self-audit, then the feature's acceptance commands. Tests must keep covering init, sync migration from v6, instruction surfaces, scope, verify/commit, continuity, credentials, redaction, timeouts and the PreCompact hook.
+Use the active feature's `node .harness/run.mjs verify <feature-id>`. It runs the quick syntax checks, the Node test suite (`npm test`, about 20 seconds) and the structural self-audit, then the feature's acceptance commands. Tests must keep covering init, sync migration from v6, instruction surfaces, managed agent definitions, scope, verify/commit and command de-duplication, continuity, brief, credentials, redaction, timeouts and the PreCompact hook.

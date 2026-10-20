@@ -19,7 +19,7 @@ After `init`: set the real `verification.full` command in `.harness/config.json`
 
 ## Operate (long-running goals)
 
-1. The user-facing chat is the orchestrator: keep intent, decisions and compact worker results; delegate implementation to fresh workers (Codex `fork_turns="none"`, Claude a fresh non-fork Agent). One mutating worker at a time.
+1. The user-facing chat is the orchestrator: keep intent, decisions and compact worker results. Delegate a feature by passing `node .harness/run.mjs brief ID` unchanged to the `harness-worker` agent (never a fork), and reviews via `brief ID --role checker` to `harness-checker`. One mutating worker at a time. Do small, low-risk changes directly instead of spawning a worker.
 2. Worker startup: `node .harness/run.mjs session`, `claim` (or the exact delegated `resume HANDOFF_ID`), `bootstrap --validate --json`, then only the docs the feature needs (`.harness/docs-map.md`).
 3. Plan the goal as features small enough for one worker: `add ID --title --description --criterion C --command CMD --allow GLOB [--depends ID]`.
 4. `start ID` → implement within scope → `check quick` while working → `verify ID`. A pass marks the feature `passing` and commits. Fix your own reversible failures; stop when the runtime blocks the feature for repeated failures or budget.

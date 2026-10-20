@@ -3,6 +3,6 @@
 <!-- agent-harness-v7 -->
 ## Claude Code harness workers
 
-- Delegate harness workers with a fresh non-fork Agent and a self-contained prompt.
-- Each child picks a unique ID (for example `claude-<feature>-<n>`) and passes `--worker-id ID` on `claim`/`resume` and every mutation (`start`, `verify`, `checkpoint`, `handoff`).
+- Delegate with `node .harness/run.mjs brief [ID]` and the `harness-worker` subagent (`.claude/agents/harness-worker.md`). A named subagent starts fresh; a fork inherits this transcript, so don't fork for harness work.
+- The worker runs `claim`, which prints its worker ID, and passes `--worker-id ID` on every later mutation (`start`, `verify`, `checkpoint`, `handoff`).
 <!-- /agent-harness-v7 -->

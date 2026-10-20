@@ -33,6 +33,13 @@ const MANAGED = [
   ['precompact.mjs', 'hooks/precompact.mjs']
 ];
 const LOOPS = [['goal.md', 'loops/goal.md'], ['maker.md', 'loops/maker.md'], ['checker.md', 'loops/checker.md']];
+// Delegation targets for the orchestrator. Named custom agents start with fresh
+// context (a Claude Code fork would inherit the transcript).
+const AGENT_DEFINITIONS = {
+  claude: [['agents/claude-harness-worker.md', '.claude/agents/harness-worker.md'], ['agents/claude-harness-checker.md', '.claude/agents/harness-checker.md']],
+  codex: [['agents/codex-harness-worker.toml', '.codex/agents/harness-worker.toml'], ['agents/codex-harness-checker.toml', '.codex/agents/harness-checker.toml']]
+};
+const AGENT_MARKER = 'agent-harness-managed';
 // Runtime-v6 machinery removed by v7 sync.
 const LEGACY_FILES = [
   'context-budget.mjs', 'windows-command.mjs', 'windows-command-supervisor.ps1', 'repair.mjs', 'managed-files.json',
@@ -285,10 +292,30 @@ function syncCodexConfig(root, enable, actions) {
   if (next !== current) { write(target, next); actions.push('update .codex/config.toml'); }
 }
 
+// Create missing agent definitions and refresh ones that still carry the managed
+// marker. A file without the marker is the project's own and is never touched.
+function syncAgentDefinitions(root, enabled, actions, warnings) {
+  for (const agent of enabled) {
+    for (const [source, relative] of AGENT_DEFINITIONS[agent] ?? []) {
+      const target = path.join(root, relative);
+      const content = asset(source);
+      if (existsSync(target)) {
+        const current = read(target);
+        if (current.replace(/\r\n/g, '\n') === content) continue;
+        if (!current.includes(AGENT_MARKER)) { warnings.push(`${relative} is customized (no ${AGENT_MARKER} line); left unchanged`); continue; }
+      }
+      const present = existsSync(target);
+      write(target, content);
+      actions.push(`${present ? 'update' : 'create'} ${relative}`);
+    }
+  }
+}
+
 function syncSurfaces(root, config, actions) {
   const warnings = [];
   const enabled = config.agents?.enabled ?? Object.keys(SURFACES);
   for (const agent of enabled) if (SURFACES[agent]) syncInstruction(root, agent, config, actions);
+  syncAgentDefinitions(root, enabled, actions, warnings);
   syncHookFile(root, '.codex/hooks.json', enabled.includes('codex'), actions, warnings);
   syncHookFile(root, '.claude/settings.json', enabled.includes('claude'), actions, warnings);
   syncCodexConfig(root, enabled.includes('codex'), actions);
