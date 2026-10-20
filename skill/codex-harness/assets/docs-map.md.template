@@ -8,6 +8,7 @@ The `.harness/` routes below describe the outer repository-development control p
 
 | Need | Source | Status |
 |---|---|---|
+| Canonical native hook authority, project enrollment, and independent source recovery | `skill/codex-harness/references/operations.md#verified-native-hook-updates` | Reviewed operator policy |
 | Product purpose and user behavior | `README.md` or project product docs | Confirm for this project |
 | Architecture and boundaries | `docs/ARCHITECTURE.md` or equivalent | Confirm for this project |
 | Product-runtime agents or orchestration | Product architecture and operations docs outside `.harness/` | Application-owned; never depend on, read, or write `.harness/` |

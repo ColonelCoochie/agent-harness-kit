@@ -1,7 +1,14 @@
+import './harness-native-identity.test.mjs';
+import './harness-hook-approval.test.mjs';
+import './harness-hook-policy.test.mjs';
+import './harness-native-hook-client.test.mjs';
+import './harness-source-repair.test.mjs';
 import './harness-continuity.test.mjs';
 import './harness-hardening.test.mjs';
 import './harness-capture-sync.test.mjs';
 import './harness-hook-timeout.test.mjs';
+import './harness-artifacts.test.mjs';
+import './harness-context.test.mjs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
@@ -12,7 +19,7 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { auditHarness, initHarness, normalizeCommandForPlatform, syncHarness } from '../skill/codex-harness/scripts/lib/core.mjs';
+import { auditHarness, initHarness, normalizeCommandForPlatform, planSync, syncHarness } from '../skill/codex-harness/scripts/lib/core.mjs';
 
 const execFileAsync = promisify(execFile);
 const temporary = [];
@@ -34,7 +41,7 @@ const runtimeSource = path.join(repositoryRoot, 'skill', 'codex-harness', 'asset
 const runtimeCommandUsage = new Map([
   ['session', 'node .harness/run.mjs session [--json]'],
   ['resume', 'node .harness/run.mjs resume HANDOFF_ID [--accept-drift] [--json]'],
-  ['doctor', 'node .harness/run.mjs doctor'],
+  ['doctor', 'node .harness/run.mjs doctor [--integrity]'],
   ['status', 'node .harness/run.mjs status'],
   ['next', 'node .harness/run.mjs next [--json]'],
   ['add', 'node .harness/run.mjs add ID --title TEXT --description TEXT --criterion TEXT --command CMD --allow GLOB [options]'],
@@ -188,6 +195,7 @@ async function runtimeOnlyProject(name) {
   const harnessDir = path.join(root, '.harness');
   await mkdir(harnessDir, { recursive: true });
   await writeFile(path.join(harnessDir, 'run.mjs'), await readFile(runtimeSource));
+  await writeFile(path.join(harnessDir, 'context-budget.mjs'), await readFile(path.join(path.dirname(runtimeSource), 'context-budget.mjs')));
   return root;
 }
 
@@ -441,12 +449,55 @@ test('scaffolds native instructions for Codex, Claude Code, and GitHub Copilot',
   assert.match(await readFile(path.join(root, 'CLAUDE.md'), 'utf8'), /Development-Harness Boundary/);
   assert.match(await readFile(path.join(root, '.github', 'copilot-instructions.md'), 'utf8'), /AGENTS\.md/);
   assert.match(await readFile(path.join(root, '.github', 'copilot-instructions.md'), 'utf8'), /Development-Harness Boundary/);
-  assert.match(await readFile(path.join(root, '.codex', 'hooks.json'), 'utf8'), /precompact-handoff\.mjs/);
+  assert.equal(JSON.parse(await readFile(path.join(root, '.codex', 'hooks.json'), 'utf8')).hooks.PreCompact[0].hooks[0].command, JSON.parse(await readFile(path.join(repositoryRoot, 'skill/codex-harness/assets/native-hook-bootstrap-v3.json'), 'utf8')).commands['codex/precompact-handoff.mjs']);
   const help = (await runtime(root, 'help')).stdout;
   assert.match(help, /Orchestrated-Worker Protocol/);
   assert.match(help, /persistent (?:development )?orchestrator/i);
   assert.match(help, /fresh (?:bounded )?(?:worker|subagent)/i);
   assert.doesNotMatch(help, /STOP_CURRENT_CHAT/);
+  assert.match((await runtime(root, 'doctor')).stdout, /Structural state is healthy/);
+});
+
+test('doctor recognizes current v3 and immutable predecessor native launcher routes', async () => {
+  const root = await project('launcher-compatibility');
+  const current = JSON.parse(await readFile(path.join(repositoryRoot, 'skill/codex-harness/assets/native-hook-bootstrap-v3.json'), 'utf8'));
+  const surfaces = ['.codex/hooks.json', '.claude/settings.json'];
+  const originals = await Promise.all(surfaces.map(relative => readFile(path.join(root, relative), 'utf8')));
+  for (const version of [1, 2, 3]) {
+    const bootstrap = JSON.parse(await readFile(path.join(repositoryRoot, `skill/codex-harness/assets/native-hook-bootstrap-v${version}.json`), 'utf8'));
+    for (const [index, relative] of surfaces.entries()) {
+      let settings = originals[index];
+      for (const [key, command] of Object.entries(current.commands)) settings = settings.replaceAll(JSON.stringify(command), JSON.stringify(bootstrap.commands[key]));
+      await writeFile(path.join(root, relative), settings);
+    }
+    assert.match((await runtime(root, 'doctor')).stdout, /Structural state is healthy/, `launcher v${version}`);
+  }
+});
+
+test('sync preserves customized v2 lifecycle groups as healthy routes without duplicate additions', async () => {
+  const root = await project('customized-v2-routes');
+  const previous = JSON.parse(await readFile(path.join(repositoryRoot, 'skill/codex-harness/assets/native-hook-bootstrap-v2.json'), 'utf8'));
+  const surfaces = [['codex', '.codex/hooks.json'], ['claude', '.claude/settings.json']];
+  const customized = new Map();
+  for (const [platform, relative] of surfaces) {
+    const settings = JSON.parse(await readFile(path.join(root, relative), 'utf8'));
+    const events = [['PreCompact', 'precompact-handoff.mjs'], ['SessionStart', 'sessionstart-routing.mjs']];
+    if (platform === 'claude') events.push(['SubagentStart', 'claude-worker-identity.mjs']);
+    for (const [event, name] of events) {
+      const hook = settings.hooks[event][0].hooks[0];
+      hook.command = previous.commands[`${platform}/${name}`];
+      if (Object.hasOwn(hook, 'commandWindows')) hook.commandWindows = hook.command;
+      hook.timeout = 123;
+    }
+    customized.set(relative, settings);
+    await writeFile(path.join(root, relative), JSON.stringify(settings));
+  }
+  const plan = await planSync(root, { approveNativeHooks: false });
+  assert.equal(plan.blocked, false);
+  for (const platform of ['codex', 'claude']) assert.ok(!plan.operations.some(operation => operation.path === `.harness/${platform}-hooks.addition.json` && operation.action === 'write'));
+  await syncHarness(root, { expectedPlanHash: plan.planHash, approveNativeHooks: false });
+  for (const [, relative] of surfaces) assert.deepEqual(JSON.parse(await readFile(path.join(root, relative), 'utf8')), customized.get(relative));
+  for (const platform of ['codex', 'claude']) await assert.rejects(readFile(path.join(root, `.harness/${platform}-hooks.addition.json`)), { code: 'ENOENT' });
   assert.match((await runtime(root, 'doctor')).stdout, /Structural state is healthy/);
 });
 
@@ -522,7 +573,7 @@ test('preserves existing Claude and Copilot instructions and emits reviewable ad
   assert.match(await readFile(path.join(root, '.harness', 'CLAUDE.addition.md'), 'utf8'), /Development-Harness Boundary/);
   assert.match(await readFile(path.join(root, '.harness', 'copilot-instructions.addition.md'), 'utf8'), /Project Harness/);
   assert.match(await readFile(path.join(root, '.harness', 'copilot-instructions.addition.md'), 'utf8'), /Development-Harness Boundary/);
-  assert.match(await readFile(path.join(root, '.harness', 'codex-hooks.addition.json'), 'utf8'), /precompact-handoff\.mjs/);
+  assert.equal(JSON.parse(await readFile(path.join(root, '.harness', 'codex-hooks.addition.json'), 'utf8')).hooks.PreCompact[0].hooks[0].command, JSON.parse(await readFile(path.join(repositoryRoot, 'skill/codex-harness/assets/native-hook-bootstrap-v3.json'), 'utf8')).commands['codex/precompact-handoff.mjs']);
 });
 
 test('requires executable acceptance and bounded scope', async () => {
@@ -649,7 +700,7 @@ test('session --json exposes only the compact delegated-worker routing packet', 
   assert.equal(session.resumeCommand, expectedResume);
   assert.match(session.workerPrompt, /fork_turns="none"/);
   assert.ok(session.workerPrompt.includes(expectedResume));
-  assert.match(session.workerPrompt, /bootstrap --json/);
+  assert.match(session.workerPrompt, /bootstrap --validate --json/);
   assert.deepEqual(session.packet, {
     id: pending.handoff.id,
     kind: pending.handoff.kind,
@@ -934,6 +985,55 @@ test('repository-snapshot enforces a staged deletion across the scope boundary',
   assert.ok(evidence.changedFiles.includes('src/removed.mjs'));
 });
 
+test('verification attempt policy defaults to five and sync preserves explicit overrides', async () => {
+  const root = await project('attempt-policy-defaults');
+  const configPath = path.join(root, '.harness', 'config.json');
+  const config = JSON.parse(await readFile(configPath, 'utf8'));
+  assert.equal(config.policies.maxAttempts, 5);
+  assert.equal(config.policies.maxRepeatedFailures, 2);
+  config.policies.maxAttempts = 7;
+  await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
+  await syncHarness(root, { approveNativeHooks: false });
+  assert.equal(JSON.parse(await readFile(configPath, 'utf8')).policies.maxAttempts, 7);
+  delete config.policies.maxAttempts;
+  await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
+  await syncHarness(root, { approveNativeHooks: false });
+  assert.equal(JSON.parse(await readFile(configPath, 'utf8')).policies.maxAttempts, 5);
+
+  const overridden = await mkdtemp(path.join(os.tmpdir(), 'codex-harness-attempt-override-'));
+  temporary.push(overridden);
+  await initHarness(overridden, { name: 'attempt-override', purpose: 'An explicit verification policy fixture.', maxAttempts: 2 });
+  assert.equal(JSON.parse(await readFile(path.join(overridden, '.harness/config.json'), 'utf8')).policies.maxAttempts, 2);
+});
+
+test('verification attempt policy admits the fifth attempt and rejects the sixth without resetting failures', async () => {
+  const root = await project('attempt-policy-budget');
+  const configPath = path.join(root, '.harness', 'config.json');
+  const config = JSON.parse(await readFile(configPath, 'utf8'));
+  config.verification.quick = [];
+  config.verification.architecture = [];
+  config.verification.e2e = [];
+  await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
+  await add(root, 'feat-001', ['--allow', '.harness/config.json']);
+  await runtime(root, 'start', 'feat-001');
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    config.verification.full = [`node -e "process.exit(${attempt})"`];
+    await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
+    await assert.rejects(() => runtime(root, 'verify', 'feat-001'));
+    const feature = JSON.parse(await readFile(path.join(root, '.harness/features.json'), 'utf8')).features[0];
+    assert.equal(feature.attempts, attempt);
+    assert.equal(feature.evidence.length, attempt);
+    assert.equal(feature.repeatedFailures, 1);
+    assert.equal(feature.status, attempt === 5 ? 'blocked' : 'active');
+  }
+  await runtime(root, 'unblock', 'feat-001');
+  await assert.rejects(() => runtime(root, 'verify', 'feat-001'), /exhausted its verification budget/);
+  const feature = JSON.parse(await readFile(path.join(root, '.harness/features.json'), 'utf8')).features[0];
+  assert.equal(feature.attempts, 5);
+  assert.equal(feature.evidence.length, 5);
+  assert.equal(config.policies.maxRepeatedFailures, 2);
+});
+
 test('failed verification records evidence and bounded repeated failures block work', async () => {
   const root = await project('failed-verification', 'node -e "process.exit(7)"');
   await add(root, 'feat-001');
@@ -967,8 +1067,8 @@ test('evidence-plan writes a canonical historical manifest with exact ordered re
   const fixture = await passingEvidenceFixture('evidence-plan-manifest');
   const { evidence } = fixture;
   const plan = evidence.verificationPlan;
-  assert.equal(evidence.schemaVersion, 4);
-  assert.equal(plan.schemaVersion, 1);
+  assert.equal(evidence.schemaVersion, 5);
+  assert.equal(plan.schemaVersion, 2);
   assert.equal(plan.evidenceSchemaVersion, evidence.schemaVersion);
   assert.equal(plan.harnessVersion, evidence.harnessVersion);
   assert.equal(plan.feature.id, evidence.featureId);
@@ -1088,13 +1188,13 @@ test('evidence-plan rejects altered layers criteria hashes scope and relationshi
     },
     {
       name: 'unknown future evidence schema',
-      mutate: (record) => { record.schemaVersion = 5; },
-      pattern: /unsupported evidence schema version 5/
+      mutate: (record) => { record.schemaVersion = 6; },
+      pattern: /unsupported evidence schema version 6/
     },
     {
       name: 'unknown future verification-plan schema',
-      mutate: (record) => { record.verificationPlan.schemaVersion = 2; },
-      pattern: /unsupported verification-plan schema version 2/
+      mutate: (record) => { record.verificationPlan.schemaVersion = 3; },
+      pattern: /unsupported verification-plan schema version 3/
     },
     {
       name: 'mismatched feature field',
@@ -2001,3 +2101,5 @@ test('skill metadata satisfies the dependency-free package contract', async () =
   assert.match(metadata, /default_prompt: "Use \$codex-harness/);
   assert.match(metadata, /product-runtime agents independent/);
 });
+
+import './harness-budget-compat.test.mjs';

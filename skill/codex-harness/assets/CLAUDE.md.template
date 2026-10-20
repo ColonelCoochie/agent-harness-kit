@@ -17,7 +17,7 @@ Delegate through a fresh non-fork Agent invocation with a self-contained bounded
 ```bash
 node .harness/run.mjs session --json
 node .harness/run.mjs claim --worker-id claude-agent:<child-id>
-node .harness/run.mjs bootstrap --json
+node .harness/run.mjs bootstrap --validate --json
 node .harness/run.mjs verify FEATURE_ID --worker-id claude-agent:<child-id>
 node .harness/run.mjs checkpoint --reason worker_yield --summary "Verified result" --next "Route next task" --worker-id claude-agent:<child-id>
 ```

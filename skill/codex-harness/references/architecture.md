@@ -52,6 +52,8 @@ This development orchestrator is not a product-runtime orchestrator. Product orc
 
 Scope and lifecycle are cross-cutting enforcement planes: WIP, dependencies, allow/deny paths, locks, retry budgets, worker yield/transfer boundaries, and maintenance constrain all five core subsystems. Observability crosses tools, state, and feedback.
 
+Context is another development boundary: `context-budget.mjs` keeps separate actor counters and bounded transcript metadata under `.harness/context/`; the runtime mutation gate parks an owned worker before executing work at pressure. Reviewed `context-guard.mjs` adapters handle supported native tool/prompt/Stop events. Parent observations only guide routing and host compaction. Command feedback has per-result and aggregate caps with redacted stream logs under `.harness/logs/`. Neither context telemetry nor log storage is application runtime. Hook-bypassing schedulers remain outside interception; see [operations](operations.md#context-and-output-budgets).
+
 Evidence validation is historical-plan based: a passing record carries the canonical plan it executed, and repository-local doctor/audit checks validate that snapshot rather than reinterpret the run through later mutable configuration. The manifest hash and internal cross-checks detect structural inconsistency, but do not create a cryptographic trust anchor against a writer who can rewrite all repository state together.
 
 ## Agent surfaces
@@ -72,7 +74,7 @@ The orchestrator retains only user intent, decisions, compact worker results, an
 1. `AGENTS.md` and its agent-native adapter
 2. `.harness/config.json`
 3. `session --json` for routing only, then claim or delegated resume
-4. `bootstrap --json` for the bounded current feature and continuity projection
+4. `bootstrap --validate --json` for the bounded current feature and continuity projection
 5. Deliberately selected detail only; never dump historical baseline maps
 6. task-relevant docs routed by `.harness/docs-map.md`
 
@@ -81,7 +83,7 @@ Keep deep design, reliability, security, and product detail in linked docs. A fr
 
 ## Bounded worker startup and ownership
 
-Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim`, or runs the exact delegated pending resume command. Then run `node .harness/run.mjs bootstrap --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
+Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim`, or runs the exact delegated pending resume command. Then run `node .harness/run.mjs bootstrap --validate --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
 
 The harness binds mutations to host `CODEX_THREAD_ID`, not shared `CODEX_SESSION_ID`. Other hosts must supply `--worker-id` on mutations as an explicit attestation. Normal worker_yield and needs_input revoke the owner; a retired worker cannot reclaim or resume. This is cooperative CLI enforcement, not protection against direct file edits or forged environments. The orchestrator cannot claim a child worker's ID.
 

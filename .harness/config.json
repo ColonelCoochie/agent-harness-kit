@@ -7,7 +7,7 @@
   },
   "policies": {
     "wipLimit": 1,
-    "maxAttempts": 3,
+    "maxAttempts": 5,
     "maxRepeatedFailures": 2,
     "commandTimeoutMs": 600000,
     "passingIsTerminal": true,
@@ -27,7 +27,9 @@
     "full": [
       "node --test tests/harness.test.mjs"
     ],
-    "e2e": [],
+    "e2e": [
+      "node scripts/verify-live-host-e2e.mjs"
+    ],
     "architecture": [
       "node bin/agent-harness.mjs audit . --min-score 95"
     ],
@@ -66,7 +68,12 @@
       "**/node_modules/**",
       "**/dist/**",
       "**/build/**"
-    ]
+    ],
+    "capture": {
+      "version": 1,
+      "metadataRoots": [],
+      "metadataExtensions": []
+    }
   },
   "continuity": {
     "mode": "orchestrated_worker",
@@ -144,5 +151,32 @@
       "skill/codex-harness/references/audit-model.md"
     ],
     "router": ".harness/docs-map.md"
+  },
+  "context": {
+    "version": 1,
+    "worker": {
+      "maxAgeMs": 3600000,
+      "maxMutations": 48,
+      "maxToolCalls": 80,
+      "maxOutputChars": 120000
+    },
+    "orchestrator": {
+      "maxAgeMs": 7200000,
+      "maxMutations": 48,
+      "maxToolCalls": 160,
+      "maxOutputChars": 160000
+    },
+    "pressureRatio": 0.65,
+    "reserveTokens": 24000,
+    "maxEstimatedTokens": 120000,
+    "maxUnmeasuredBytes": 240000,
+    "staleUsageMs": 300000,
+    "staleGrowthBytes": 48000,
+    "maxInterruptedGoals": 6,
+    "scanBytes": 1048576,
+    "maxLineBytes": 262144,
+    "perResultChars": 6000,
+    "perRunChars": 16000,
+    "codexCodeModeResultSuppressionConfirmed": true
   }
 }

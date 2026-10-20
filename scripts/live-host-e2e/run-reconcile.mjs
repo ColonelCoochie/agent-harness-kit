@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict';
+import { readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+import { connect, headerProof } from './native-client.mjs';
+
+const cwd=path.resolve('scratch/live-host-e2e/project-native');
+const base=path.resolve('scratch/live-host-e2e');
+const reportPath=path.join(base,'workers-native-result.json');
+const json=async p=>JSON.parse(await readFile(p,'utf8'));
+const state=()=>JSON.parse(execFileSync(process.execPath,['.harness/run.mjs','session','--json'],{cwd,encoding:'utf8'}));
+const featureId='ledger-verification-002';
+const originalSha='c0a61500b4ab0ed5c845f9606029ac3d3c09a982288fcaa72a00655de60f0e7a';
+assert.equal(createHash('sha256').update(await readFile(path.join(cwd,'acceptance.test.mjs'))).digest('hex'),originalSha);
+const initial=state();assert.equal(initial.phase,'working');assert.equal(initial.owner,null);
+const all=await json(path.join(cwd,'.harness/features.json'));
+const original=all.features.find(f=>f.id==='ledger-001');assert.equal(original.status,'blocked');
+assert(!all.features.some(f=>f.id===featureId),'Reconcile an existing outcome before another run');
+const report=await json(reportPath);assert.equal(report.status,'failed');
+report.originalFailure={status:report.status,error:report.error,featureId:original.id,evidence:original.evidence};
+report.status='in_progress';delete report.error;
+const save=()=>writeFile(reportPath,JSON.stringify(report,null,2)+'\n');
+const client=await connect({cwd,log:path.join(base,'worker-native-events.jsonl'),trustBypass:false,projectTrust:false,limit:80000});
+try{
+ const discovery=await client.rpc('hooks/list',{cwds:[cwd]});
+ assert.equal(discovery.data[0].hooks.length,6);assert(discovery.data[0].hooks.every(h=>h.enabled&&h.trustStatus==='trusted'));
+ const worker=await client.start(`You are the sole fresh bounded native verification worker in ${cwd}. You are not alone; preserve others' changes. Native reviewed hooks use persisted trust, no bypass, and the unchanged 12-tool budget. Never read credentials, modify hooks/config/runtime/baselines, edit acceptance.test.mjs or product code, override budgets, create goals, or recover workers. Keep each actual tool result below 2500 characters and batch required startup/checks sequentially. The original ledger-001 scope-only failure must remain blocked and immutable. At pressure/exit 75 return the exact printed resume command and stop.`);
+ report.reconciliationWorker={role:'verification',threadId:worker.thread.id,parentRoutingThreadId:report.driverParentThreadId,featureId,discovery};await save();
+ console.log(JSON.stringify({stage:'native_reconciliation_started',threadId:worker.thread.id,featureId,persistedTrustedHooks:6}));
+ const completed=await client.turn(worker.thread.id,`Complete ledger-routing-7419 final verification using a new correctly scoped feature ${featureId}. All five ORIGINAL acceptance cases already pass; ledger-001 cannot pass because its immutable baseline predates reviewed hook/runtime upgrades and predecessor temporary outputs. Preserve that historical failure. FIRST actual shell tool call: execute session --json, claim, bootstrap ledger-001 --json (parse in memory and print only selected status/scope/evidence), read AGENTS.md, .harness/config.json, task docs-map routes, package.json, README.md, SPEC.md and acceptance.test.mjs narrowly, and reusable skill C:/Users/Jason/Documents/CoochieHarness/skill/codex-harness/SKILL.md; then doctor/status/next. Keep aggregate output below 2500 characters; do not create temporary startup/output files. Before the next bounded batch run context --observe --json. After startup, one shell call runs add ${featureId} --title "Verify ledger against reviewed native fixture" --description "Verify original ledger acceptance on current reviewed infrastructure; preserve ledger-001 scope failure." --criterion "All five original deterministic ledger acceptance cases pass under native reviewed hooks" --command "node --test acceptance.test.mjs" --allow "*.mjs" --allow "README.md", then start ${featureId}. This freezes the CURRENT properly prepared fixture without modifying historical state. Next single shell call executes the literal node .harness/run.mjs verify ${featureId}, captures its output in memory, prints exit plus bounded latest evidence metadata (path/pass/commands), and ONLY on exit zero executes checkpoint --reason worker_yield --summary "Original five ledger acceptance cases passed native successor verification" --next "Parent authenticates final native E2E evidence". No edits or standalone tests are required. Stop immediately after normal yield. Do not claim passing unless actual verify succeeds. If any substantive blocker occurs, record checkpoint --reason needs_input with the cause and stop.`,600000);
+ Object.assign(report.reconciliationWorker,{turnStatus:completed.turn.status,header:await headerProof(worker.thread.path,worker.thread.id),hooks:completed.events.filter(e=>e.method==='hook/completed'&&e.threadId===worker.thread.id).map(e=>({id:e.run?.id,event:e.run?.eventName,status:e.run?.status,entries:e.run?.entries}))});
+ report.afterReconciliation=state();await save();
+ const finalAll=await json(path.join(cwd,'.harness/features.json'));
+ const feature=finalAll.features.find(f=>f.id===featureId);
+ assert.equal(feature?.status,'passing');assert.equal(finalAll.features.find(f=>f.id==='ledger-001').status,'blocked');
+ assert.equal(report.afterReconciliation.owner,null);assert.equal(report.afterReconciliation.packet.reason,'worker_yield');
+ const evidence=await json(path.join(cwd,feature.evidence.at(-1)));assert.equal(evidence.pass,true);assert.equal(evidence.featureId,featureId);
+ report.ledgerFeature={id:featureId,status:feature.status,evidence:feature.evidence,contractHash:feature.contractHash};
+ report.status='passed';await save();
+ console.log(JSON.stringify({stage:'native_reconciliation_passed',threadId:worker.thread.id,featureId,evidence:feature.evidence.at(-1),originalFailurePreserved:true}));
+}catch(error){report.status='failed';report.error=error.stack;await save();throw error;}finally{await client.close();}

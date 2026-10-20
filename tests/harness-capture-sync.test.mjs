@@ -25,6 +25,7 @@ async function fixture(name, agents) {
 async function isolatedKit(name, editCore = value => value) {
   const root = await directory(name), skill = path.join(root, 'kit');
   await mkdir(path.join(skill, 'scripts/lib'), { recursive: true });
+  await cp(path.join(repository, 'skill/codex-harness/scripts/lib'), path.join(skill, 'scripts/lib'), { recursive: true });
   await cp(path.join(repository, 'skill/codex-harness/assets'), path.join(skill, 'assets'), { recursive: true });
   const core = path.join(skill, 'scripts/lib/core.mjs');
   await writeFile(core, editCore(await readFile(path.join(repository, 'skill/codex-harness/scripts/lib/core.mjs'), 'utf8')));

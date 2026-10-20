@@ -10,7 +10,7 @@ Any in-product agent, loop, scheduler, or orchestrator is product-owned runtime.
 
 Protocol marker: `ORCHESTRATED_WORKER_CONTINUITY_V1`.
 
-The persistent development orchestrator keeps the user-facing chat open for user intent, decisions, concise status, and routing. Delegate repository work to fresh bounded workers, allow one mutating worker at a time, and permit parallel read-only exploration. Each worker runs `node .harness/run.mjs session`, claims or resumes ownership, runs `node .harness/run.mjs bootstrap --json`, reads `.harness/config.json`, and relevant routed docs, then runs `doctor`, `status`, and `next` before edits.
+The persistent development orchestrator keeps the user-facing chat open for user intent, decisions, concise status, and routing. Delegate repository work to fresh bounded workers, allow one mutating worker at a time, and permit parallel read-only exploration. Each worker runs `node .harness/run.mjs session`, claims or resumes ownership, runs `node .harness/run.mjs bootstrap --validate --json`, reads `.harness/config.json`, and relevant routed docs, then runs `doctor`, `status`, and `next` before edits.
 
 Normal completion uses `checkpoint --reason worker_yield`; a user-input pause uses `checkpoint --reason needs_input`. The worker returns a concise result or question and yields without a global handoff, resume, or new user chat.
 
@@ -18,10 +18,12 @@ Reserve dirty-safe `handoff --summary ... --next ...` for a true context or owne
 
 Work on one active feature by default. Confirm repository-defined product, security, rights, provider, and deployment gates. Use `.harness/run.mjs` for state changes, and allow a feature to become `passing` only through successful `verify` evidence. Product-runtime orchestration remains wholly application-owned and independent of `.harness/`.
 
+Worker ownership, scope and configured verification are required; extra review rounds and process accounting depend on task risk and project policy. The same owner can correct reversible local command or test errors within scope without a successor for each error. Respect attempt budgets. Reconcile unknown external outcomes before an authorized retry; never automatically retry credentials or deployment.
+
 
 ## Bounded worker startup and ownership
 
-Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim`, or runs the exact delegated pending resume command. Then run `node .harness/run.mjs bootstrap --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
+Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim`, or runs the exact delegated pending resume command. Then run `node .harness/run.mjs bootstrap --validate --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
 
 The harness binds mutations to host `CODEX_THREAD_ID`, not shared `CODEX_SESSION_ID`. Other hosts must supply `--worker-id` on mutations as an explicit attestation. Normal worker_yield and needs_input revoke the owner; a retired worker cannot reclaim or resume. This is cooperative CLI enforcement, not protection against direct file edits or forged environments. The orchestrator cannot claim a child worker's ID.
 

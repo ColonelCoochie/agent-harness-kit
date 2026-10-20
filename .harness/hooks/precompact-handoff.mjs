@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { codexHookIdentity } from './native-hook-identity.mjs';
 
 const platform = process.argv.includes('--platform')
   ? process.argv[process.argv.indexOf('--platform') + 1]
@@ -23,7 +24,7 @@ try {
     const manualIndex = process.argv.indexOf('--worker-id');
     const explicit = manualIndex >= 0 ? process.argv[manualIndex + 1] : null;
     const nativeClaude = typeof input.agent_id === 'string' && /^[a-zA-Z0-9_./:-]{1,180}$/.test(input.agent_id) ? 'claude-agent:' + input.agent_id : null;
-    const actor = platform === 'claude' ? nativeClaude || explicit : process.env.CODEX_THREAD_ID;
+    const actor = platform === 'claude' ? nativeClaude || explicit : await codexHookIdentity(input, root);
     if (platform === 'claude' && nativeClaude && explicit && nativeClaude !== explicit) throw new Error('explicit worker identity conflicts with Claude agent_id');
     if (continuity.phase !== 'awaiting_resume') {
       if (!continuity.owner) { emitContinue(); process.exit(0); }
@@ -44,7 +45,7 @@ try {
         '--automatic',
         '--json',
         ...(platform === 'claude' ? ['--worker-id', actor] : [])
-      ], root, platform);
+      ], root, platform, actor);
       if (result.exitCode !== 0) throw new Error(result.stderr.trim() || result.stdout.trim() || 'automatic handoff failed');
       handoffId = JSON.parse(result.stdout).id;
     }
@@ -79,10 +80,11 @@ async function findProjectRoot(start) {
   }
 }
 
-function run(command, commandArgs, cwd, host) {
+function run(command, commandArgs, cwd, host, actor) {
   return new Promise((resolve) => {
     const env = { ...process.env };
     if (host === 'claude') delete env.CODEX_THREAD_ID;
+    else env.CODEX_THREAD_ID = actor;
     const child = spawn(command, commandArgs, { cwd, windowsHide: true, env });
     let stdout = '';
     let stderr = '';

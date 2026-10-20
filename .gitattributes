@@ -3,3 +3,7 @@
 *.json text eol=lf
 *.md text eol=lf
 *.yaml text eol=lf
+
+/skill/codex-harness/assets/native-hook-bootstrap-v*.json -text
+/skill/codex-harness/assets/migrations/native-hooks-v*/*.json -text
+/.harness/hooks/native-hook-bootstrap-v*.json -text

@@ -19,7 +19,7 @@ async function fixture() {
   fixtureRoots.push(root);
   await mkdir(path.join(root, '.harness/hooks'), { recursive: true });
   await mkdir(path.join(root, '.harness/evidence'), { recursive: true });
-  for (const name of ['run.mjs', 'hooks/precompact-handoff.mjs', 'hooks/sessionstart-routing.mjs']) await copyFile(path.join(repository, '.harness', name), path.join(root, '.harness', name));
+  for (const name of ['run.mjs', 'context-budget.mjs', 'hooks/hook-recovery.mjs', 'hooks/native-hook-identity.mjs', 'hooks/precompact-handoff.mjs', 'hooks/sessionstart-routing.mjs']) await copyFile(path.join(repository, '.harness', name), path.join(root, '.harness', name));
   const config = await json(path.join(repository, '.harness/config.json'));
   config.verification = { quick: [], full: [goodCommand], architecture: [], e2e: [], clean: [] };
   config.completion = { baseLayers: ['full'], alwaysRunWhenConfigured: [], requireAcceptanceCommands: true };

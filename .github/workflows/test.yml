@@ -23,4 +23,4 @@ jobs:
       - run: node --check skill/codex-harness/scripts/lib/core.mjs
       - run: node --check skill/codex-harness/assets/project-runtime.mjs
       - run: node --check skill/codex-harness/assets/precompact-handoff.mjs
-      - run: node --test tests/harness.test.mjs
+      - run: npm test

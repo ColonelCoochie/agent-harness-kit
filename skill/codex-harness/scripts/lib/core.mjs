@@ -1,15 +1,21 @@
 import { access, copyFile, lstat, mkdir, readFile, readdir, readlink, rename, rmdir, stat, unlink, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CONTEXT_DEFAULTS } from '../../assets/context-budget.mjs';
+import { realpath } from 'node:fs/promises';
+import { approveCanonicalHooks, readHookPolicy } from './hook-policy.mjs';
+const LEGACY_NATIVE_BOOTSTRAP = JSON.parse(readFileSync(new URL('../../assets/native-hook-bootstrap-v1.json', import.meta.url), 'utf8'));
+const PREVIOUS_NATIVE_BOOTSTRAP = JSON.parse(readFileSync(new URL('../../assets/native-hook-bootstrap-v2.json', import.meta.url), 'utf8'));
+const NATIVE_BOOTSTRAP = JSON.parse(readFileSync(new URL('../../assets/native-hook-bootstrap-v3.json', import.meta.url), 'utf8'));
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const SKILL_DIR = path.resolve(SCRIPT_DIR, '..', '..');
 export const ASSET_DIR = path.join(SKILL_DIR, 'assets');
 export const HARNESS_VERSION = 6;
-const EVIDENCE_SCHEMA_VERSION = 4;
-const VERIFICATION_PLAN_SCHEMA_VERSION = 1;
+const EVIDENCE_SCHEMA_VERSION = 5;
+const VERIFICATION_PLAN_SCHEMA_VERSION = 2;
 export const STATE_SCHEMA_VERSION = 1;
 export const STATES = ['not_started', 'active', 'blocked', 'passing'];
 const STATE_LOCK_OWNER_PREFIX = 'owner-';
@@ -21,11 +27,26 @@ const DEVELOPMENT_HARNESS_BOUNDARY = '## Development-Harness Boundary';
 const ORCHESTRATED_WORKER_PROTOCOL = 'ORCHESTRATED_WORKER_CONTINUITY_V1';
 const MANAGED_EXECUTABLES = Object.freeze([
   ['project-runtime.mjs', '.harness/run.mjs', 'always'],
+  ['windows-command.mjs', '.harness/windows-command.mjs', 'always'],
+  ['windows-command-supervisor.ps1', '.harness/windows-command-supervisor.ps1', 'always'],
+  ['context-budget.mjs', '.harness/context-budget.mjs', 'always'],
+  ['repair.mjs', '.harness/repair.mjs', 'always'],
+  ['hook-recovery.mjs', '.harness/hooks/hook-recovery.mjs', 'shared'],
+  ['native-hook-dispatch.mjs', '.harness/hooks/native-hook-dispatch.mjs', 'shared'],
+  ['native-hook-bootstrap-v1.json', '.harness/hooks/native-hook-bootstrap-v1.json', 'shared'],
+  ['native-hook-bootstrap-v2.json', '.harness/hooks/native-hook-bootstrap-v2.json', 'shared'],
+  ['native-hook-bootstrap-v3.json', '.harness/hooks/native-hook-bootstrap-v3.json', 'shared'],
+  ['context-guard.mjs', '.harness/hooks/context-guard.mjs', 'shared'],
+  ['native-hook-identity.mjs', '.harness/hooks/native-hook-identity.mjs', 'shared'],
   ['precompact-handoff.mjs', '.harness/hooks/precompact-handoff.mjs', 'shared'],
   ['sessionstart-routing.mjs', '.harness/hooks/sessionstart-routing.mjs', 'shared'],
   ['claude-worker-identity.mjs', '.harness/hooks/claude-worker-identity.mjs', 'claude']
 ]);
 const MANAGED_INVENTORY_PATH = '.harness/managed-files.json';
+const CANONICAL_HOOK_PREDECESSOR = Object.freeze({
+  asset: 'migrations/native-hooks-v3/group-identities.json',
+  sha256: '6527882f55a9e3b61885209d446126085b98c1ead295fbca5da9c4fbf78547c3'
+});
 const DEFAULT_ENVIRONMENT_ALLOW = [
   'PATH', 'Path', 'PATHEXT', 'SystemRoot', 'ComSpec', 'TEMP', 'TMP',
   'HOME', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'CI', 'NODE_ENV'
@@ -79,11 +100,11 @@ const CODEX_HOOK_SURFACE = {
   path: '.codex/hooks.json',
   template: 'codex-hooks.json.template',
   addition: 'codex-hooks.addition.json.template',
-  routed: (content) => content.includes('HARNESS_HOOK_LAUNCHER_V1') && content.includes('.harness/hooks/precompact-handoff.mjs') && content.includes('PreCompact') && content.includes('.harness/hooks/sessionstart-routing.mjs') && content.includes('SessionStart')
+  routed: content => nativeHooksRouted(content, 'codex')
 };
 const CLAUDE_HOOK_SURFACE = {
   path: '.claude/settings.json', template: 'claude-hooks.json.template', addition: 'claude-hooks.addition.json.template',
-  routed: content => content.includes('HARNESS_HOOK_LAUNCHER_V1') && content.includes('.harness/hooks/claude-worker-identity.mjs') && content.includes('SubagentStart') && content.includes('PreCompact') && content.includes('SessionStart')
+  routed: content => nativeHooksRouted(content, 'claude')
 };
 const CANONICAL_V5_ASSET_MIGRATIONS = Object.freeze([
   Object.freeze({
@@ -485,7 +506,8 @@ function featureContract(feature) {
     dependencies: feature.dependencies,
     scope: feature.scope,
     acceptance: feature.acceptance,
-    requiredLayers: feature.requiredLayers ?? ['full']
+    requiredLayers: feature.requiredLayers ?? ['full'],
+    ...(Object.hasOwn(feature, 'verificationBudget') ? { verificationBudget: feature.verificationBudget } : {})
   };
 }
 
@@ -559,7 +581,31 @@ function isRecord(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function validateEvidenceRecord(feature, record) {
+function exactKeys(value, keys) {
+  return isRecord(value) && sameOrderedValues(Object.keys(value).sort(), [...keys].sort());
+}
+
+function validVerificationBudget(value) {
+  return exactKeys(value, ['maxAttempts']) && Number.isSafeInteger(value.maxAttempts) && value.maxAttempts > 0;
+}
+
+function scopeBaselineShape(baseline) {
+  return {
+    version: baseline?.version,
+    head: baseline?.head,
+    tree: baseline?.tree,
+    branch: baseline?.branch,
+    files: baseline?.files,
+    worktreeHash: baseline?.worktreeHash,
+    ...(baseline?.capturePolicy ? { capturePolicy: baseline.capturePolicy } : {})
+  };
+}
+
+function scopeBaselineHash(baseline) {
+  return stableHash(scopeBaselineShape(baseline));
+}
+
+function validateEvidenceRecord(feature, record, { planOnly = false } = {}) {
   const errors = [];
   const warnings = [];
   const evidenceSchema = Number(record?.schemaVersion ?? 1);
@@ -568,11 +614,11 @@ function validateEvidenceRecord(feature, record) {
     return { errors, warnings };
   }
   if (record.featureId !== feature.id) errors.push(`${feature.id}: evidence belongs to ${record.featureId}`);
-  if (record.pass !== true) errors.push(`${feature.id}: latest evidence did not pass`);
-  if (!Array.isArray(record.commands) || record.commands.length === 0 || record.commands.some((item) => item.exitCode !== 0)) {
+  if (!planOnly && record.pass !== true) errors.push(`${feature.id}: latest evidence did not pass`);
+  if (!planOnly && (!Array.isArray(record.commands) || record.commands.length === 0 || record.commands.some((item) => item.exitCode !== 0))) {
     errors.push(`${feature.id}: evidence lacks successful commands`);
   }
-  if (!Array.isArray(record.scopeViolations) || record.scopeViolations.length !== 0) {
+  if (!planOnly && (!Array.isArray(record.scopeViolations) || record.scopeViolations.length !== 0)) {
     errors.push(`${feature.id}: passing evidence has nonempty or invalid scope violations`);
   }
   if (evidenceSchema >= 2) {
@@ -580,7 +626,7 @@ function validateEvidenceRecord(feature, record) {
     if (!record.configHash) errors.push(`${feature.id}: evidence lacks config provenance`);
     if (Number(record.harnessVersion ?? 1) >= 2 && !record.verificationHash) errors.push(`${feature.id}: evidence lacks verification-plan provenance`);
   }
-  if (evidenceSchema < EVIDENCE_SCHEMA_VERSION) {
+  if (evidenceSchema < 4 && record.verificationPlan === undefined) {
     warnings.push(`${feature.id}: legacy evidence schema v${evidenceSchema} predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified`);
     return { errors, warnings };
   }
@@ -590,7 +636,7 @@ function validateEvidenceRecord(feature, record) {
     errors.push(`${feature.id}: evidence lacks an embedded verification plan`);
     return { errors, warnings };
   }
-  if (plan.schemaVersion !== VERIFICATION_PLAN_SCHEMA_VERSION) {
+  if (!((evidenceSchema === 4 && plan.schemaVersion === 1) || (evidenceSchema === 5 && plan.schemaVersion === 2))) {
     errors.push(`${feature.id}: unsupported verification-plan schema version ${String(plan.schemaVersion)}`);
   }
   if (plan.evidenceSchemaVersion !== evidenceSchema
@@ -605,6 +651,28 @@ function validateEvidenceRecord(feature, record) {
   if (plan.feature?.id !== record.featureId) errors.push(`${feature.id}: verification-plan feature does not match evidence`);
   if (plan.feature?.contractHash !== record.contractHash) errors.push(`${feature.id}: verification-plan contract does not match evidence`);
   if (plan.config?.hash !== record.configHash) errors.push(`${feature.id}: verification-plan config hash does not match evidence`);
+  const hasBudget = Object.hasOwn(feature, 'verificationBudget');
+  if (hasBudget && !validVerificationBudget(feature.verificationBudget)) errors.push(`${feature.id}: invalid frozen verificationBudget`);
+  if (!exactKeys(plan.feature, ['id', 'contractHash', ...(hasBudget ? ['verificationBudget'] : [])]) || Object.hasOwn(plan.feature, 'verificationBudget') !== hasBudget
+    || (hasBudget && !sameStructuredValue(plan.feature.verificationBudget, feature.verificationBudget))) {
+    errors.push(`${feature.id}: verification-plan budget does not match the frozen feature`);
+  }
+  if (evidenceSchema === 5) {
+    const budget = plan.executionPolicy?.attemptBudget;
+    const validBudget = exactKeys(budget, ['version', 'globalMaxAttempts', 'featureMaxAttempts', 'effectiveMaxAttempts', 'attemptsBefore'])
+      && budget.version === 1
+      && Number.isSafeInteger(budget.globalMaxAttempts) && budget.globalMaxAttempts > 0
+      && (budget.featureMaxAttempts === null || (Number.isSafeInteger(budget.featureMaxAttempts) && budget.featureMaxAttempts > 0))
+      && budget.featureMaxAttempts === (hasBudget ? feature.verificationBudget?.maxAttempts : null)
+      && Number.isSafeInteger(budget.effectiveMaxAttempts) && budget.effectiveMaxAttempts > 0
+      && budget.effectiveMaxAttempts === Math.min(budget.globalMaxAttempts, budget.featureMaxAttempts ?? budget.globalMaxAttempts)
+      && Number.isSafeInteger(budget.attemptsBefore) && budget.attemptsBefore >= 0 && budget.attemptsBefore < budget.effectiveMaxAttempts;
+    if (!validBudget || !Number.isSafeInteger(record.attempt) || record.attempt !== budget?.attemptsBefore + 1 || record.attempt > budget?.effectiveMaxAttempts) {
+      errors.push(`${feature.id}: verification-plan attempt budget or actual attempt is invalid`);
+    }
+  } else if (Object.hasOwn(plan.executionPolicy ?? {}, 'attemptBudget')) {
+    errors.push(`${feature.id}: legacy verification plan cannot contain an attempt budget`);
+  }
 
   const plannedLayers = Array.isArray(plan.requiredLayers) ? plan.requiredLayers : [];
   const layerIds = plannedLayers.map((layer) => layer?.id);
@@ -708,6 +776,7 @@ function validateEvidenceRecord(feature, record) {
     errors.push(`${feature.id}: verification-plan execution or evidence policy is invalid`);
   }
 
+  if (planOnly) return { errors, warnings };
   const expectedExecutedLayers = unique(executions.map((execution) => execution?.layer));
   if (!sameOrderedValues(record.executedLayers, expectedExecutedLayers)) {
     errors.push(`${feature.id}: evidence executed layers do not match verification plan`);
@@ -740,6 +809,137 @@ function validateEvidenceRecord(feature, record) {
   }
   return { errors, warnings };
 }
+
+async function validateBudgetHistory(feature, features, root) {
+  const errors = [];
+  const fail = message => { throw new Error(`${feature.id}: ${message}`); };
+  const digest = value => /^[a-f0-9]{64}$/.test(value);
+  const contractValid = contract => exactKeys(contract, ['version', 'scopeBaselineHash', 'hash', 'snapshot', 'frozenAt'])
+    && contract.version === 2 && digest(contract.scopeBaselineHash) && digest(contract.hash)
+    && typeof contract.frozenAt === 'string' && Number.isFinite(Date.parse(contract.frozenAt))
+    && isRecord(contract.snapshot) && contract.snapshot.id === feature.id
+    && sameStructuredValue(contract.snapshot, featureContract(contract.snapshot))
+    && (!Object.hasOwn(contract.snapshot, 'verificationBudget') || validVerificationBudget(contract.snapshot.verificationBudget))
+    && stableHash({ contract: contract.snapshot, scopeBaselineHash: contract.scopeBaselineHash }) === contract.hash;
+  const historicalOwner = actor => exactKeys(actor, ['id', 'source', 'parentSessionId', 'generation', 'claimedAt', 'featureId'])
+    && typeof actor.id === 'string' && /^[a-zA-Z0-9_./:-]{1,200}$/.test(actor.id)
+    && ['CODEX_THREAD_ID', 'explicit-attestation'].includes(actor.source)
+    && (actor.parentSessionId === null || (typeof actor.parentSessionId === 'string' && actor.parentSessionId.trim().length > 0))
+    && Number.isSafeInteger(actor.generation) && actor.generation >= 0
+    && typeof actor.claimedAt === 'string' && Number.isFinite(Date.parse(actor.claimedAt))
+    && (actor.featureId === null || (typeof actor.featureId === 'string' && /^[a-z0-9][a-z0-9._-]*$/i.test(actor.featureId)));
+  const readContained = async (reference, hash, directory) => {
+    if (typeof reference !== 'string' || !reference.startsWith(`.harness/${directory}/`) || !reference.endsWith('.json')
+      || reference.includes('\\') || reference.split('/').includes('..') || !digest(hash)) fail('invalid immutable history reference');
+    const container = path.join(root, '.harness', directory);
+    const target = path.resolve(root, reference);
+    if (!isPathInside(container, target)) fail('history reference escapes its directory');
+    const info = await lstat(target);
+    if (!info.isFile() || info.isSymbolicLink() || !isPathInside(await realpath(container), await realpath(target))) fail('history reference is not a contained regular file');
+    return readFile(target);
+  };
+  const rawHash = bytes => createHash('sha256').update(bytes).digest('hex');
+  const readAuthenticated = async (reference, hash, directory) => {
+    const bytes = await readContained(reference, hash, directory);
+    if (rawHash(bytes) !== hash) fail('history reference hash mismatch');
+    return { bytes, record: JSON.parse(bytes) };
+  };
+  const readEvidence = async (ref, legacyActor) => {
+    if (!exactKeys(ref, ['reference', 'hash'])) fail('invalid evidence receipt');
+    const bytes = await readContained(ref.reference, ref.hash, 'evidence');
+    const record = JSON.parse(bytes);
+    // Archived v2 owner-object writers hashed regular-file mode + NUL + these exact bytes.
+    // This discriminator never changes baseline hashes or current evidence authentication.
+    const historical = legacyActor && record.schemaVersion === 4 && record.verificationPlan?.schemaVersion === 1;
+    if (rawHash(bytes) !== ref.hash && !(historical && ['100644', '100755'].some(mode =>
+      createHash('sha256').update(mode + '\0').update(bytes).digest('hex') === ref.hash))) fail('history reference hash mismatch');
+    return record;
+  };
+  const evidenceFor = (record, frozenFeature) => {
+    const validation = validateEvidenceRecord(frozenFeature, record, { planOnly: true });
+    if (validation.errors.length) fail(validation.errors.join('; '));
+  };
+  try {
+    if (Object.hasOwn(feature, 'verificationBudget') && !validVerificationBudget(feature.verificationBudget)) fail('invalid verificationBudget');
+    const revisions = feature.budgetRevisions;
+    if (revisions === undefined) {
+      if (Object.hasOwn(feature, 'verificationBudget')) fail('verificationBudget lacks authenticated revision history');
+      return errors;
+    }
+    if (!Array.isArray(revisions) || revisions.length === 0) fail('invalid budget revision history');
+    if (!contractValid(feature.contract) || !sameStructuredValue(feature.contract.snapshot, featureContract(feature))) fail('current revised contract snapshot mismatch');
+    let prior = null;
+    const revisionHashes = new Set();
+    for (const [index, revision] of revisions.entries()) {
+      if (!exactKeys(revision, ['version', 'at', 'actor', 'reason', 'additionalAttempts', 'previousRevisionHash', 'previousContract', 'scopeBaselineRef', 'previousEvidence', 'maintenanceReceipts', 'attempts', 'repeatedFailures', 'addedAllow', 'nextContractHash', 'hash'])
+        || revision.version !== 2 || typeof revision.at !== 'string' || !Number.isFinite(Date.parse(revision.at))
+        || !((typeof revision.actor === 'string' && revision.actor.trim()) || historicalOwner(revision.actor)) || typeof revision.reason !== 'string' || !revision.reason.trim()
+        || !Number.isSafeInteger(revision.additionalAttempts) || revision.additionalAttempts < 0
+        || !Number.isSafeInteger(revision.attempts) || revision.attempts < 0
+        || !Number.isSafeInteger(revision.repeatedFailures) || revision.repeatedFailures < 0
+        || !digest(revision.nextContractHash) || !digest(revision.hash)) fail('malformed budget revision');
+      const { hash, ...unsigned } = revision;
+      if (stableHash(unsigned) !== hash || revisionHashes.has(hash) || revision.previousRevisionHash !== (prior?.hash ?? null)) fail('budget revision hash or chain mismatch');
+      revisionHashes.add(hash);
+      const legacyActor = historicalOwner(revision.actor);
+      if (!contractValid(revision.previousContract) || (prior && revision.previousContract.hash !== prior.nextContractHash)) fail('previous contract hash or snapshot mismatch');
+      const ref = revision.scopeBaselineRef;
+      if (!exactKeys(ref, ['version', 'path', 'sha256', 'bytes', 'baselineHash']) || ref.version !== 1 || !Number.isSafeInteger(ref.bytes) || ref.bytes < 1
+        || ref.path !== `.harness/baselines/${ref.sha256}.json` || ref.baselineHash !== revision.previousContract.scopeBaselineHash) fail('invalid revision baseline reference');
+      const baseline = await readAuthenticated(ref.path, ref.sha256, 'baselines');
+      if (baseline.bytes.length !== ref.bytes || baseline.record.baselineHash !== ref.baselineHash || scopeBaselineHash(baseline.record) !== ref.baselineHash) fail('revision baseline identity mismatch');
+      if (!sameStructuredValue(ref, feature.scopeBaselineRef) || feature.contract.scopeBaselineHash !== ref.baselineHash) fail('revision baseline differs from current contract');
+      const historicalContracts = revisions.slice(0,index+1).map(item=>item.previousContract);
+      if (!Array.isArray(revision.previousEvidence) || revision.previousEvidence.length !== revision.attempts
+        || new Set(revision.previousEvidence.map(item=>item?.reference)).size !== revision.previousEvidence.length
+        || !revision.previousEvidence.every((item, order) => item?.reference === feature.evidence?.[order])) fail('previous evidence does not preserve cumulative history');
+      for (const evidence of revision.previousEvidence) {
+        const record = await readEvidence(evidence, legacyActor);
+        const frozen = historicalContracts.find(item=>item.hash===record.contractHash);
+        if (!frozen) fail('historical evidence contract is unknown');
+        evidenceFor(record,{...frozen.snapshot,contract:frozen});
+      }
+      const receipts = revision.maintenanceReceipts;
+      if (!Array.isArray(receipts) || receipts.length === 0 || new Set(receipts.map(receipt => receipt?.featureId)).size !== receipts.length) fail('missing or duplicate maintenance receipts');
+      for (const receipt of receipts) {
+        if (!exactKeys(receipt, ['featureId', 'evidence']) || typeof receipt.featureId !== 'string' || receipt.featureId === feature.id
+          || !Array.isArray(receipt.evidence) || receipt.evidence.length === 0 || new Set(receipt.evidence.map(item => item?.reference)).size !== receipt.evidence.length) fail('invalid maintenance receipt');
+        const maintenance = features.find(item => item.id === receipt.featureId);
+        if (!maintenance || maintenance.status !== 'passing') fail('maintenance receipt feature is missing or not passing');
+        if (!receipt.evidence.every((item,order)=>item?.reference === maintenance.evidence?.[order])) fail('maintenance receipt history differs from feature evidence');
+        for (const evidence of receipt.evidence) {
+          if (!maintenance.evidence?.includes(evidence?.reference)) fail('maintenance evidence does not belong to receipt feature');
+          const record = await readEvidence(evidence, legacyActor);
+          const contracts = [maintenance.contract, ...(maintenance.budgetRevisions ?? []).map(item => item.previousContract)];
+          const frozen = contracts.find(item => item?.hash === record.contractHash);
+          if (!frozen) fail('maintenance evidence contract is unknown');
+          if (evidence === receipt.evidence.at(-1)) {
+            const latestValidation = validateEvidenceRecord({ ...frozen.snapshot, contract: frozen }, record);
+            if (latestValidation.errors.length) fail(latestValidation.errors.join('; '));
+          }
+          evidenceFor(record, { ...frozen.snapshot, contract: frozen });
+        }
+      }
+      if (!Array.isArray(revision.addedAllow) || revision.addedAllow.some(value => typeof value !== 'string' || !value)
+        || new Set(revision.addedAllow).size !== revision.addedAllow.length
+        || (revision.additionalAttempts === 0 && revision.addedAllow.every(value => revision.previousContract.snapshot.scope.allow.includes(value)))) fail('invalid revised scope additions');
+      const nextContract = revisions[index + 1]?.previousContract ?? feature.contract;
+      const expected = { ...revision.previousContract.snapshot, scope: { ...revision.previousContract.snapshot.scope, allow: unique([...revision.previousContract.snapshot.scope.allow, ...revision.addedAllow]) } };
+      if (revision.additionalAttempts > 0) {
+        const nextBudget = nextContract.snapshot?.verificationBudget;
+        if (!validVerificationBudget(nextBudget) || (Object.hasOwn(expected, 'verificationBudget')
+          ? nextBudget.maxAttempts !== expected.verificationBudget.maxAttempts + revision.additionalAttempts
+          : nextBudget.maxAttempts <= revision.additionalAttempts)) fail('invalid historical budget increment');
+        expected.verificationBudget = nextBudget;
+      }
+      if (nextContract.hash !== revision.nextContractHash || !sameStructuredValue(nextContract.snapshot, expected)) fail('revision next contract or snapshot mismatch');
+      prior = revision;
+    }
+    if (prior.nextContractHash !== featureContractHash(feature)) fail('final revised contract hash mismatch');
+  } catch (error) { errors.push(`${feature.id}: budget history integrity: ${error.message}`); }
+  return errors;
+}
+
 
 async function ensureAgentSurfaces(target, harnessDir, results, replacements = {}, enabledAgents = AGENT_SURFACES.map((surface) => surface.id)) {
   const selected = new Set(['codex', ...enabledAgents]);
@@ -778,7 +978,7 @@ async function ensureHookSurface(target, harnessDir, results, surface) {
   const destination = path.join(target, surface.path);
   const platform = surface === CLAUDE_HOOK_SURFACE ? 'claude' : 'codex';
   const replacements = {};
-  for (const [key, name] of [['PRECOMPACT', 'precompact-handoff.mjs'], ['SESSIONSTART', 'sessionstart-routing.mjs'], ['IDENTITY', 'claude-worker-identity.mjs']]) {
+  for (const [key, name] of [['PRECOMPACT', 'precompact-handoff.mjs'], ['SESSIONSTART', 'sessionstart-routing.mjs'], ['IDENTITY', 'claude-worker-identity.mjs'], ['CONTEXT', 'context-guard.mjs']]) {
     replacements[key + '_COMMAND'] = JSON.stringify(hookLauncher(name, platform));
     replacements[key + '_WINDOWS_COMMAND'] = JSON.stringify(hookLauncher(name, platform));
   }
@@ -788,21 +988,20 @@ async function ensureHookSurface(target, harnessDir, results, surface) {
     return;
   }
   const content = await readText(destination);
-  const upgraded = upgradeKnownHookCommands(content, platform, await renderAsset(surface.template, replacements));
-  if (upgraded && surface.routed(upgraded)) {
+  const predecessors = canonicalHookPredecessors(await renderAsset(CANONICAL_HOOK_PREDECESSOR.asset), platform);
+  const upgraded = upgradeKnownHookCommands(content, platform, await renderAsset(surface.template, replacements), predecessors);
+  if (upgraded) {
     await atomicWrite(destination, upgraded);
-    await clearKnownHookAddition(harnessDir, surface, replacements);
     results.push({ path: destination, status: 'written' });
-    return;
   }
-  if (!surface.routed(content)) {
+  if (!surface.routed(upgraded ?? content)) {
     const addition = path.join(harnessDir, path.basename(surface.addition, '.template'));
     const expected = await renderAsset(surface.addition, replacements);
     const known = await exists(addition) && isKnownHookAddition(await readText(addition), expected);
     results.push(await copyAsset(surface.addition, addition, { replacements, force: known }));
   }
   else await clearKnownHookAddition(harnessDir, surface, replacements);
-  results.push({ path: destination, status: 'preserved' });
+  if (!upgraded) results.push({ path: destination, status: 'preserved' });
 }
 
 function isKnownHookAddition(content, expected) {
@@ -823,12 +1022,29 @@ async function clearKnownHookAddition(harnessDir, surface, replacements) {
 }
 
 function hookLauncher(name, platform) {
-  // The code contains only shell-neutral ASCII literals, never a project path,
-  // variable interpolation or Git-root assumption. Forward the original JSON
-  // input intact to the installed adapter closest to its cwd.
-  const failure = platform === 'claude' && name === 'precompact-handoff.mjs' ? "{decision:'block',reason:e.message}" : "{continue:false,stopReason:e.message}";
-  const script = `const marker='HARNESS_HOOK_LAUNCHER_V1';const fs=require('node:fs'),p=require('node:path'),cp=require('node:child_process');try{const raw=fs.readFileSync(0,'utf8'),input=JSON.parse(raw||'{}');let root=p.resolve(input.cwd||process.cwd());while(!fs.existsSync(p.join(root,'.harness/run.mjs'))){const parent=p.dirname(root);if(parent===root)throw new Error('No nearest harness installation');root=parent;}const result=cp.spawnSync(process.execPath,[p.join(root,'.harness/hooks/${name}'),'--platform','${platform}'],{cwd:root,input:raw,encoding:'utf8',windowsHide:true});if(result.error||result.status!==0)throw new Error(result.error?.message||result.stderr||'Hook adapter failed');process.stdout.write(result.stdout||'{}');}catch(e){process.stdout.write(JSON.stringify(${failure}));}`;
-  return `node -e "${script}"`;
+  const command = NATIVE_BOOTSTRAP.commands[platform + '/' + name];
+  if (!command) throw new Error('Unsupported native hook bootstrap');
+  return command;
+}
+
+function nativeHooksRouted(content, platform) {
+  let settings; try { settings = JSON.parse(content); } catch { return false; }
+  const required = [['PreCompact', 'precompact-handoff.mjs'], ['SessionStart', 'sessionstart-routing.mjs']];
+  if (platform === 'claude') required.push(['SubagentStart', 'claude-worker-identity.mjs']);
+  return required.every(([event, name]) => Array.isArray(settings?.hooks?.[event]) && settings.hooks[event].some(group => lifecycleHookGroup(group, event) && group.hooks.some(hook => {
+    if (!hook || hook.type !== 'command') return false;
+    const command = process.platform === 'win32' ? hook.commandWindows ?? hook.command : hook.command;
+    return command === NATIVE_BOOTSTRAP.commands[platform + '/' + name] || command === PREVIOUS_NATIVE_BOOTSTRAP.commands[platform + '/' + name] || isKnownLegacyHookCommand(command, name, platform);
+  })));
+}
+
+function lifecycleHookGroup(group, event) {
+  if (!group || typeof group !== 'object' || Array.isArray(group) || !Array.isArray(group.hooks)
+      || Object.keys(group).some(key => !['matcher', 'hooks'].includes(key))) return false;
+  if (group.matcher === undefined) return true;
+  if (typeof group.matcher !== 'string') return false;
+  try { return new RegExp(group.matcher).test(event === 'PreCompact' ? 'auto' : event === 'SessionStart' ? 'compact' : ''); }
+  catch { return false; }
 }
 
 function isKnownLegacyHookCommand(command, name, platform) {
@@ -836,17 +1052,41 @@ function isKnownLegacyHookCommand(command, name, platform) {
   const escapedName = name.replaceAll('.', '\\.');
   const oldAbsolute = new RegExp(`^node (?:"[^"\\r\\n]+/\\.harness/hooks/${escapedName}"|'[^'\\r\\n]+/\\.harness/hooks/${escapedName}')(?: --platform ${platform})?$`).test(command);
   const oldGit = command === `node "$(git rev-parse --show-toplevel)/.harness/hooks/${name}"${name === 'precompact-handoff.mjs' ? ' --platform ' + platform : ''}`;
-  return oldAbsolute || oldGit;
+  return oldAbsolute || oldGit || LEGACY_NATIVE_BOOTSTRAP.commands[platform + '/' + name] === command || LEGACY_NATIVE_BOOTSTRAP.legacy[platform + '/' + name]?.includes(command);
 }
 
-function upgradeKnownHookCommands(content, platform, canonical) {
+function canonicalHookPredecessors(content, platform) {
+  // These digests bind complete historical groups, including literal launcher
+  // commands and every option. Project inventories are never source authority.
+  if (rawHash(content) !== CANONICAL_HOOK_PREDECESSOR.sha256) throw new Error('Canonical hook predecessor identity mismatch.');
+  return JSON.parse(content).groups.filter(group => group.platform === platform);
+}
+
+function upgradeKnownHookCommands(content, platform, canonical, predecessors = []) {
   let settings;
   try { settings = JSON.parse(content); } catch { return null; }
   let changed = false;
-  const precompactDefault = JSON.parse(canonical).hooks.PreCompact[0];
-  for (const [event, name] of [['PreCompact', 'precompact-handoff.mjs'], ['SessionStart', 'sessionstart-routing.mjs'], ['SubagentStart', 'claude-worker-identity.mjs']]) {
-    for (const group of Array.isArray(settings.hooks?.[event]) ? settings.hooks[event] : []) for (const hook of Array.isArray(group.hooks) ? group.hooks : []) {
-      if (hook.type !== 'command' || typeof hook.command !== 'string') continue;
+  const expectedSettings = JSON.parse(canonical);
+  for (const prior of predecessors) {
+    const groups = settings?.hooks?.[prior.event], expectedGroups = expectedSettings.hooks[prior.event];
+    if (!Array.isArray(groups) || !Array.isArray(expectedGroups)) continue;
+    const expected = expectedGroups[prior.index];
+    if (!expected) throw new Error('Canonical hook predecessor has no current definition: ' + prior.event);
+    // Unchanged definitions remain subject to the native approval duplicate gate.
+    if (stableHash(expected) === prior.sha256) continue;
+    const matches = groups.map((group, index) => ({ group, index })).filter(item => stableHash(item.group) === prior.sha256);
+    if (!matches.length) continue;
+    const identities = new Set([...predecessors.filter(item => item.event === prior.event && item.index === prior.index).map(item => item.sha256), stableHash(expected)]);
+    if (groups.filter(group => identities.has(stableHash(group))).length !== 1) throw new Error('Duplicated canonical hook predecessor requires review: ' + prior.event);
+    if (stableHash(matches[0].group) !== stableHash(expected)) {
+      groups[matches[0].index] = structuredClone(expected);
+      changed = true;
+    }
+  }
+  const precompactDefault = expectedSettings.hooks.PreCompact[0];
+  for (const [event, name] of [['PreCompact', 'precompact-handoff.mjs'], ['SessionStart', 'sessionstart-routing.mjs'], ['SubagentStart', 'claude-worker-identity.mjs'], ...['PreToolUse', 'PostToolUse', 'UserPromptSubmit', 'Stop'].map(event => [event, 'context-guard.mjs'])]) {
+    for (const group of Array.isArray(settings?.hooks?.[event]) ? settings.hooks[event] : []) for (const hook of Array.isArray(group?.hooks) ? group.hooks : []) {
+      if (!hook || hook.type !== 'command' || typeof hook.command !== 'string') continue;
       // Exact generated invocations only: wrappers, arguments and customized
       // Windows overrides are preserved even when the main command migrates.
       const launcher = hookLauncher(name, platform);
@@ -865,7 +1105,47 @@ function upgradeKnownHookCommands(content, platform, canonical) {
       }
     }
   }
+  // Add our own bounded adapter alongside existing hooks. Preserve customized
+  // groups and wrappers; an unknown existing context adapter needs review.
+  const routed = (platform === 'claude' ? CLAUDE_HOOK_SURFACE : CODEX_HOOK_SURFACE).routed(JSON.stringify(settings));
+  for (const event of routed ? ['PreToolUse', 'PostToolUse', 'UserPromptSubmit', 'Stop'] : []) {
+    const expected = JSON.parse(canonical).hooks[event];
+    const groups = settings.hooks?.[event] ?? [];
+    if (!Array.isArray(groups)) continue;
+    const contextCommand = NATIVE_BOOTSTRAP.commands[platform + '/context-guard.mjs'];
+    // An opaque frozen predecessor remains recognizable when a user customized
+    // its group. Do not append a second context guard beside that reviewed hook.
+    const contextHooks = groups.flatMap(group => (Array.isArray(group?.hooks) ? group.hooks : []).filter(hook => (hook?.command === contextCommand && lifecycleHookGroup(group, event)) || hook?.command === PREVIOUS_NATIVE_BOOTSTRAP.commands[platform + '/context-guard.mjs'] || String(hook?.command).includes('context-guard.mjs')));
+    if (!contextHooks.length && expected) { settings.hooks ??= {}; settings.hooks[event] = [...groups, ...expected]; changed = true; }
+  }
   return changed ? JSON.stringify(settings, null, 2) + '\n' : null;
+}
+
+function withContextInstructions(content, block) {
+  if (content.includes('<!-- agent-harness-context-v1 -->')) return content;
+  return content.trimEnd() + '\n\n' + block.trim() + '\n';
+}
+
+function codexContextConfig(content) {
+  // Avoid interpreting arbitrary TOML. Only fill missing simple root settings
+  // and a conventional features table; custom values always win.
+  if (/'''|"""|^\s*features\s*=|^\s*\[\s*["']features["']\s*\]|^\s*["'](?:model_auto_compact_token_limit(?:_scope)?|features|hooks)["']|^\s*features\s*\.\s*["']/m.test(content)) return null;
+  const firstTable = content.search(/^\s*\[/m);
+  const root = firstTable < 0 ? content : content.slice(0, firstTable);
+  const defaults = [];
+  if (!/^\s*model_auto_compact_token_limit\s*=/m.test(root)) defaults.push('model_auto_compact_token_limit = 80000');
+  if (!/^\s*model_auto_compact_token_limit_scope\s*=/m.test(root)) defaults.push('model_auto_compact_token_limit_scope = "total"');
+  let result = defaults.length ? root.trimEnd() + '\n\n# Agent Harness proactive context defaults; custom values are preserved.\n' + defaults.join('\n') + '\n' + (firstTable < 0 ? '' : '\n' + content.slice(firstTable)) : content;
+  if (!/^\s*features\s*\.\s*hooks\s*=/m.test(root)) {
+    const match = /^\s*\[\s*features\s*\]\s*(?:#.*)?$/m.exec(result);
+    if (match) {
+      const start = match.index + match[0].length;
+      const endMatch = /^\s*\[/m.exec(result.slice(start));
+      const end = endMatch ? start + endMatch.index : result.length;
+      if (!/^\s*hooks\s*=/m.test(result.slice(start, end))) result = result.slice(0, start) + '\nhooks = true\n' + result.slice(start);
+    } else result = result.trimEnd() + '\n\n[features]\nhooks = true\n';
+  }
+  return result;
 }
 
 export async function detectProject(root) {
@@ -960,7 +1240,7 @@ export async function initHarness(root, options = {}) {
     },
     policies: {
       wipLimit: Number(options.wipLimit || 1),
-      maxAttempts: Number(options.maxAttempts || 3),
+      maxAttempts: Number(options.maxAttempts || 5),
       maxRepeatedFailures: Number(options.maxRepeatedFailures || 2),
       commandTimeoutMs: Number(options.commandTimeoutMs || 600000),
       passingIsTerminal: true,
@@ -983,13 +1263,15 @@ export async function initHarness(root, options = {}) {
     scope: {
       enforcement: 'required',
       defaultAllow: ['**/*'],
-      defaultDeny: DEFAULT_DENY
+      defaultDeny: DEFAULT_DENY,
+      capture: { version: 1, metadataRoots: [], metadataExtensions: [] }
     },
     continuity: {
       mode: 'orchestrated_worker',
       dirtyWorktree: 'record',
       blockMutationsAfterHandoff: true
     },
+    context: CONTEXT_DEFAULTS,
     security: {
       environmentAllow: DEFAULT_ENVIRONMENT_ALLOW,
       redactOutput: true,
@@ -1051,9 +1333,32 @@ export async function initHarness(root, options = {}) {
     results.push(await copyAsset(asset, path.join(target, relative), { force: Boolean(options.force) }));
   }
 
+  const repairSource = path.join(harnessDir, 'repair-source.json');
+  if (!await exists(repairSource)) await writeJson(repairSource, { version: 1, entrypoint: path.resolve(SCRIPT_DIR, '..', 'harness.mjs') });
   await ensureAgentSurfaces(target, harnessDir, results, { PROJECT_PURPOSE: projectPurpose }, enabledAgents);
+  const contextBlock = await readText(path.join(ASSET_DIR, 'context-instructions.md'));
+  for (const surface of AGENT_SURFACES.filter(surface => surface.id === 'codex' || enabledAgents.includes(surface.id))) {
+    const destination = path.join(target, surface.path);
+    const current = await readText(destination);
+    if (!surface.routed(current)) {
+      const addition = path.join(harnessDir, path.basename(surface.addition, '.template'));
+      const currentAddition = await readText(addition);
+      const nextAddition = withContextInstructions(currentAddition, contextBlock);
+      if (nextAddition !== currentAddition) await atomicWrite(addition, nextAddition);
+      continue;
+    }
+    const next = withContextInstructions(current, contextBlock);
+    if (next !== current) { await atomicWrite(destination, next); results.push({ path: destination, status: 'written' }); }
+  }
   if (enabledAgents.includes('codex')) await ensureCodexHookSurface(target, harnessDir, results);
   if (enabledAgents.includes('claude')) await ensureHookSurface(target, harnessDir, results, CLAUDE_HOOK_SURFACE);
+  if (enabledAgents.includes('codex')) {
+    const destination = path.join(target, '.codex/config.toml');
+    const current = await exists(destination) ? await readText(destination) : '';
+    const next = codexContextConfig(current);
+    if (next !== null && next !== current) { await mkdir(path.dirname(destination), { recursive: true }); await atomicWrite(destination, next); results.push({ path: destination, status: 'written' }); }
+    else if (next === null) { await atomicWrite(path.join(harnessDir, 'codex-context-config.addition.toml'), codexContextConfig('')); results.push({ path: destination, status: 'preserved' }); }
+  }
 
   await atomicWrite(path.join(harnessDir, 'evidence', '.gitkeep'), '');
   if (!await exists(path.join(harnessDir, 'credentials-state.json'))) {
@@ -1071,7 +1376,18 @@ export async function initHarness(root, options = {}) {
     if (actual.equals(await readFile(path.join(ASSET_DIR, asset)))) inventory.files[relative] = rawHash(actual);
   }
   await writeJson(inventoryPath, inventory);
-  return { target, profile, verification, results };
+  const nativeHookApproval = await updateNativeHookTrust(target, options);
+  return { target, profile, verification, results, nativeHookApproval };
+}
+
+export async function updateNativeHookTrust(root, options = {}) {
+  const approvalOptions = options.hookApproval ?? {};
+  const policy = await readHookPolicy(approvalOptions);
+  if (!policy) return { status: 'disabled', approved: 0 };
+  const target = await realpath(root);
+  if (!policy.projects.includes(target) && !options.enrollHooks) return { status: 'not-enrolled', approved: 0 };
+  if (!await exists(path.join(target, '.codex', 'hooks.json'))) return { status: 'no-codex-hooks', approved: 0 };
+  return approveCanonicalHooks(target, { ...approvalOptions, enroll: Boolean(options.enrollHooks) });
 }
 
 function rawHash(bytes) { return createHash('sha256').update(bytes).digest('hex'); }
@@ -1152,6 +1468,7 @@ export async function planSync(root, options = {}) {
   for (const [relative, before, after] of [['.harness/config.json', originalConfig, config], ['.harness/features.json', originalState, state], ['.harness/continuity.json', originalContinuity, continuity]]) {
     if (stableHash(before) !== stableHash(after)) { await operation(relative, 'write', jsonBytes(after), 'migrated'); migrations.push(relative); }
   }
+  if (!options.sourceRepair) await ensure('.harness/repair-source.json', jsonBytes({ version: 1, entrypoint: path.resolve(SCRIPT_DIR, '..', 'harness.mjs') }));
   const enabled = Array.isArray(config.agents?.enabled) ? config.agents.enabled : AGENT_SURFACES.map(surface => surface.id);
   const inventoryInput = await read(MANAGED_INVENTORY_PATH);
   const inventory = inventoryInput.kind === 'file' ? JSON.parse(inventoryInput.bytes) : { version: 1, files: {} }; validateManagedInventory(inventory);
@@ -1175,6 +1492,7 @@ export async function planSync(root, options = {}) {
       if (item.action === 'write' && relative !== '.harness/run.mjs') repairs.push(relative);
     }
   }
+  if (!options.sourceRepair) {
   for (const [name, relative] of [['progress.md', '.harness/progress.md'], ['handoff.md', '.harness/handoff.md'], ['quality.md', '.harness/quality.md']]) {
     if ((await ensure(relative, await asset(name))).action === 'write') repairs.push(relative);
   }
@@ -1205,20 +1523,26 @@ export async function planSync(root, options = {}) {
   }
   for (const surface of AGENT_SURFACES.filter(surface => surface.id === 'codex' || enabled.includes(surface.id))) {
     const before = await read(surface.path);
-    if (before.kind === 'missing') { await operation(surface.path, 'write', await asset(surface.template, { PROJECT_PURPOSE: config.project?.purpose ?? '' }), 'written'); repairs.push(surface.path); }
+    const contextBlock = await asset('context-instructions.md');
+    if (before.kind === 'missing') { await operation(surface.path, 'write', withContextInstructions(await asset(surface.template, { PROJECT_PURPOSE: config.project?.purpose ?? '' }), contextBlock), 'written'); repairs.push(surface.path); }
     else if (!surface.routed(before.bytes.toString('utf8'))) {
-      const relative = '.harness/' + path.basename(surface.addition, '.template'); if ((await ensure(relative, await asset(surface.addition))).action === 'write') repairs.push(relative);
+      const relative = '.harness/' + path.basename(surface.addition, '.template'); if ((await ensure(relative, withContextInstructions(await asset(surface.addition), contextBlock))).action === 'write') repairs.push(relative);
+    }
+    if (before.kind === 'file' && surface.routed(before.bytes.toString('utf8'))) {
+      const current = before.bytes.toString('utf8'), next = withContextInstructions(current, contextBlock);
+      if (next !== current) { await operation(surface.path, 'write', next, 'written'); repairs.push(surface.path); }
     }
   }
   for (const [surface, platform] of [[CODEX_HOOK_SURFACE, 'codex'], [CLAUDE_HOOK_SURFACE, 'claude']].filter(([, platform]) => enabled.includes(platform))) {
     const replacements = {};
-    for (const [key, name] of [['PRECOMPACT', 'precompact-handoff.mjs'], ['SESSIONSTART', 'sessionstart-routing.mjs'], ['IDENTITY', 'claude-worker-identity.mjs']]) {
+    for (const [key, name] of [['PRECOMPACT', 'precompact-handoff.mjs'], ['SESSIONSTART', 'sessionstart-routing.mjs'], ['IDENTITY', 'claude-worker-identity.mjs'], ['CONTEXT', 'context-guard.mjs']]) {
       replacements[key + '_COMMAND'] = replacements[key + '_WINDOWS_COMMAND'] = JSON.stringify(hookLauncher(name, platform));
     }
     const canonical = await asset(surface.template, replacements);
-    const before = await read(surface.path), current = before.bytes?.toString('utf8'), upgraded = current && upgradeKnownHookCommands(current, platform, canonical);
+    const predecessors = canonicalHookPredecessors(await asset(CANONICAL_HOOK_PREDECESSOR.asset), platform);
+    const before = await read(surface.path), current = before.bytes?.toString('utf8'), upgraded = current && upgradeKnownHookCommands(current, platform, canonical, predecessors);
     const routed = before.kind === 'missing' || surface.routed(upgraded || current);
-    if (before.kind === 'missing' || (upgraded && surface.routed(upgraded))) { await operation(surface.path, 'write', upgraded || canonical, 'written'); repairs.push(surface.path); }
+    if (before.kind === 'missing' || upgraded) { await operation(surface.path, 'write', upgraded || canonical, 'written'); repairs.push(surface.path); }
     const addition = '.harness/' + path.basename(surface.addition, '.template'), expected = await asset(surface.addition, replacements);
     if (!routed) {
       const input = await read(addition);
@@ -1234,12 +1558,21 @@ export async function planSync(root, options = {}) {
       }
     }
   }
+  if (enabled.includes('codex') && !options.deferHostConfig) {
+    const relative = '.codex/config.toml', before = await read(relative), current = before.bytes?.toString('utf8') ?? '';
+    const next = codexContextConfig(current);
+    if (next === null) { if ((await ensure('.harness/codex-context-config.addition.toml', codexContextConfig(''))).action === 'write') repairs.push('.harness/codex-context-config.addition.toml'); }
+    else if (next !== current) { await operation(relative, 'write', next, 'written'); repairs.push(relative); }
+  }
+  }
+  if (options.repairAuthority?.pendingHandoff && migrations.length) throw new Error('Pending handoff requires migration; repair left transfer unchanged');
   await operation(MANAGED_INVENTORY_PATH, 'write', jsonBytes(inventory), 'written');
   operations.sort((left, right) => left.path.localeCompare(right.path));
   const readSet = [...inputs].map(([path, value]) => ({ path, kind: value.kind, hash: value.hash })).sort((a, b) => a.path.localeCompare(b.path));
   const sourceSet = [...sources].map(([path, value]) => ({ path, kind: value.kind, hash: value.hash })).sort((a, b) => a.path.localeCompare(b.path));
   const resultOperation = operations.find(item => item.path === '.harness/run.mjs');
   const plan = { target, version: HARNESS_VERSION, blocked: blockers.length > 0, blockers, operations, readSet, sourceSet, migrations, repairs, canonicalAssetResults,
+    ...(options.repairAuthority ? { repairAuthority: options.repairAuthority } : {}),
     result: { path: path.join(target, '.harness/run.mjs'), status: resultOperation.action === 'write' ? 'written' : resultOperation.action === 'blocked' ? 'preserved' : 'unchanged' } };
   plan.planHash = stableHash(plan);
   return plan;
@@ -1259,8 +1592,9 @@ export async function syncHarness(root, options = {}) {
   if (options.preview) return plan;
   if (options.expectedPlanHash !== undefined && options.expectedPlanHash !== plan.planHash) throw new Error('Stale expected sync plan hash; sync left project files unchanged.');
   if (plan.blocked) throw new Error(`Sync blocked by customized executable(s): ${plan.blockers.map(item => item.path).join(', ')}. Run sync --preview --json and review narrow --replace-reviewed PATH=SHA256 replacements.`);
-  return withStateLock(path.join(plan.target, '.harness'), 'sync', async () => {
+  await withStateLock(path.join(plan.target, '.harness'), 'sync', async () => {
     await validateSyncPlan(plan);
+    if (options.validateRepairAuthority) await options.validateRepairAuthority(plan);
     for (const item of plan.operations) {
       const destination = path.join(plan.target, item.path);
       if (item.action === 'write') await atomicWrite(destination, item.bytes);
@@ -1268,6 +1602,10 @@ export async function syncHarness(root, options = {}) {
     }
     return plan;
   });
+  plan.nativeHookApproval = options.approveNativeHooks === false
+    ? { status: 'skipped', reason: 'source-repair-never-approves-hooks' }
+    : await updateNativeHookTrust(plan.target, options);
+  return plan;
 }
 
 function normalizeRelative(root, target) {
@@ -1295,7 +1633,7 @@ function migrateConfig(config, profile) {
     version: STATE_SCHEMA_VERSION,
     policies: {
       wipLimit: 1,
-      maxAttempts: 3,
+      maxAttempts: 5,
       maxRepeatedFailures: 2,
       commandTimeoutMs: 600000,
       passingIsTerminal: true,
@@ -1327,6 +1665,7 @@ function migrateConfig(config, profile) {
       enforcement: 'required',
       defaultAllow: ['**/*'],
       defaultDeny: DEFAULT_DENY,
+      capture: { version: 1, metadataRoots: [], metadataExtensions: [] },
       ...(config.scope ?? {})
     },
     continuity: {
@@ -1335,6 +1674,7 @@ function migrateConfig(config, profile) {
       blockMutationsAfterHandoff: true,
       ...existingContinuity
     },
+    context: { ...CONTEXT_DEFAULTS, ...(config.context ?? {}), worker: { ...CONTEXT_DEFAULTS.worker, ...(config.context?.worker ?? {}) }, orchestrator: { ...CONTEXT_DEFAULTS.orchestrator, ...(config.context?.orchestrator ?? {}) } },
     security: {
       environmentAllow: DEFAULT_ENVIRONMENT_ALLOW,
       redactOutput: true,
@@ -1468,6 +1808,7 @@ export async function auditHarness(root) {
   const credentialAllowlistOverlaps = credentialEnvironmentAllowOverlaps(config?.security);
   const evidenceIntegrity = [];
   const evidenceWarnings = [];
+  for (const feature of featureItems) evidenceIntegrity.push(...await validateBudgetHistory(feature, featureItems, target));
   for (const feature of featureItems.filter((item) => item.status === 'passing')) {
     const reference = feature.evidence?.at(-1);
     if (!reference) {

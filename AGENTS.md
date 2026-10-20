@@ -8,7 +8,7 @@ Protocol marker: `ORCHESTRATED_WORKER_CONTINUITY_V1`.
 
 The persistent development orchestrator keeps the user-facing chat open. It owns user intent, decisions, concise status, and routing, but delegates repository implementation to fresh bounded workers so implementation context does not accumulate in the orchestrator. Allow only one mutating worker at a time; independent read-only explorers may run in parallel.
 
-Before changing files, a worker runs `node .harness/run.mjs session`, claims or resumes ownership, runs `node .harness/run.mjs bootstrap --json`, reads `.harness/config.json`, and task-relevant routes in `.harness/docs-map.md`, then runs `doctor`, `status`, and `next`. If continuity is `awaiting_resume`, the orchestrator delegates the exact printed `node .harness/run.mjs resume <handoff-id>` command to a fresh worker; the orchestrator must not consume the implementation packet or run the resume itself. A fresh user chat/task is a fallback only when the host cannot delegate subagents.
+Before changing files, a worker runs `node .harness/run.mjs session`, claims or resumes ownership, runs `node .harness/run.mjs bootstrap --validate --json`, reads `.harness/config.json`, and task-relevant routes in `.harness/docs-map.md`, then uses the combined validation and status/next projection. If continuity is `awaiting_resume`, the orchestrator delegates the exact printed `node .harness/run.mjs resume <handoff-id>` command to a fresh worker; the orchestrator must not consume the implementation packet or run the resume itself. A fresh user chat/task is a fallback only when the host cannot delegate subagents.
 
 At normal completion, a worker verifies or records the blocker, writes a bounded `checkpoint --reason worker_yield`, returns a concise result, and yields. When user input is required, use `checkpoint --reason needs_input`, return one concise question, and yield. Neither boundary requires `handoff`, `resume`, or a new user chat.
 
@@ -32,12 +32,14 @@ When changing the generated runtime, edit the reusable source under `skill/codex
 
 ## Verification
 
+Owned bounded-worker startup, explicit scope, configured verification and reasoned worker yield are required. Extra plans, review rounds and process accounting depend on task risk and project policy. The same worker may correct reversible local command/test errors within scope without a successor for each error; respect attempt budgets and stop for repeated failures or missing authority. Reconcile unknown external outcomes before an authorized retry; never automatically retry credentials or deployment.
+
 Use the active feature's `node .harness/run.mjs verify <feature-id>` gate before completion. The configured ladder runs source syntax checks, the full Node test suite, the structural self-audit, and each feature's acceptance command. For focused manual checks, preserve coverage of initialization, migration, all instruction surfaces, missing-key behavior, round-robin selection, redaction, evidence metadata, and the generated runtime.
 
 
 ## Bounded worker startup and ownership
 
-Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim`, or runs the exact delegated pending resume command. Then run `node .harness/run.mjs bootstrap --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
+Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim`, or runs the exact delegated pending resume command. Then run `node .harness/run.mjs bootstrap --validate --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
 
 The harness binds mutations to host `CODEX_THREAD_ID`, not shared `CODEX_SESSION_ID`. Other hosts must supply `--worker-id` on mutations as an explicit attestation. Normal worker_yield and needs_input revoke the owner; a retired worker cannot reclaim or resume. This is cooperative CLI enforcement, not protection against direct file edits or forged environments. The orchestrator cannot claim a child worker's ID.
 
@@ -50,3 +52,15 @@ For Claude Code, review `.claude/settings.json` or merge the generated `.harness
 Only after the host or operator confirms an abandoned worker has stopped, a distinct actor may run `node .harness/run.mjs recover --expected-owner OLD_ID --reason "Host confirmed termination" --confirmed-terminated` (append its own `--worker-id` on a non-Codex host). Recovery preserves packets and feature state, retires OLD_ID, logs the attestation, and releases ownership for a fresh claim. Never recover a live worker or clear a pending handoff; delegate the exact pending resume instead.
 
 Authoritative stored state remains `.harness/features.json` and `.harness/continuity.json`; access their bounded projections during startup.
+
+<!-- agent-harness-context-v1 -->
+## Proactive context management
+
+Before each bounded work batch and delegation, run `node .harness/run.mjs context --observe --json`. This records the current actor's boundary without claiming a child owner; read-only inspection omits `--observe`. On hosts without native hooks, include estimated calls and returned characters since the previous observation through `--tool-calls N --output-chars N`, and use `--transcript PATH` when host telemetry is available. Keep tool responses concise: select only needed lines, set output limits, and inspect redacted `.harness/logs/` files through narrow queries. Never dump full transcripts, feature arrays, baseline blobs, or large command logs into conversation.
+
+Workers target one implementation milestone per batch and check pressure at least every ten tool calls or five minutes. At pressure, persist `handoff --summary ... --next ...`, return only its exact resume command and a compact result, then stop. The orchestrator immediately delegates that command to a fresh worker (`fork_turns="none"` on Codex); it never runs the resume or absorbs the packet. Automatic mutation gates and reviewed native context hooks provide earlier boundaries when available. Exit 75 means rotation occurred and the requested mutation did not run.
+
+The orchestrator keeps only user intent, decisions, compact worker results and routing. At its own pressure, use supported host compaction with the project auto-compaction defaults and reconstruct from `session --json`; never transfer or recover a live child to free parent context. Repeated interrupted internal goal turns without tool progress trip a circuit breaker: stop that continuation and reconcile host goal state before another run. Never request continuation from a Stop hook to repair pressure.
+
+Hooks require local host review/trust. Native dispatch and identity delivery must be validated on the actual host; tools or goal schedulers that skip hooks cannot be intercepted by this CLI. Missing token telemetry uses conservative byte growth and work budgets, not assumed headroom. Product runtime remains independent of `.harness/`.
+<!-- /agent-harness-context-v1 -->

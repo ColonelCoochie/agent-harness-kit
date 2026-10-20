@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "platform": "codex",
+  "groups": [
+    {
+      "event": "PreCompact",
+      "index": 0,
+      "sha256": "4c0c40a5f7bb453bfacc19232c79a7a6b6d00e0d8184496f701eeb77ad340ad5"
+    },
+    {
+      "event": "SessionStart",
+      "index": 0,
+      "sha256": "046e7fd3ec45aba1b236d0ca187abd981ca64ac8f3e3f8b1abdc5837466ef543"
+    },
+    {
+      "event": "PreToolUse",
+      "index": 0,
+      "sha256": "d52dd6108a44b4517ac617a64e43dd54ce429cc22c181a622ff2ef3073a9af04"
+    },
+    {
+      "event": "PostToolUse",
+      "index": 0,
+      "sha256": "d52dd6108a44b4517ac617a64e43dd54ce429cc22c181a622ff2ef3073a9af04"
+    },
+    {
+      "event": "UserPromptSubmit",
+      "index": 0,
+      "sha256": "c714d257ea6277eb187e7eb9843a0be291989b44ff7d1eb596b61dc04559d6db"
+    },
+    {
+      "event": "Stop",
+      "index": 0,
+      "sha256": "c714d257ea6277eb187e7eb9843a0be291989b44ff7d1eb596b61dc04559d6db"
+    }
+  ]
+}

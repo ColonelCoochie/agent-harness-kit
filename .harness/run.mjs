@@ -2,10 +2,12 @@
 
 import { spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
-import { access, appendFile, lstat, mkdir, open, opendir, readFile, readdir, readlink, rename, rmdir, stat, unlink, writeFile } from 'node:fs/promises';
+import { access, appendFile, lstat, mkdir, open, opendir, readFile, readdir, readlink, realpath, rename, rmdir, stat, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { StringDecoder } from 'node:string_decoder';
+import { appendFileSync, closeSync, openSync } from 'node:fs';
+import { contextObservation, contextPolicy } from './context-budget.mjs';
 
 const HARNESS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HARNESS_DIR, '..');
@@ -18,8 +20,8 @@ const CONTINUITY_HISTORY_DIR = path.join(HARNESS_DIR, 'history', 'progress');
 const EVIDENCE_DIR = path.join(HARNESS_DIR, 'evidence');
 const CREDENTIAL_STATE_PATH = path.join(HARNESS_DIR, 'credentials-state.json');
 const HARNESS_RUNTIME_VERSION = 6;
-const EVIDENCE_SCHEMA_VERSION = 4;
-const VERIFICATION_PLAN_SCHEMA_VERSION = 1;
+const EVIDENCE_SCHEMA_VERSION = 5;
+const VERIFICATION_PLAN_SCHEMA_VERSION = 2;
 const STATE_SCHEMA_VERSION = 1;
 const CONTINUITY_SCHEMA_VERSION = 1;
 const STATE_LOCK_OWNER_PREFIX = 'owner-';
@@ -29,6 +31,9 @@ const STATE_LOCK_ORPHAN_AGE_MS = 300000;
 const STATE_LOCK_MAX_ACQUIRE_ATTEMPTS = 8;
 const DEFAULT_GIT_CAPTURE_MAX_BYTES = 8 * 1024 * 1024;
 const REPOSITORY_CAPTURE_LIMITS = Object.freeze({ entries: 32768, manifestBytes: 16 * 1024 * 1024, depth: 64, elapsedMs: 300000, fileBytes: 16 * 1024 * 1024 * 1024 });
+// Only deliberately selected generated output types may use metadata fingerprints.
+// Code, configuration, contracts and JSON manifests always retain byte capture.
+const ARTIFACT_METADATA_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.ico', '.pdf', '.mp4', '.webm', '.mov', '.mp3', '.wav', '.ogg', '.zip', '.gz', '.fbx', '.rbxl', '.rbxlx', '.rbxm', '.rbxmx', '.log']);
 const GIT_CAPTURE_MAX_BYTES = configuredGitCaptureLimit();
 const STATES = new Set(['not_started', 'active', 'blocked', 'passing']);
 const CONTINUITY_PHASES = new Set(['working', 'awaiting_resume']);
@@ -43,6 +48,7 @@ const RUNTIME_OWNED_PATHS = [
   '.harness/handoff.md',
   '.harness/history/progress/**',
   '.harness/state.lock/**'
+  ,'.harness/context/**', '.harness/logs/**'
 ];
 const CONTINUITY_OWNED_PATHS = [
   '.harness/events.jsonl',
@@ -51,6 +57,7 @@ const CONTINUITY_OWNED_PATHS = [
   '.harness/handoff.md',
   '.harness/history/progress/**',
   '.harness/state.lock/**'
+  ,'.harness/context/**', '.harness/logs/**'
 ];
 const rawArgv = process.argv.slice(2);
 const args = parseArgs(rawArgv);
@@ -64,12 +71,13 @@ const DEVELOPMENT_HARNESS_BOUNDARY = '## Development-Harness Boundary';
 const ORCHESTRATED_WORKER_PROTOCOL = 'ORCHESTRATED_WORKER_CONTINUITY_V1';
 const COMMAND_OPTIONS = Object.freeze({
   session: new Set(['json']),
-  bootstrap: new Set(['id', 'json']),
+  context: new Set(['json', 'observe', 'toolCalls', 'outputChars', 'transcript']),
+  bootstrap: new Set(['id', 'json', 'validate', 'integrity']),
   claim: new Set(['json']),
   recover: new Set(['expectedOwner', 'reason', 'confirmedTerminated', 'json']),
   migrate: new Set(['json']),
   resume: new Set(['id', 'acceptDrift', 'json']),
-  doctor: new Set(),
+  doctor: new Set(['integrity']),
   status: new Set(),
   next: new Set(['json']),
   add: new Set(['id', 'title', 'description', 'criterion', 'acceptCommand', 'command', 'depends', 'level', 'require', 'allow', 'allowAll', 'deny', 'credential', 'credentials']),
@@ -85,12 +93,13 @@ const COMMAND_OPTIONS = Object.freeze({
 });
 const COMMAND_USAGE = Object.freeze({
   session: 'node .harness/run.mjs session [--json]',
-  bootstrap: 'node .harness/run.mjs bootstrap [ID] [--json]',
+  context: 'node .harness/run.mjs context [--observe] [--tool-calls N] [--output-chars N] [--transcript PATH] [--json]',
+  bootstrap: 'node .harness/run.mjs bootstrap [ID] [--validate] [--integrity] [--json]',
   claim: 'node .harness/run.mjs claim [--json]',
   recover: 'node .harness/run.mjs recover --expected-owner ID --reason TEXT --confirmed-terminated [--json]',
   migrate: 'node .harness/run.mjs migrate [--json]',
   resume: 'node .harness/run.mjs resume HANDOFF_ID [--accept-drift] [--json]',
-  doctor: 'node .harness/run.mjs doctor',
+  doctor: 'node .harness/run.mjs doctor [--integrity]',
   status: 'node .harness/run.mjs status',
   next: 'node .harness/run.mjs next [--json]',
   add: 'node .harness/run.mjs add ID --title TEXT --description TEXT --criterion TEXT --command CMD --allow GLOB [options]',
@@ -111,6 +120,7 @@ try {
   } else {
     validateCommandOptions(command, args, rawArgv);
     if (command === 'session') await continuityStatus();
+    else if (command === 'context') await contextStatus();
     else if (command === 'bootstrap') await workerBootstrap();
     else if (command === 'claim') await withStateLock(claimWorker);
     else if (command === 'recover') await withStateLock(recoverWorker);
@@ -559,16 +569,44 @@ function compactFeature(feature) {
 }
 
 async function workerBootstrap() {
+  const validate = booleanRequest('validate');
+  const integrityRequested = booleanRequest('integrity');
+  if (integrityRequested && !validate) throw new Error('bootstrap --integrity requires --validate.');
   const continuity = await readContinuity();
   // Parked callers receive only routing; do not disclose the implementation packet.
   if (continuity.phase !== 'working') { console.log(JSON.stringify({ continuity: continuityView(continuity) })); return; }
   const { config, state } = await load();
   const selectedId = args._[1] || args.id;
-  console.log(serializeBootstrap(config, state, continuity, selectedId));
+  const projection = bootstrapProjection(config, state, continuity, selectedId);
+  if (!validate) { console.log(serializeBootstrapProjection(projection)); return; }
+  const validation = await collectDoctor(config, state, continuity, { integrityRequested });
+  projection.status = { counts: projection.counts, activeIds: projection.active.map(feature => feature.id) };
+  projection.next = { action: projection.active.length ? 'continue' : projection.candidates.length ? 'start' : 'none', candidateIds: projection.candidates.map(feature => feature.id) };
+  projection.validation = { healthy: validation.errors.length === 0, errorCount: validation.errors.length, warningCount: validation.warnings.length,
+    integrity: validation.integrity, errors: [], warnings: [], omitted: { errors: validation.errors.length, warnings: validation.warnings.length } };
+  // Keep the contract projection intact and bound diagnostics by actual UTF-8 bytes.
+  serializeBootstrapProjection(projection, 32767);
+  for (const kind of ['errors', 'warnings']) {
+    for (const message of validation[kind]) {
+      projection.validation[kind].push(utf8Projection(message, 2000));
+      projection.validation.omitted[kind]--;
+      if (Buffer.byteLength(JSON.stringify(projection)) > 32767) {
+        projection.validation[kind].pop(); projection.validation.omitted[kind]++; break;
+      }
+    }
+  }
+  console.log(serializeBootstrapProjection(projection, 32767));
+  if (validation.errors.length) process.exitCode = 1;
 }
 
-function serializeBootstrap(config, state, continuity, selectedId) {
-  const selected = selectedId ? byId(state, selectedId) : activeFeatures(state)[0];
+function booleanRequest(name) {
+  if (args[name] !== undefined && args[name] !== true && args[name] !== 'true') throw new Error(`--${name} accepts a flag or the value true; a requested validation cannot fall back to a structural check.`);
+  return args[name] === true || args[name] === 'true';
+}
+
+function bootstrapProjection(config, state, continuity, selectedId) {
+  const active = activeFeatures(state);
+  const selected = selectedId ? byId(state, selectedId) : active[0];
   const detail = selected ? {
     ...compactFeature(selected), description: utf8Projection(selected.description, 2000),
     scope: selected.scope, acceptance: selected.acceptance, requiredLayers: selected.requiredLayers,
@@ -576,16 +614,23 @@ function serializeBootstrap(config, state, continuity, selectedId) {
     scopeBaselineRef: selected.scopeBaselineRef ?? null, evidence: (selected.evidence ?? []).slice(-3),
     blocker: selected.blocker ? String(selected.blocker).slice(0, 2000) : null
   } : null;
-  const result = {
+  return {
     continuity: continuityView(continuity), revision: state.revision,
     counts: Object.fromEntries([...STATES].map(status => [status, state.features.filter(f => f.status === status).length])),
-    active: activeFeatures(state).slice(0, 10).map(compactFeature),
+    active: active.slice(0, 10).map(compactFeature),
     candidates: nextCandidates(state, config).slice(0, 10).map(compactFeature), selected: detail,
     checkpoint: continuity.checkpoint ? { summary: String(continuity.checkpoint.summary).slice(0, 4000), next: String(continuity.checkpoint.next).slice(0, 2000), decisions: (continuity.checkpoint.decisions ?? []).slice(0, 20), blockers: (continuity.checkpoint.blockers ?? []).slice(0, 20), evidence: (continuity.checkpoint.evidence ?? []).slice(-10), historicalBlockedCount: continuity.checkpoint.historicalBlockedCount ?? null } : null,
     routes: { config: '.harness/config.json', docs: '.harness/docs-map.md', progress: '.harness/progress.md' }
   };
+}
+
+function serializeBootstrap(config, state, continuity, selectedId) {
+  return serializeBootstrapProjection(bootstrapProjection(config, state, continuity, selectedId));
+}
+
+function serializeBootstrapProjection(result, limit = 32768) {
   const serialized = JSON.stringify(result);
-  if (Buffer.byteLength(serialized) > 32768) throw new Error('Selected feature bootstrap exceeds 32 KiB; narrow the feature contract before dispatch.');
+  if (Buffer.byteLength(serialized) > limit) throw new Error('Selected feature bootstrap exceeds 32 KiB; narrow the feature contract before dispatch.');
   return serialized;
 }
 
@@ -688,7 +733,37 @@ async function whileWorking(operation) {
     throw new Error(`Repository is parked at handoff ${continuity.handoff.id}. Keep the orchestrator chat active and delegate one fresh worker to run: ${resumeCommand(continuity)}`);
   }
   assertOwner(continuity);
+  if (!['checkpoint', 'handoff', 'block'].includes(command)) {
+    const { config } = await load();
+    const budget = await contextObservation(ROOT, { actor: continuity.owner.id, role: 'worker', config, event: 'mutation', startedAt: continuity.owner.claimedAt });
+    if (budget.pressure === 'rotate') {
+      await pressureHandoff(budget);
+      process.exitCode = 75;
+      return;
+    }
+  }
   return operation();
+}
+
+async function contextStatus() {
+  const { config } = await load();
+  const continuity = await readContinuity();
+  const actor = workerIdentity();
+  const role = continuity.owner?.id === actor.id ? 'worker' : 'orchestrator';
+  if (!args.observe && (args.toolCalls || args.outputChars || args.transcript)) throw new Error('Context accounting options require --observe.');
+  for (const value of [args.toolCalls, args.outputChars].filter(value => value !== undefined)) if (!/^\d+$/.test(String(value))) throw new Error('Context accounting counts must be nonnegative integers.');
+  const budget = await contextObservation(ROOT, { actor: actor.id, role, config, startedAt: role === 'worker' ? continuity.owner.claimedAt : undefined, persist: Boolean(args.observe), event: args.observe ? 'PreToolUse' : 'inspect', toolCalls: Number(args.toolCalls ?? 0), outputChars: Number(args.outputChars ?? 0), transcriptPath: args.transcript });
+  const { policy: _policy, ...view } = budget;
+  console.log(args.json ? JSON.stringify(view) : `Context ${view.pressure}; role=${role}; reasons=${view.reasons.join(',') || 'none'}; telemetry=${view.telemetry}`);
+}
+
+async function pressureHandoff(budget) {
+  args.summary = `Proactive worker rotation: ${budget.reasons.join(', ')}. Persisted feature state and Git changes are the implementation authority; reconstruct through bootstrap and scoped sources.`;
+  args.next = 'Continue the active feature in one fresh worker without inherited implementation history. Run the exact resume command then bootstrap --validate --json and inspect scoped changes before further implementation or verification.';
+  args.reason = 'context_pressure';
+  args.automatic = true;
+  args.json = false;
+  await writeHandoff();
 }
 
 function list(value) {
@@ -794,7 +869,8 @@ function contractShape(feature) {
     dependencies: feature.dependencies,
     scope: feature.scope,
     acceptance: feature.acceptance,
-    requiredLayers: feature.requiredLayers ?? ['full']
+    requiredLayers: feature.requiredLayers ?? ['full'],
+    ...(Object.hasOwn(feature, 'verificationBudget') ? { verificationBudget: feature.verificationBudget } : {})
   };
 }
 
@@ -805,7 +881,8 @@ function scopeBaselineShape(baseline) {
     tree: baseline?.tree,
     branch: baseline?.branch,
     files: baseline?.files,
-    worktreeHash: baseline?.worktreeHash
+    worktreeHash: baseline?.worktreeHash,
+    ...(baseline?.capturePolicy ? { capturePolicy: baseline.capturePolicy } : {})
   };
 }
 
@@ -835,6 +912,24 @@ function sameStructuredValue(actual, expected) {
 
 function isRecord(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function exactKeys(value, keys) {
+  return isRecord(value) && sameOrderedValues(Object.keys(value).sort(), [...keys].sort());
+}
+
+function validVerificationBudget(value) {
+  return exactKeys(value, ['maxAttempts']) && Number.isSafeInteger(value.maxAttempts) && value.maxAttempts > 0;
+}
+
+function attemptBudget(config, feature) {
+  const globalMaxAttempts = config.policies?.maxAttempts ?? 5;
+  if (!Number.isSafeInteger(globalMaxAttempts) || globalMaxAttempts < 1) throw new Error('Global verification budget must be a positive safe integer.');
+  if (Object.hasOwn(feature, 'verificationBudget') && !validVerificationBudget(feature.verificationBudget)) throw new Error(`${feature.id}: invalid verificationBudget`);
+  const featureMaxAttempts = Object.hasOwn(feature, 'verificationBudget') ? feature.verificationBudget.maxAttempts : null;
+  const attemptsBefore = feature.attempts ?? 0;
+  if (!Number.isSafeInteger(attemptsBefore) || attemptsBefore < 0) throw new Error(`${feature.id}: invalid cumulative attempt count`);
+  return { version: 1, globalMaxAttempts, featureMaxAttempts, effectiveMaxAttempts: Math.min(globalMaxAttempts, featureMaxAttempts ?? globalMaxAttempts), attemptsBefore };
 }
 
 function verificationCredentialPlan(config, entry) {
@@ -877,7 +972,8 @@ function verificationPlanSnapshot(config, feature, layers, entries, contractHash
     harnessVersion: HARNESS_RUNTIME_VERSION,
     feature: {
       id: feature.id,
-      contractHash
+      contractHash,
+      ...(Object.hasOwn(feature, 'verificationBudget') ? { verificationBudget: feature.verificationBudget } : {})
     },
     config: {
       hash: configHash
@@ -902,7 +998,8 @@ function verificationPlanSnapshot(config, feature, layers, entries, contractHash
       expectedViolations: []
     },
     executionPolicy: {
-      commandTimeoutMs: Number(config.policies?.commandTimeoutMs ?? 0)
+      commandTimeoutMs: Number(config.policies?.commandTimeoutMs ?? 0),
+      attemptBudget: attemptBudget(config, feature)
     },
     evidencePolicy: {
       redactOutput: Boolean(config.security?.redactOutput),
@@ -911,7 +1008,7 @@ function verificationPlanSnapshot(config, feature, layers, entries, contractHash
   };
 }
 
-function validateEvidenceRecord(feature, record) {
+function validateEvidenceRecord(feature, record, { planOnly = false } = {}) {
   const errors = [];
   const warnings = [];
   const evidenceSchema = Number(record?.schemaVersion ?? 1);
@@ -920,11 +1017,11 @@ function validateEvidenceRecord(feature, record) {
     return { errors, warnings };
   }
   if (record.featureId !== feature.id) errors.push(`${feature.id}: evidence belongs to ${record.featureId}`);
-  if (record.pass !== true) errors.push(`${feature.id}: latest evidence did not pass`);
-  if (!Array.isArray(record.commands) || record.commands.length === 0 || record.commands.some((item) => item.exitCode !== 0)) {
+  if (!planOnly && record.pass !== true) errors.push(`${feature.id}: latest evidence did not pass`);
+  if (!planOnly && (!Array.isArray(record.commands) || record.commands.length === 0 || record.commands.some((item) => item.exitCode !== 0))) {
     errors.push(`${feature.id}: evidence lacks successful commands`);
   }
-  if (!Array.isArray(record.scopeViolations) || record.scopeViolations.length !== 0) {
+  if (!planOnly && (!Array.isArray(record.scopeViolations) || record.scopeViolations.length !== 0)) {
     errors.push(`${feature.id}: passing evidence has nonempty or invalid scope violations`);
   }
   if (evidenceSchema >= 2) {
@@ -932,7 +1029,7 @@ function validateEvidenceRecord(feature, record) {
     if (!record.configHash) errors.push(`${feature.id}: evidence lacks config provenance`);
     if (Number(record.harnessVersion ?? 1) >= 2 && !record.verificationHash) errors.push(`${feature.id}: evidence lacks verification-plan provenance`);
   }
-  if (evidenceSchema < EVIDENCE_SCHEMA_VERSION) {
+  if (evidenceSchema < 4 && record.verificationPlan === undefined) {
     warnings.push(`${feature.id}: legacy evidence schema v${evidenceSchema} predates embedded verification-plan manifests; the historical pass remains usable but is not independently plan-verified`);
     return { errors, warnings };
   }
@@ -942,7 +1039,7 @@ function validateEvidenceRecord(feature, record) {
     errors.push(`${feature.id}: evidence lacks an embedded verification plan`);
     return { errors, warnings };
   }
-  if (plan.schemaVersion !== VERIFICATION_PLAN_SCHEMA_VERSION) {
+  if (!((evidenceSchema === 4 && plan.schemaVersion === 1) || (evidenceSchema === 5 && plan.schemaVersion === 2))) {
     errors.push(`${feature.id}: unsupported verification-plan schema version ${String(plan.schemaVersion)}`);
   }
   if (plan.evidenceSchemaVersion !== evidenceSchema
@@ -957,6 +1054,28 @@ function validateEvidenceRecord(feature, record) {
   if (plan.feature?.id !== record.featureId) errors.push(`${feature.id}: verification-plan feature does not match evidence`);
   if (plan.feature?.contractHash !== record.contractHash) errors.push(`${feature.id}: verification-plan contract does not match evidence`);
   if (plan.config?.hash !== record.configHash) errors.push(`${feature.id}: verification-plan config hash does not match evidence`);
+  const hasBudget = Object.hasOwn(feature, 'verificationBudget');
+  if (hasBudget && !validVerificationBudget(feature.verificationBudget)) errors.push(`${feature.id}: invalid frozen verificationBudget`);
+  if (!exactKeys(plan.feature, ['id', 'contractHash', ...(hasBudget ? ['verificationBudget'] : [])]) || Object.hasOwn(plan.feature, 'verificationBudget') !== hasBudget
+    || (hasBudget && !sameStructuredValue(plan.feature.verificationBudget, feature.verificationBudget))) {
+    errors.push(`${feature.id}: verification-plan budget does not match the frozen feature`);
+  }
+  if (evidenceSchema === 5) {
+    const budget = plan.executionPolicy?.attemptBudget;
+    const validBudget = exactKeys(budget, ['version', 'globalMaxAttempts', 'featureMaxAttempts', 'effectiveMaxAttempts', 'attemptsBefore'])
+      && budget.version === 1
+      && Number.isSafeInteger(budget.globalMaxAttempts) && budget.globalMaxAttempts > 0
+      && (budget.featureMaxAttempts === null || (Number.isSafeInteger(budget.featureMaxAttempts) && budget.featureMaxAttempts > 0))
+      && budget.featureMaxAttempts === (hasBudget ? feature.verificationBudget?.maxAttempts : null)
+      && Number.isSafeInteger(budget.effectiveMaxAttempts) && budget.effectiveMaxAttempts > 0
+      && budget.effectiveMaxAttempts === Math.min(budget.globalMaxAttempts, budget.featureMaxAttempts ?? budget.globalMaxAttempts)
+      && Number.isSafeInteger(budget.attemptsBefore) && budget.attemptsBefore >= 0 && budget.attemptsBefore < budget.effectiveMaxAttempts;
+    if (!validBudget || !Number.isSafeInteger(record.attempt) || record.attempt !== budget?.attemptsBefore + 1 || record.attempt > budget?.effectiveMaxAttempts) {
+      errors.push(`${feature.id}: verification-plan attempt budget or actual attempt is invalid`);
+    }
+  } else if (Object.hasOwn(plan.executionPolicy ?? {}, 'attemptBudget')) {
+    errors.push(`${feature.id}: legacy verification plan cannot contain an attempt budget`);
+  }
 
   const plannedLayers = Array.isArray(plan.requiredLayers) ? plan.requiredLayers : [];
   const layerIds = plannedLayers.map((layer) => layer?.id);
@@ -1060,6 +1179,7 @@ function validateEvidenceRecord(feature, record) {
     errors.push(`${feature.id}: verification-plan execution or evidence policy is invalid`);
   }
 
+  if (planOnly) return { errors, warnings };
   const expectedExecutedLayers = unique(executions.map((execution) => execution?.layer));
   if (!sameOrderedValues(record.executedLayers, expectedExecutedLayers)) {
     errors.push(`${feature.id}: evidence executed layers do not match verification plan`);
@@ -1105,13 +1225,190 @@ async function validatePassingEvidence(feature) {
   return validateEvidenceRecord(feature, record);
 }
 
+async function validateBudgetHistory(feature, features, root) {
+  const errors = [];
+  const fail = message => { throw new Error(`${feature.id}: ${message}`); };
+  const digest = value => /^[a-f0-9]{64}$/.test(value);
+  const contractValid = contract => exactKeys(contract, ['version', 'scopeBaselineHash', 'hash', 'snapshot', 'frozenAt'])
+    && contract.version === 2 && digest(contract.scopeBaselineHash) && digest(contract.hash)
+    && typeof contract.frozenAt === 'string' && Number.isFinite(Date.parse(contract.frozenAt))
+    && isRecord(contract.snapshot) && contract.snapshot.id === feature.id
+    && sameStructuredValue(contract.snapshot, contractShape(contract.snapshot))
+    && (!Object.hasOwn(contract.snapshot, 'verificationBudget') || validVerificationBudget(contract.snapshot.verificationBudget))
+    && stableHash({ contract: contract.snapshot, scopeBaselineHash: contract.scopeBaselineHash }) === contract.hash;
+  const historicalOwner = actor => exactKeys(actor, ['id', 'source', 'parentSessionId', 'generation', 'claimedAt', 'featureId'])
+    && typeof actor.id === 'string' && /^[a-zA-Z0-9_./:-]{1,200}$/.test(actor.id)
+    && ['CODEX_THREAD_ID', 'explicit-attestation'].includes(actor.source)
+    && (actor.parentSessionId === null || (typeof actor.parentSessionId === 'string' && actor.parentSessionId.trim().length > 0))
+    && Number.isSafeInteger(actor.generation) && actor.generation >= 0
+    && typeof actor.claimedAt === 'string' && Number.isFinite(Date.parse(actor.claimedAt))
+    && (actor.featureId === null || (typeof actor.featureId === 'string' && /^[a-z0-9][a-z0-9._-]*$/i.test(actor.featureId)));
+  const readContained = async (reference, hash, directory) => {
+    if (typeof reference !== 'string' || !reference.startsWith(`.harness/${directory}/`) || !reference.endsWith('.json')
+      || reference.includes('\\') || reference.split('/').includes('..') || !digest(hash)) fail('invalid immutable history reference');
+    const container = path.join(root, '.harness', directory);
+    const target = path.resolve(root, reference);
+    if (!isPathInside(container, target)) fail('history reference escapes its directory');
+    const info = await lstat(target);
+    if (!info.isFile() || info.isSymbolicLink() || !isPathInside(await realpath(container), await realpath(target))) fail('history reference is not a contained regular file');
+    return readFile(target);
+  };
+  const rawHash = bytes => createHash('sha256').update(bytes).digest('hex');
+  const readAuthenticated = async (reference, hash, directory) => {
+    const bytes = await readContained(reference, hash, directory);
+    if (rawHash(bytes) !== hash) fail('history reference hash mismatch');
+    return { bytes, record: JSON.parse(bytes) };
+  };
+  const readEvidence = async (ref, legacyActor) => {
+    if (!exactKeys(ref, ['reference', 'hash'])) fail('invalid evidence receipt');
+    const bytes = await readContained(ref.reference, ref.hash, 'evidence');
+    const record = JSON.parse(bytes);
+    // Archived v2 owner-object writers hashed regular-file mode + NUL + these exact bytes.
+    // This discriminator never changes baseline hashes or current evidence authentication.
+    const historical = legacyActor && record.schemaVersion === 4 && record.verificationPlan?.schemaVersion === 1;
+    if (rawHash(bytes) !== ref.hash && !(historical && ['100644', '100755'].some(mode =>
+      createHash('sha256').update(mode + '\0').update(bytes).digest('hex') === ref.hash))) fail('history reference hash mismatch');
+    return record;
+  };
+  const evidenceFor = (record, frozenFeature) => {
+    const validation = validateEvidenceRecord(frozenFeature, record, { planOnly: true });
+    if (validation.errors.length) fail(validation.errors.join('; '));
+  };
+  try {
+    if (Object.hasOwn(feature, 'verificationBudget') && !validVerificationBudget(feature.verificationBudget)) fail('invalid verificationBudget');
+    const revisions = feature.budgetRevisions;
+    if (revisions === undefined) {
+      if (Object.hasOwn(feature, 'verificationBudget')) fail('verificationBudget lacks authenticated revision history');
+      return errors;
+    }
+    if (!Array.isArray(revisions) || revisions.length === 0) fail('invalid budget revision history');
+    if (!contractValid(feature.contract) || !sameStructuredValue(feature.contract.snapshot, contractShape(feature))) fail('current revised contract snapshot mismatch');
+    let prior = null;
+    const revisionHashes = new Set();
+    for (const [index, revision] of revisions.entries()) {
+      if (!exactKeys(revision, ['version', 'at', 'actor', 'reason', 'additionalAttempts', 'previousRevisionHash', 'previousContract', 'scopeBaselineRef', 'previousEvidence', 'maintenanceReceipts', 'attempts', 'repeatedFailures', 'addedAllow', 'nextContractHash', 'hash'])
+        || revision.version !== 2 || typeof revision.at !== 'string' || !Number.isFinite(Date.parse(revision.at))
+        || !((typeof revision.actor === 'string' && revision.actor.trim()) || historicalOwner(revision.actor)) || typeof revision.reason !== 'string' || !revision.reason.trim()
+        || !Number.isSafeInteger(revision.additionalAttempts) || revision.additionalAttempts < 0
+        || !Number.isSafeInteger(revision.attempts) || revision.attempts < 0
+        || !Number.isSafeInteger(revision.repeatedFailures) || revision.repeatedFailures < 0
+        || !digest(revision.nextContractHash) || !digest(revision.hash)) fail('malformed budget revision');
+      const { hash, ...unsigned } = revision;
+      if (stableHash(unsigned) !== hash || revisionHashes.has(hash) || revision.previousRevisionHash !== (prior?.hash ?? null)) fail('budget revision hash or chain mismatch');
+      revisionHashes.add(hash);
+      const legacyActor = historicalOwner(revision.actor);
+      if (!contractValid(revision.previousContract) || (prior && revision.previousContract.hash !== prior.nextContractHash)) fail('previous contract hash or snapshot mismatch');
+      const ref = revision.scopeBaselineRef;
+      if (!exactKeys(ref, ['version', 'path', 'sha256', 'bytes', 'baselineHash']) || ref.version !== 1 || !Number.isSafeInteger(ref.bytes) || ref.bytes < 1
+        || ref.path !== `.harness/baselines/${ref.sha256}.json` || ref.baselineHash !== revision.previousContract.scopeBaselineHash) fail('invalid revision baseline reference');
+      const baseline = await readAuthenticated(ref.path, ref.sha256, 'baselines');
+      if (baseline.bytes.length !== ref.bytes || baseline.record.baselineHash !== ref.baselineHash || scopeBaselineHash(baseline.record) !== ref.baselineHash) fail('revision baseline identity mismatch');
+      if (!sameStructuredValue(ref, feature.scopeBaselineRef) || feature.contract.scopeBaselineHash !== ref.baselineHash) fail('revision baseline differs from current contract');
+      const historicalContracts = revisions.slice(0,index+1).map(item=>item.previousContract);
+      if (!Array.isArray(revision.previousEvidence) || revision.previousEvidence.length !== revision.attempts
+        || new Set(revision.previousEvidence.map(item=>item?.reference)).size !== revision.previousEvidence.length
+        || !revision.previousEvidence.every((item, order) => item?.reference === feature.evidence?.[order])) fail('previous evidence does not preserve cumulative history');
+      for (const evidence of revision.previousEvidence) {
+        const record = await readEvidence(evidence, legacyActor);
+        const frozen = historicalContracts.find(item=>item.hash===record.contractHash);
+        if (!frozen) fail('historical evidence contract is unknown');
+        evidenceFor(record,{...frozen.snapshot,contract:frozen});
+      }
+      const receipts = revision.maintenanceReceipts;
+      if (!Array.isArray(receipts) || receipts.length === 0 || new Set(receipts.map(receipt => receipt?.featureId)).size !== receipts.length) fail('missing or duplicate maintenance receipts');
+      for (const receipt of receipts) {
+        if (!exactKeys(receipt, ['featureId', 'evidence']) || typeof receipt.featureId !== 'string' || receipt.featureId === feature.id
+          || !Array.isArray(receipt.evidence) || receipt.evidence.length === 0 || new Set(receipt.evidence.map(item => item?.reference)).size !== receipt.evidence.length) fail('invalid maintenance receipt');
+        const maintenance = features.find(item => item.id === receipt.featureId);
+        if (!maintenance || maintenance.status !== 'passing') fail('maintenance receipt feature is missing or not passing');
+        if (!receipt.evidence.every((item,order)=>item?.reference === maintenance.evidence?.[order])) fail('maintenance receipt history differs from feature evidence');
+        for (const evidence of receipt.evidence) {
+          if (!maintenance.evidence?.includes(evidence?.reference)) fail('maintenance evidence does not belong to receipt feature');
+          const record = await readEvidence(evidence, legacyActor);
+          const contracts = [maintenance.contract, ...(maintenance.budgetRevisions ?? []).map(item => item.previousContract)];
+          const frozen = contracts.find(item => item?.hash === record.contractHash);
+          if (!frozen) fail('maintenance evidence contract is unknown');
+          if (evidence === receipt.evidence.at(-1)) {
+            const latestValidation = validateEvidenceRecord({ ...frozen.snapshot, contract: frozen }, record);
+            if (latestValidation.errors.length) fail(latestValidation.errors.join('; '));
+          }
+          evidenceFor(record, { ...frozen.snapshot, contract: frozen });
+        }
+      }
+      if (!Array.isArray(revision.addedAllow) || revision.addedAllow.some(value => typeof value !== 'string' || !value)
+        || new Set(revision.addedAllow).size !== revision.addedAllow.length
+        || (revision.additionalAttempts === 0 && revision.addedAllow.every(value => revision.previousContract.snapshot.scope.allow.includes(value)))) fail('invalid revised scope additions');
+      const nextContract = revisions[index + 1]?.previousContract ?? feature.contract;
+      const expected = { ...revision.previousContract.snapshot, scope: { ...revision.previousContract.snapshot.scope, allow: unique([...revision.previousContract.snapshot.scope.allow, ...revision.addedAllow]) } };
+      if (revision.additionalAttempts > 0) {
+        const nextBudget = nextContract.snapshot?.verificationBudget;
+        if (!validVerificationBudget(nextBudget) || (Object.hasOwn(expected, 'verificationBudget')
+          ? nextBudget.maxAttempts !== expected.verificationBudget.maxAttempts + revision.additionalAttempts
+          : nextBudget.maxAttempts <= revision.additionalAttempts)) fail('invalid historical budget increment');
+        expected.verificationBudget = nextBudget;
+      }
+      if (nextContract.hash !== revision.nextContractHash || !sameStructuredValue(nextContract.snapshot, expected)) fail('revision next contract or snapshot mismatch');
+      prior = revision;
+    }
+    if (prior.nextContractHash !== featureContractHash(feature)) fail('final revised contract hash mismatch');
+  } catch (error) { errors.push(`${feature.id}: budget history integrity: ${error.message}`); }
+  return errors;
+}
+
+async function nativeHooksRouted(content, platform) {
+  let settings, canonical, previous, legacy;
+  try {
+    settings = JSON.parse(content);
+    canonical = JSON.parse(await readFile(path.join(HARNESS_DIR, 'hooks', 'native-hook-bootstrap-v3.json'), 'utf8'));
+    previous = JSON.parse(await readFile(path.join(HARNESS_DIR, 'hooks', 'native-hook-bootstrap-v2.json'), 'utf8'));
+    legacy = JSON.parse(await readFile(path.join(HARNESS_DIR, 'hooks', 'native-hook-bootstrap-v1.json'), 'utf8'));
+  } catch { return false; }
+  const required = [['PreCompact', 'precompact-handoff.mjs'], ['SessionStart', 'sessionstart-routing.mjs']];
+  if (platform === 'claude') required.push(['SubagentStart', 'claude-worker-identity.mjs']);
+  return required.every(([event, name]) => Array.isArray(settings?.hooks?.[event]) && settings.hooks[event].some(group => lifecycleHookGroup(group, event) && group.hooks.some(hook => {
+    if (!hook || hook.type !== 'command') return false;
+    const command = process.platform === 'win32' ? hook.commandWindows ?? hook.command : hook.command;
+    if (typeof command !== 'string') return false;
+    const key = `${platform}/${name}`, escapedName = name.replaceAll('.', '\\.');
+    const absolute = new RegExp(`^node (?:"[^"\\r\\n]+/\\.harness/hooks/${escapedName}"|'[^'\\r\\n]+/\\.harness/hooks/${escapedName}')(?: --platform ${platform})?$`).test(command);
+    const git = command === `node "$(git rev-parse --show-toplevel)/.harness/hooks/${name}"${name === 'precompact-handoff.mjs' ? ' --platform ' + platform : ''}`;
+    return command === canonical.commands?.[key] || command === previous.commands?.[key] || command === legacy.commands?.[key] || legacy.legacy?.[key]?.includes(command) || absolute || git;
+  })));
+}
+
+function lifecycleHookGroup(group, event) {
+  if (!group || typeof group !== 'object' || Array.isArray(group) || !Array.isArray(group.hooks)
+      || Object.keys(group).some(key => !['matcher', 'hooks'].includes(key))) return false;
+  if (group.matcher === undefined) return true;
+  if (typeof group.matcher !== 'string') return false;
+  try { return new RegExp(group.matcher).test(event === 'PreCompact' ? 'auto' : event === 'SessionStart' ? 'compact' : ''); }
+  catch { return false; }
+}
+
 async function doctor() {
+  if (args.integrity !== undefined && args.integrity !== true && args.integrity !== 'true') throw new Error('--integrity accepts a flag or the value true; an integrity request cannot fall back to a structural check.');
+  const integrityRequested = args.integrity === true || args.integrity === 'true';
   const { config, state } = await load();
   const continuity = await readContinuity();
+  const { errors, warnings, integrity } = await collectDoctor(config, state, continuity, { integrityRequested });
+  if (integrity) console.log(`INTEGRITY content-v1 ${integrity.hash} (${integrity.paths} paths; ${integrity.contentBytes} content bytes)`);
+  console.log(`Harness doctor: ${ROOT} (runtime v${HARNESS_RUNTIME_VERSION}, schema v${STATE_SCHEMA_VERSION})`);
+  console.log(`Features: ${state.features.length}; active: ${activeFeatures(state).length}; passing: ${state.features.filter((item) => item.status === 'passing').length}`);
+  console.log(`Continuity: ${continuity.phase}; generation: ${continuity.generation}`);
+  for (const warning of warnings) console.log(`WARN  ${warning}`);
+  for (const error of errors) console.log(`FAIL  ${error}`);
+  if (errors.length === 0) console.log('PASS  Structural state is healthy.');
+  if (continuity.phase === 'awaiting_resume') printAwaitingResume(continuity);
+  if (errors.length > 0) process.exitCode = 1;
+}
+
+async function collectDoctor(config, state, continuity, { integrityRequested = false } = {}) {
   const errors = [];
   const warnings = [];
   const ids = new Set();
   const featureIds = new Set(state.features.map((item) => item.id));
+  try { capturePolicy(config.scope?.capture); } catch (error) { errors.push(error.message); }
+  try { contextPolicy(config); } catch (error) { errors.push(error.message); }
 
   if (config.version !== STATE_SCHEMA_VERSION || state.version !== STATE_SCHEMA_VERSION) errors.push('Unsupported or mismatched harness state schema version.');
   if (!config.project?.purpose || String(config.project.purpose).includes('Replace this sentence')) errors.push('Project purpose is still a placeholder.');
@@ -1146,7 +1443,11 @@ async function doctor() {
   if (!Array.isArray(config.execution?.setup) || !Array.isArray(config.execution?.start) || !Array.isArray(config.execution?.health) || !Array.isArray(config.execution?.shutdown)) errors.push('execution setup/start/health/shutdown must be arrays.');
   if (!Number.isInteger(state.revision) || state.revision < 0) errors.push('features.json revision must be a non-negative integer.');
   if (Number(process.versions.node.split('.')[0]) < Number(config.execution?.harnessRuntime?.minimumMajorVersion ?? 20)) errors.push('Node.js does not meet the configured harness runtime minimum.');
-  if (config.scope?.enforcement === 'required' && !(await repositoryChanges()).available) errors.push('Git-backed scope enforcement is required but repository state is unavailable.');
+  // Structural startup checks need a complete Git listing, not every dirty byte.
+  const repository = await repositoryChanges({ listingOnly: !integrityRequested });
+  if (config.scope?.enforcement === 'required' && !repository.available) errors.push(`Git-backed scope enforcement is required but repository state is unavailable: ${repository.reason}`);
+  if (integrityRequested && !repository.available && config.scope?.enforcement !== 'required') errors.push(`Full repository integrity capture failed: ${repository.reason}`);
+  const integrity = integrityRequested && repository.available ? { hash: stableHash(repository.files), paths: repository.files.length, contentBytes: repository.collector.metrics().fileBytes } : null;
   if (activeFeatures(state).length > Number(config.policies?.wipLimit ?? 1)) errors.push('Active features exceed the WIP limit.');
   if (continuity.phase === 'awaiting_resume' && continuity.handoff?.featureRevision !== state.revision) {
     errors.push(`Pending handoff ${continuity.handoff?.id ?? '(missing)'} captured feature revision ${continuity.handoff?.featureRevision ?? '(missing)'}, but current state is revision ${state.revision}.`);
@@ -1157,6 +1458,7 @@ async function doctor() {
   if (!await exists(HANDOFF_PATH)) errors.push('Handoff projection is missing.');
 
   for (const feature of state.features) {
+    errors.push(...await validateBudgetHistory(feature, state.features, ROOT));
     if (feature.scopeBaselineRef) {
       try { await resolveBaseline(feature); } catch (error) { errors.push(feature.id + ': ' + error.message); }
     }
@@ -1208,7 +1510,7 @@ async function doctor() {
     const hooksPath = path.join(ROOT, '.codex', 'hooks.json');
     if (!await exists(guardPath)) errors.push('Codex pre-compaction handoff adapter is missing. Run the reusable sync command.');
     const hooksText = await exists(hooksPath) ? await readFile(hooksPath, 'utf8') : '';
-    if (!hooksText.includes('.harness/hooks/precompact-handoff.mjs') || !hooksText.includes('PreCompact')) {
+    if (!await nativeHooksRouted(hooksText, 'codex')) {
       warnings.push('Codex automatic compaction guard is not merged; review .harness/codex-hooks.addition.json or rerun sync.');
     }
   }
@@ -1216,19 +1518,12 @@ async function doctor() {
     const settingsPath = path.join(ROOT, '.claude', 'settings.json');
     const settingsText = await exists(settingsPath) ? await readFile(settingsPath, 'utf8') : '';
     const identityPath = path.join(HARNESS_DIR, 'hooks', 'claude-worker-identity.mjs');
-    if (!await exists(identityPath) || !settingsText.includes('SubagentStart') || !settingsText.includes('PreCompact') || !settingsText.includes('SessionStart') || !settingsText.includes('HARNESS_HOOK_LAUNCHER_V1') || await exists(path.join(HARNESS_DIR, 'claude-hooks.addition.json'))) {
+    if (!await exists(identityPath) || !await nativeHooksRouted(settingsText, 'claude') || await exists(path.join(HARNESS_DIR, 'claude-hooks.addition.json'))) {
       warnings.push('Claude native identity/compaction hooks are absent or unmerged; review .claude/settings.json and .harness/claude-hooks.addition.json. Unique explicit --worker-id manual operation remains available; automatic hooks cannot infer it.');
     }
   }
 
-  console.log(`Harness doctor: ${ROOT} (runtime v${HARNESS_RUNTIME_VERSION}, schema v${STATE_SCHEMA_VERSION})`);
-  console.log(`Features: ${state.features.length}; active: ${activeFeatures(state).length}; passing: ${state.features.filter((item) => item.status === 'passing').length}`);
-  console.log(`Continuity: ${continuity.phase}; generation: ${continuity.generation}`);
-  for (const warning of warnings) console.log(`WARN  ${warning}`);
-  for (const error of errors) console.log(`FAIL  ${error}`);
-  if (errors.length === 0) console.log('PASS  Structural state is healthy.');
-  if (continuity.phase === 'awaiting_resume') printAwaitingResume(continuity);
-  if (errors.length > 0) process.exitCode = 1;
+  return { errors, warnings, integrity };
 }
 
 function findCycles(features) {
@@ -1382,7 +1677,7 @@ async function startFeature() {
   if (activeFeatures(state).length >= config.policies.wipLimit) throw new Error(`WIP limit ${config.policies.wipLimit} reached.`);
   const missing = dependencyFailures(state, feature);
   if (missing.length) throw new Error(`Dependencies are not passing: ${missing.join(', ')}`);
-  feature.scopeBaseline = await repositoryBaseline();
+  feature.scopeBaseline = await repositoryBaseline(capturePolicy(config.scope?.capture));
   if (config.scope?.enforcement === 'required' && !feature.scopeBaseline.available) {
     const detail = feature.scopeBaseline.reason ? ` ${feature.scopeBaseline.reason}` : '';
     throw new Error(`Git-backed scope enforcement is required, but repository state is unavailable.${detail} Initialize Git and retry.`);
@@ -1459,7 +1754,10 @@ async function verifyFeature() {
   const feature = requested ? byId(state, requested) : activeFeatures(state)[0];
   if (!feature) throw new Error('No active feature. Provide a feature ID.');
   if (feature.status !== 'active') throw new Error(`${feature.id} is ${feature.status}; only active features can verify.`);
-  if (Number(feature.attempts ?? 0) >= Number(config.policies?.maxAttempts ?? 3)) {
+  const historyErrors = await validateBudgetHistory(feature, state.features, ROOT);
+  if (historyErrors.length) throw new Error(historyErrors.join('; '));
+  const budget = attemptBudget(config, feature);
+  if (budget.attemptsBefore >= budget.effectiveMaxAttempts) {
     throw new Error(`${feature.id} exhausted its verification budget; block, inspect the trace, and revise the plan.`);
   }
   const currentContractHash = featureContractHash(feature);
@@ -1495,8 +1793,9 @@ async function verifyFeature() {
   }));
 
   const startedAt = new Date().toISOString();
-  const before = await repositoryIdentity();
   const preScope = await evaluateScope(feature, config);
+  const before = preScope.repository ?? null;
+  if (before?.captureMode === 'artifact-metadata-v1') console.log('Scope capture: artifact-metadata-v1; selected generated outputs use metadata fingerprints. Use doctor --integrity for current content digests.');
   let run = preScope.violations.length
     ? {
         pass: false,
@@ -1526,7 +1825,7 @@ async function verifyFeature() {
       }]
     };
   }
-  const after = postScope.repository ?? await repositoryIdentity();
+  const after = postScope.repository ?? null;
   const slug = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-');
   const relativeEvidence = `.harness/evidence/${slug}-${safeName(feature.id)}.json`;
   const evidence = {
@@ -1539,6 +1838,7 @@ async function verifyFeature() {
     configHash,
     verificationHash: stableHash(verificationPlan),
     verificationPlan,
+    attempt: budget.attemptsBefore + 1,
     startedAt,
     finishedAt: new Date().toISOString(),
     pass: run.pass,
@@ -1560,7 +1860,7 @@ async function verifyFeature() {
     const fingerprint = stableHash(run.results.filter((item) => item.exitCode !== 0).map((item) => ({ layer: item.layer, command: item.command, exitCode: item.exitCode, output: item.output.slice(-1000) })));
     feature.repeatedFailures = feature.lastFailureFingerprint === fingerprint ? Number(feature.repeatedFailures ?? 0) + 1 : 1;
     feature.lastFailureFingerprint = fingerprint;
-    if (feature.attempts >= Number(config.policies?.maxAttempts ?? 3) || feature.repeatedFailures >= Number(config.policies?.maxRepeatedFailures ?? 2)) {
+    if (feature.attempts >= budget.effectiveMaxAttempts || feature.repeatedFailures >= Number(config.policies?.maxRepeatedFailures ?? 2)) {
       feature.status = 'blocked';
       feature.blocker = `Verification stop condition reached after ${feature.attempts} attempt(s). Inspect: node .harness/run.mjs trace ${feature.id}`;
     }
@@ -1590,7 +1890,8 @@ async function evaluateScope(feature, config) {
   if (baselineProblem) {
     return scopeFailure(config, 'scope-baseline-unavailable', baselineProblem);
   }
-  const current = await repositoryChanges();
+  const policy = baseline.capturePolicy ?? capturePolicy();
+  const current = await repositoryChanges({ policy, scopeOnly: true });
   if (!current.available) {
     return scopeFailure(config, 'scope-unavailable', current.reason || 'Git repository state could not be read', current.output);
   }
@@ -1604,7 +1905,7 @@ async function evaluateScope(feature, config) {
   }
   let dirty;
   try {
-    dirty = await dirtyChangesSince(baseline.files, current.files, current.collector);
+    dirty = await dirtyChangesSince(baseline.files.filter((item) => !isScopeOwnedPath(item.path)), current.files, current.collector);
   } catch (error) {
     return scopeFailure(config, 'scope-unavailable', error.message, current.output);
   }
@@ -1621,7 +1922,8 @@ async function evaluateScope(feature, config) {
     changed: scopedChanges,
     violations,
     output: [current.output, committed.output].filter(Boolean).join('\n'),
-    repository: identity
+    repository: identity,
+    capturePolicy: policy
   };
 }
 
@@ -1636,6 +1938,10 @@ function validateScopeBaseline(baseline, expectedBaselineHash) {
     return 'Feature scope baseline predates repository snapshot v2; preserve it as history and start a successor feature.';
   }
   if (baseline.available !== true) return baseline.reason || 'Feature scope baseline was unavailable at start.';
+  if (baseline.capturePolicy) {
+    try { if (stableHash(capturePolicy(baseline.capturePolicy)) !== stableHash(baseline.capturePolicy)) return 'Feature scope baseline capture policy is not canonical.'; }
+    catch (error) { return error.message; }
+  }
   if (typeof baseline.head !== 'string' || !baseline.head || typeof baseline.tree !== 'string' || !baseline.tree) {
     return 'Feature scope baseline is missing its starting HEAD or tree identity.';
   }
@@ -1646,6 +1952,10 @@ function validateScopeBaseline(baseline, expectedBaselineHash) {
     || typeof item.status !== 'string'
     || typeof item.hash !== 'string')) {
     return 'Feature scope baseline contains an invalid dirty-file fingerprint.';
+  }
+  if (baseline.files.some((item) => item.fingerprint === 'metadata-v1'
+    && (!metadataArtifact(item.path, baseline.capturePolicy) || !/^metadata-v1:[a-f0-9]{64}$/.test(item.hash) || !/^[a-f0-9]{64}$/.test(item.contentHash)))) {
+    return 'Feature scope baseline metadata fingerprint lacks its original artifact content digest.';
   }
   if (baseline.worktreeHash !== stableHash(baseline.files)) {
     return 'Feature scope baseline dirty-file fingerprint does not match its recorded hash.';
@@ -1666,12 +1976,15 @@ async function dirtyChangesSince(baselineFiles, currentFiles, collector = reposi
   return changed;
 }
 
-async function repositoryBaseline() {
-  const changes = await repositoryChanges();
+async function repositoryBaseline(policy = capturePolicy()) {
+  // Metadata fingerprints are used for later scope comparison; start still seals
+  // the original artifact bytes once, alongside those explicitly labelled rows.
+  const changes = await repositoryChanges({ policy, scopeOnly: true, baselineIntegrity: true });
   const identity = await repositoryIdentity(changes);
   const available = changes.available && identity.available;
   const baseline = {
     version: 2,
+    capturePolicy: policy,
     available,
     head: identity.head,
     tree: identity.tree,
@@ -1703,13 +2016,16 @@ async function repositoryIdentity(status = null) {
     tree: tree.exitCode === 0 && !tree.overflow ? tree.stdout.trim() : null,
     branch: branch.exitCode === 0 && !branch.overflow ? branch.stdout.trim() : null,
     statusHash: stableHash(worktree.files ?? []),
+    captureMode: worktree.captureMode ?? 'content-v1',
+    ...(worktree.capturePolicy ? { capturePolicy: worktree.capturePolicy } : {}),
+    ...(worktree.collector ? { captureMetrics: worktree.collector.metrics() } : {}),
     status: worktree.output.trim(),
     diagnostics: [worktree.diagnostics, head.stderr, tree.stderr, branch.stderr].filter(Boolean).join('\n').trim(),
     reason: failures.length ? unique(failures).join(' ') : null
   };
 }
 
-async function repositoryChanges() {
+async function repositoryChanges(options = {}) {
   const result = await captureGit(['status', '--porcelain=v1', '-z', '--untracked-files=all']);
   if (result.exitCode !== 0 || result.overflow) {
     const reason = gitCaptureFailure('git status', result);
@@ -1723,20 +2039,23 @@ async function repositoryChanges() {
     const reason = `git status returned malformed NUL-delimited output: ${error.message}`;
     return { available: false, files: [], output: reason, diagnostics: result.stderr.trim(), reason };
   }
-  const collector = repositoryCaptureCollector();
+  const excluded = options.scopeOnly ? isScopeOwnedPath : isTransientHarnessPath;
+  const collector = repositoryCaptureCollector(REPOSITORY_CAPTURE_LIMITS, options.policy, options.baselineIntegrity);
   let files;
   try {
     const requests = [];
     for (const record of records) {
-      if (record.fromPath && !isTransientHarnessPath(record.fromPath)) requests.push({path:record.fromPath,status:'D '});
-      if (!isTransientHarnessPath(record.path)) requests.push({path:record.path,status:record.status});
+      if (record.fromPath && !excluded(record.fromPath)) requests.push({path:record.fromPath,status:'D '});
+      if (!excluded(record.path)) requests.push({path:record.path,status:record.status});
     }
-    files = await collector.collect(requests);
+    files = options.listingOnly ? requests : await collector.collect(requests);
   } catch (error) {
     return { available:false,files:[],output:error.message,diagnostics:result.stderr.trim(),reason:error.message };
   }
   const output = records.map(record => `${record.status} ${record.fromPath ? `${record.fromPath} -> ` : ''}${record.path}`).join('\n');
-  return { available:true,files,output,diagnostics:result.stderr.trim(),reason:null,collector };
+  return { available:true,files,output,diagnostics:result.stderr.trim(),reason:null,collector,
+    captureMode: options.listingOnly ? 'listing-v1' : options.policy?.metadataRoots?.length ? 'artifact-metadata-v1' : 'content-v1',
+    ...(options.policy ? { capturePolicy: options.policy } : {}) };
 }
 
 function parsePorcelainStatus(stdoutBuffer) {
@@ -1812,7 +2131,7 @@ async function committedChangesSince(baseline, currentIdentity, collector = repo
   let files;
   try {
     const requests=[];
-    for(const record of records){if(record.fromPath)requests.push({path:record.fromPath,status:'D '});requests.push({path:record.path,status:`${record.status[0]} `});}
+    for(const record of records){if(record.fromPath&&!isScopeOwnedPath(record.fromPath))requests.push({path:record.fromPath,status:'D '});if(!isScopeOwnedPath(record.path))requests.push({path:record.path,status:`${record.status[0]} `});}
     files=new Map((await collector.collect(requests)).map(item=>[item.path,item]));
   }catch(error){return {available:false,files:[],output:error.message,reason:error.message};}
   const baselineFiles = new Map(baseline.files.map((item) => [item.path, item]));
@@ -1864,7 +2183,13 @@ function gitCaptureFailure(label, result) {
 function isTransientHarnessPath(value) {
   if (!value) return false;
   const normalized = normalizePath(value).replace(/\/$/, '');
-  return normalized.startsWith('.harness/baselines/') || normalized === '.harness/state.lock' || normalized.startsWith('.harness/state.lock/');
+  return normalized.startsWith('.harness/baselines/') || normalized === '.harness/state.lock' || normalized.startsWith('.harness/state.lock/')
+    || normalized === '.harness/context' || normalized.startsWith('.harness/context/') || normalized === '.harness/logs' || normalized.startsWith('.harness/logs/')
+    || /^\.harness\/(?:features|continuity|credentials-state)\.json\.[0-9]+\.[0-9]+\.tmp$/.test(normalized);
+}
+
+function isScopeOwnedPath(value) {
+  return isTransientHarnessPath(value) || RUNTIME_OWNED_PATHS.some((pattern) => matchGlob(value, pattern));
 }
 
 function repositoryCapturePath(value) {
@@ -1876,11 +2201,40 @@ function repositoryCapturePath(value) {
   return relative;
 }
 
+function capturePolicy(value) {
+  if (value === undefined) return { version: 1, metadataRoots: [], metadataExtensions: [] };
+  if (!value || typeof value !== 'object' || Array.isArray(value)
+    || Object.keys(value).some((key) => !['version', 'metadataRoots', 'metadataExtensions'].includes(key))
+    || (value.version !== undefined && value.version !== 1)
+    || !Array.isArray(value.metadataRoots) || !Array.isArray(value.metadataExtensions)) {
+    throw new Error('scope.capture must contain metadataRoots and metadataExtensions arrays (version 1).');
+  }
+  const metadataRoots = [...new Set(value.metadataRoots.map((root) => {
+    const canonical = repositoryCapturePath(root);
+    if (root !== canonical || /[*?\[\]{}]/.test(root)) throw new Error('scope.capture metadataRoots must be exact canonical repository-relative paths.');
+    if (/^(?:\.git|\.harness|\.github|\.codex|\.claude|src|scripts|tests|test|bin|skill|packages)(?:\/|$)/i.test(root)) {
+      throw new Error(`scope.capture metadata root is a protected development/source path: ${root}`);
+    }
+    return root;
+  }))].sort();
+  const metadataExtensions = [...new Set(value.metadataExtensions.map((extension) => {
+    if (typeof extension !== 'string' || !ARTIFACT_METADATA_EXTENSIONS.has(extension)) throw new Error(`scope.capture metadata extension is not an approved generated output type: ${extension}`);
+    return extension;
+  }))].sort();
+  return { version: 1, metadataRoots, metadataExtensions };
+}
+
+function metadataArtifact(relative, policy) {
+  return Boolean(policy?.metadataRoots?.some((root) => relative.startsWith(root + '/'))
+    && ARTIFACT_METADATA_EXTENSIONS.has(path.extname(relative).toLowerCase())
+    && policy.metadataExtensions.includes(path.extname(relative).toLowerCase()));
+}
+
 function repositoryCaptureIdentity(info) {
   return [info.dev,info.ino,info.mode,info.size,info.mtimeMs,info.ctimeMs].join(':');
 }
 
-function repositoryCaptureCollector(limits = REPOSITORY_CAPTURE_LIMITS) {
+function repositoryCaptureCollector(limits = REPOSITORY_CAPTURE_LIMITS, policy = null, baselineIntegrity = false) {
   const began = performance.now(), nodes = new Map(), folded = new Map(), ancestry = new Map();
   let entries = 0, manifestBytes = 0, fileBytes = 0;const fileBuffer=Buffer.alloc(1048576);
   function guard() { if (performance.now()-began > limits.elapsedMs) throw new Error('repository capture elapsed limit exceeded'); }
@@ -1924,12 +2278,15 @@ function repositoryCaptureCollector(limits = REPOSITORY_CAPTURE_LIMITS) {
     const node={path:relative,hash:'deleted',kind:'deleted',children:[],obstructed:before.missing};
     if(info){const target=path.join(ROOT,relative),identity=repositoryCaptureIdentity(info);node.identity=identity;await sealAncestors(before.seal);
       if(info.isSymbolicLink()){const link=await readlink(target,{encoding:'buffer'});node.hash=createHash('sha256').update('120000\0').update(link).digest('hex');node.kind='symlink';const again=await readlink(target,{encoding:'buffer'});if(!link.equals(again))throw new Error('repository symbolic link changed');}
-      else if(info.isFile()){
+      else if(info.isFile()&&metadataArtifact(relative,policy)&&!baselineIntegrity){
+        node.hash='metadata-v1:'+createHash('sha256').update(identity).digest('hex');node.kind='file';node.fingerprint='metadata-v1';
+      }else if(info.isFile()){
         fileBytes+=info.size;if(fileBytes>limits.fileBytes)throw new Error('repository capture file-byte limit exceeded');
         const handle=await open(target,'r');try{if(repositoryCaptureIdentity(await handle.stat())!==identity)throw new Error('repository opened file identity changed');await sealAncestors(before.seal);
           const mode=(info.mode&0o111)===0?'100644':'100755',digest=createHash('sha256').update(`${mode}\0`),buffer=fileBuffer;let total=0;
           for(;;){guard();const {bytesRead}=await handle.read(buffer,0,buffer.length,null);if(!bytesRead)break;total+=bytesRead;if(total>info.size)throw new Error('repository file grew during capture');digest.update(buffer.subarray(0,bytesRead));}
           if(total!==info.size||repositoryCaptureIdentity(await handle.stat())!==identity)throw new Error('repository file changed during capture');node.hash=digest.digest('hex');node.kind='file';
+          if(metadataArtifact(relative,policy)){node.contentHash=node.hash;node.hash='metadata-v1:'+createHash('sha256').update(identity).digest('hex');node.fingerprint='metadata-v1';}
         }finally{await handle.close();}
       }else if(info.isDirectory()){
         const first=await names(target),membership=[];node.kind='directory';node.names=first;await sealAncestors(before.seal);if(repositoryCaptureIdentity(await lstat(target))!==identity)throw new Error('repository directory changed before traversal');
@@ -1945,7 +2302,7 @@ function repositoryCaptureCollector(limits = REPOSITORY_CAPTURE_LIMITS) {
     await sealCapture();const statuses=new Map();for(const row of requests){const relative=repositoryCapturePath(row.path);if(typeof row.status!=='string'||!/^[ MTADRCU?!B]{2}$/.test(row.status))throw new Error('invalid repository capture status');account({path:relative,status:row.status});if(statuses.has(relative)&&statuses.get(relative)!==row.status)throw new Error('conflicting repository capture statuses');statuses.set(relative,row.status);}
     const ordered=[...statuses.keys()].sort((a,b)=>a.split('/').length-b.split('/').length||a.localeCompare(b)),roots=[],rootSet=new Set();
     for(const relative of ordered){const parts=relative.split('/');let covering=null;for(let i=1;i<parts.length;i++){const parent=parts.slice(0,i).join('/');if(rootSet.has(parent)&&nodes.get(parent)?.kind==='directory'){covering=parent;break;}}if(covering){if(statuses.get(covering)!==statuses.get(relative))throw new Error('conflicting overlapping repository statuses');continue;}await walk(relative);roots.push(relative);rootSet.add(relative);}
-    const output=new Map();function emit(relative,status){const node=nodes.get(relative),row={path:relative,status,hash:node.hash};if(node.kind==='directory')row.type='directory';output.set(relative,row);for(const child of node.children)emit(child,status);}
+    const output=new Map();function emit(relative,status){const node=nodes.get(relative),row={path:relative,status,hash:node.hash};if(node.kind==='directory')row.type='directory';if(node.fingerprint)row.fingerprint=node.fingerprint;if(node.contentHash)row.contentHash=node.contentHash;output.set(relative,row);for(const child of node.children)emit(child,status);}
     await sealCapture();for(const root of roots)emit(root,statuses.get(root));guard();return [...output.values()].sort((a,b)=>a.path.localeCompare(b.path));
   }
   return {collect,metrics:()=>({entries,manifestBytes,fileBytes,elapsedMs:Math.ceil(performance.now()-began)})};
@@ -1982,6 +2339,8 @@ function matchGlob(file, pattern) {
 
 async function runCommands(entries, config) {
   const results = [];
+  const outputPolicy = contextPolicy(config);
+  await mkdir(path.join(HARNESS_DIR, 'logs'), { recursive: true });
   const secrets = secretEnvironmentValues(config.security);
   for (const entry of entries) {
     const text = commandText(entry);
@@ -2009,7 +2368,7 @@ async function runCommands(entries, config) {
       });
       break;
     }
-    const result = await capture(text, Number(config.policies?.commandTimeoutMs || 600000), config.security, prepared.environment, prepared.secrets);
+    const result = await capture(text, Number(config.policies?.commandTimeoutMs || 600000), config.security, prepared.environment, prepared.secrets, outputPolicy);
     results.push({
       executionId: typeof entry === 'string' ? undefined : entry.executionId,
       executionOrder: typeof entry === 'string' ? undefined : entry.executionOrder,
@@ -2020,16 +2379,23 @@ async function runCommands(entries, config) {
       pass: result.exitCode === 0 && result.timedOut === false,
       exitCode: result.exitCode,
       timedOut: result.timedOut,
+      signal: result.signal,
+      terminationConfirmed: result.terminationConfirmed,
       durationMs: Date.now() - started,
       stdout: result.stdout,
       stderr: result.stderr,
       output: result.output,
       truncated: result.truncated,
       originalBytes: result.originalBytes
+      ,logs: result.logs
     });
-    if (result.exitCode !== 0) break;
+    if (result.exitCode !== 0 || result.timedOut) break;
   }
-  return { pass: results.length === entries.length && results.every((item) => item.exitCode === 0), results };
+  const continuity = await readContinuity();
+  if (continuity.owner) await contextObservation(ROOT, { actor: continuity.owner.id, role: 'worker', config, outputChars: Math.min(outputPolicy.perRunChars, results.reduce((sum, item) => sum + item.output.length, 0)), startedAt: continuity.owner.claimedAt });
+  results.displayBudget = outputPolicy.perRunChars;
+  results.resultBudget = outputPolicy.perResultChars;
+  return { pass: results.length === entries.length && results.every((item) => item.pass), results };
 }
 
 async function resolveCommandCredentials(entry, config) {
@@ -2099,13 +2465,71 @@ function secretEnvironmentValues(security, additional = []) {
     .sort((left, right) => right.length - left.length);
 }
 
+// Locate quoted values without treating escaped quotes or embedded whitespace
+// as a boundary. An unfinished value extends through the end of the input.
+function* quotedSecretSpans(value) {
+  const prefix = /(?:(?:"(?:api[_-]?key|credential|password|private[_-]?key|secret|token)"|'(?:api[_-]?key|credential|password|private[_-]?key|secret|token)'|(?:api[_-]?key|credential|password|private[_-]?key|secret|token))(?:\s*[=:]\s*|\s+)|authorization:\s*(?:bearer|basic)\s+)(["'])/gi;
+  let match;
+  while ((match = prefix.exec(value))) {
+    const valueStart = prefix.lastIndex, quote = match[1];
+    let end = valueStart, escaped = false, closed = false;
+    while (end < value.length) {
+      const character = value[end++];
+      if (escaped) escaped = false;
+      else if (character === '\\') escaped = true;
+      else if (character === quote) { closed = true; break; }
+    }
+    yield { start: match.index, valueStart, end, quote, escaped, closed };
+    prefix.lastIndex = end;
+  }
+}
+
+function secretValueForms(secrets) {
+  return [...new Set(secrets.filter(secret => typeof secret === 'string' && secret.length)
+    .flatMap(secret => [secret, JSON.stringify(secret).slice(1, -1)]))];
+}
+
+// Every match refers to the original input. Replacing a known value first can
+// remove an escaped quote or a secret label and change the remaining grammar.
+function redactionSpans(value, forms) {
+  const spans = [];
+  for (const form of forms) {
+    for (let start = value.indexOf(form); start >= 0; start = value.indexOf(form, start + 1)) {
+      spans.push({ start, end: start + form.length, boundaryStart: start, marker: '[REDACTED_ENV]', priority: 2 });
+    }
+  }
+  for (const span of quotedSecretSpans(value)) spans.push({
+    start: span.valueStart, end: span.end - Number(span.closed), boundaryStart: span.start, marker: '[REDACTED]', priority: 0
+  });
+  for (const match of value.matchAll(/\b(?:sk|rk|pk|ghp|github_pat|xox[baprs])-?[A-Za-z0-9_\-]{16,}\b/g)) {
+    spans.push({ start: match.index, end: match.index + match[0].length, boundaryStart: match.index, marker: '[REDACTED_TOKEN]', priority: 1 });
+  }
+  for (const pattern of [
+    /((?:api[_-]?key|credential|password|private[_-]?key|secret|token)(?:\s*[=:]\s*|\s+))([^\s,;]+)/gi,
+    /(authorization:\s*(?:bearer|basic)\s+)([^\s]+)/gi
+  ]) for (const match of value.matchAll(pattern)) {
+    // Quoted values belong to the quote scanner, including their whitespace.
+    if (/^["']/.test(match[2])) continue;
+    spans.push({ start: match.index + match[1].length, end: match.index + match[0].length, boundaryStart: match.index, marker: '[REDACTED]', priority: 0 });
+  }
+  return spans;
+}
+
 function redact(value, secrets = []) {
-  let output = String(value);
-  for (const secret of secrets) output = output.replaceAll(secret, '[REDACTED_ENV]');
-  return output
-    .replace(/\b(?:sk|rk|pk|ghp|github_pat|xox[baprs])-?[A-Za-z0-9_\-]{16,}\b/g, '[REDACTED_TOKEN]')
-    .replace(/((?:api[_-]?key|credential|password|private[_-]?key|secret|token)(?:\s*[=:]\s*|\s+))[^\s,;]+/gi, '$1[REDACTED]')
-    .replace(/(authorization:\s*(?:bearer|basic)\s+)[^\s]+/gi, '$1[REDACTED]');
+  const raw = String(value), merged = [];
+  for (const span of redactionSpans(raw, secretValueForms(secrets)).sort((left, right) => left.start - right.start)) {
+    const previous = merged.at(-1);
+    if (previous && span.start < previous.end) {
+      previous.end = Math.max(previous.end, span.end);
+      if (span.priority > previous.priority) { previous.marker = span.marker; previous.priority = span.priority; }
+    } else merged.push({ ...span });
+  }
+  let output = '', cursor = 0;
+  for (const span of merged) {
+    output += raw.slice(cursor, span.start) + span.marker;
+    cursor = span.end;
+  }
+  return output + raw.slice(cursor);
 }
 
 function platformCommand(commandText) {
@@ -2190,7 +2614,14 @@ function captureGit(gitArgs, timeoutMs = 30000) {
   });
 }
 
-function capture(commandText, timeoutMs, security = null, environment = {}, explicitSecrets = []) {
+async function capture(commandText, timeoutMs, security = null, environment = {}, explicitSecrets = [], outputPolicy = contextPolicy()) {
+  // Help and option validation remain usable without execution adapters.
+  let windowsCommand = null;
+  if (process.platform === 'win32') {
+    try { ({ windowsCommand } = await import('./windows-command.mjs')); }
+    catch (error) { throw new Error(`Windows command containment adapter initialization failed: ${error.message}`); }
+    if (typeof windowsCommand !== 'function') throw new Error('Windows command containment adapter initialization failed: missing controller export.');
+  }
   return new Promise((resolve) => {
     const credentialNames = new Set(credentialEnvironmentNames(security).map(environmentNameKey));
     const baseEnvironment = security?.environmentAllow
@@ -2200,15 +2631,19 @@ function capture(commandText, timeoutMs, security = null, environment = {}, expl
       : Object.fromEntries(Object.entries(process.env)
         .filter(([key]) => !credentialNames.has(environmentNameKey(key))));
     const env = { ...baseEnvironment, ...environment };
-    // POSIX commands own a process group; Windows taskkill terminates the tree.
-    const child = spawn(platformCommand(commandText), { cwd: ROOT, env, shell: true, windowsHide: true, detached: process.platform !== 'win32' });
+    // POSIX commands own a process group; Windows shells start inside a job.
+    const containment = process.platform === 'win32' ? windowsCommand(platformCommand(commandText), ROOT, env, timeoutMs) : null;
+    const child = containment?.child ?? spawn(platformCommand(commandText), { cwd: ROOT, env, shell: true, windowsHide: true, detached: true });
     let stdout = '';
     let stderr = '';
     let originalBytes = 0;
     let truncated = false;
     let settled = false;
     const secrets = unique([...secretEnvironmentValues(security), ...explicitSecrets]);
-    const streams = [redactedCapture(security?.redactOutput, secrets), redactedCapture(security?.redactOutput, secrets)];
+    const logId = randomUUID();
+    const logs = { stdout: `.harness/logs/${logId}.stdout.log`, stderr: `.harness/logs/${logId}.stderr.log` };
+    const files = [logs.stdout, logs.stderr].map(relative => openSync(path.join(ROOT, relative), 'wx', 0o600));
+    const streams = files.map(file => redactedCapture(security?.redactOutput, secrets, outputPolicy.perResultChars, value => appendFileSync(file, value)));
     const append = (stream, chunk) => {
       originalBytes += chunk.length;
       stream.append(chunk);
@@ -2217,14 +2652,14 @@ function capture(commandText, timeoutMs, security = null, environment = {}, expl
     let timedOut = false;
     let termination = Promise.resolve();
     let watchdog;
-    const timer = setTimeout(() => {
+    const timer = containment ? null : setTimeout(() => {
       timedOut = true;
       termination = terminateCommandTree(child);
       watchdog = setTimeout(() => { child.stdout.destroy(); child.stderr.destroy(); finish(124); }, 2000);
     }, timeoutMs);
     child.stdout.on('data', (chunk) => append(streams[0], chunk));
     child.stderr.on('data', (chunk) => append(streams[1], chunk));
-    const finish = async (exitCode, extra = '') => {
+    const finish = async (exitCode, extra = '', completion = {}) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
@@ -2233,48 +2668,45 @@ function capture(commandText, timeoutMs, security = null, environment = {}, expl
       if (extra) append(streams[1], Buffer.from(`\n${extra}`));
       stdout = streams[0].finish();
       stderr = streams[1].finish();
+      for (const file of files) closeSync(file);
       truncated ||= streams.some(stream => stream.truncated);
+      const combined = stdout + stderr;
+      truncated ||= combined.length > outputPolicy.perResultChars;
       const marker = truncated ? '\n[OUTPUT TRUNCATED; see originalBytes metadata]' : '';
-      resolve({ exitCode, timedOut, stdout, stderr, output: `${stdout}${stderr}${marker}`, truncated, originalBytes });
+      resolve({ exitCode, timedOut, signal: completion.signal ?? null, terminationConfirmed: completion.terminationConfirmed ?? null, stdout, stderr, output: combined.slice(-outputPolicy.perResultChars) + marker, truncated, originalBytes, logs });
     };
-    child.on('error', (error) => { clearTimeout(timer); finish(1, error.message); });
-    child.on('close', (code) => { clearTimeout(timer); finish(timedOut ? 124 : (code ?? 1)); });
+    if (containment) containment.done.then(result => { timedOut = result.timedOut; finish(result.exitCode, result.confirmed ? '' : result.error, { terminationConfirmed: result.confirmed }); });
+    else {
+      child.on('error', (error) => { clearTimeout(timer); finish(1, error.message); });
+      child.on('close', (code, signal) => { clearTimeout(timer); finish(timedOut ? 124 : (code ?? 1), '', { signal }); });
+    }
   });
 }
 
 function terminateCommandTree(child) {
   if (!child.pid) return Promise.resolve();
-  if (process.platform !== 'win32') {
-    try { process.kill(-child.pid, 'SIGKILL'); } catch { try { child.kill('SIGKILL'); } catch {} }
-    return Promise.resolve();
-  }
-  return new Promise(resolve => {
-    const killer = spawn(path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'taskkill.exe'), ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
-    const timer = setTimeout(() => { killer.kill(); child.kill(); resolve(); }, 1500);
-    killer.on('error', () => { clearTimeout(timer); child.kill(); resolve(); });
-    killer.on('close', () => { clearTimeout(timer); resolve(); });
-  });
+  try { process.kill(-child.pid, 'SIGKILL'); } catch { try { child.kill('SIGKILL'); } catch {} }
+  return Promise.resolve();
 }
 
 // Keep incomplete credentials in a raw overlap, redact complete spans, then
-// truncate sanitized output. Unbounded uninterrupted spans are omitted as a
-// whole line rather than retaining a potentially sensitive token suffix.
-function redactedCapture(enabled, secrets) {
+// truncate sanitized output. If a safe boundary cannot be found within the
+// retained bound, omit the remainder of this stream: a later newline may be
+// inside a quoted or known multiline secret whose prefix has been discarded.
+function redactedCapture(enabled, secrets, maximum = 30000, sink = () => {}) {
   const decoder = new StringDecoder('utf8');
-  const overlap = Math.max(4096, ...secrets.map(secret => secret.length + 1));
-  let pending = '', output = '', suppressLine = false, truncated = false;
+  const secretForms = secretValueForms(secrets);
+  const overlap = Math.max(4096, ...secretForms.map(secret => secret.length + 1));
+  let pending = '', output = '', suppressed = false, truncated = false;
   const persist = value => {
-    const next = output + (enabled ? redact(value, secrets) : value);
-    if (next.length > 30000) truncated = true;
-    output = next.slice(-30000);
+    const sanitized = enabled ? redact(value, secrets) : value;
+    sink(sanitized);
+    const next = output + sanitized;
+    if (next.length > maximum) truncated = true;
+    output = next.slice(-maximum);
   };
   const ingest = value => {
-    if (suppressLine) {
-      const end = value.indexOf('\n');
-      if (end < 0) return;
-      suppressLine = false;
-      value = value.slice(end + 1);
-    }
+    if (suppressed) return;
     pending += value;
     if (!enabled) { persist(pending); pending = ''; return; }
     const limit = pending.length - overlap;
@@ -2282,37 +2714,42 @@ function redactedCapture(enabled, secrets) {
     let split = 0;
     for (let index = limit; index > 0; index--) if (/\s/.test(pending[index - 1])) { split = index; break; }
     // Exact values may contain whitespace; never split a value around it.
-    for (const secret of secrets) {
-      let index = pending.indexOf(secret);
-      while (index >= 0 && index < split) {
-        if (index + secret.length > split) split = index;
-        index = pending.indexOf(secret, index + 1);
-      }
-    }
-    const patterns = [/\b(?:sk|rk|pk|ghp|github_pat|xox[baprs])-?[A-Za-z0-9_\-]{16,}\b/g, /(?:api[_-]?key|credential|password|private[_-]?key|secret|token)(?:\s*[=:]\s*|\s+)[^\s,;]+/gi, /authorization:\s*(?:bearer|basic)\s+[^\s]+/gi];
-    for (const pattern of patterns) for (const match of pending.matchAll(pattern)) if (match.index < split && match.index + match[0].length > split) split = match.index;
+    const spans = redactionSpans(pending, secretForms).map(span => ({ start: span.boundaryStart, end: span.end }));
     // Retain an incomplete secret label even across arbitrarily long whitespace.
-    for (const pattern of [/(?:api[_-]?key|credential|password|private[_-]?key|secret|token)(?:\s*[=:]\s*|\s+)$/i, /authorization:\s*(?:bearer|basic)\s*$/i]) {
+    for (const pattern of [/(?:"(?:api[_-]?key|credential|password|private[_-]?key|secret|token)"|'(?:api[_-]?key|credential|password|private[_-]?key|secret|token)'|(?:api[_-]?key|credential|password|private[_-]?key|secret|token))(?:\s*[=:]\s*|\s+)$/i, /authorization:\s*(?:bearer|basic)\s*$/i]) {
       const match = pending.match(pattern);
-      if (match && match.index < split) split = match.index;
+      if (match) spans.push({ start: match.index, end: pending.length });
     }
+    // Moving a cut left may intersect another, overlapping secret span.
+    for (const span of spans.sort((left, right) => right.start - left.start)) if (span.start < split && span.end > split) split = span.start;
     if (split > 0) { persist(pending.slice(0, split)); pending = pending.slice(split); }
     if (pending.length > Math.max(65536, overlap * 2)) {
-      persist('\n[OUTPUT OMITTED: oversized uninterrupted span]\n');
-      pending = ''; suppressLine = true; truncated = true;
+      persist('\n[OUTPUT OMITTED: unsafe oversized span; remainder of stream suppressed]\n');
+      pending = ''; suppressed = true; truncated = true;
     }
   };
   return {
-    append(chunk) { ingest(decoder.write(chunk)); },
+    append(chunk) {
+      if (suppressed) return;
+      const decoded = decoder.write(chunk);
+      if (!enabled) { ingest(decoded); return; }
+      // Bound retained raw text even if a caller supplies a very large chunk.
+      for (let offset = 0; offset < decoded.length; offset += 16384) ingest(decoded.slice(offset, offset + 16384));
+    },
     finish() { ingest(decoder.end()); persist(pending); pending = ''; return output; },
     get truncated() { return truncated; }
   };
 }
 
 function printRun(run) {
+  let remaining = run.results.displayBudget ?? 16000;
   for (const result of run.results) {
-    console.log(`\n$ ${result.command}`);
-    if (result.output.trim()) console.log(result.output.trim());
+    console.log(`\n$ ${result.command.slice(0, 512)}`);
+    const display = result.output.trim();
+    const visible = remaining > 0 ? display.slice(-Math.min(remaining, run.results.resultBudget ?? 6000)) : '';
+    if (visible) console.log(visible);
+    remaining -= visible.length;
+    if (display.length > visible.length || result.truncated) console.log(`[output limited; redacted logs: ${result.logs?.stdout ?? 'see evidence'} ${result.logs?.stderr ?? ''}]`);
     console.log(`[exit=${result.exitCode} duration=${result.durationMs}ms${result.timedOut ? ' timeout' : ''}]`);
   }
 }
@@ -2371,7 +2808,8 @@ async function buildCheckpoint(kind) {
   const summary = sanitize(boundedText('summary', args.summary, 4000));
   const next = args.next ? sanitize(boundedText('next', args.next, 2000)) : utf8Projection(sanitize(inferredNextAction(state, config, selectedId)), 2000);
   const createdAt = new Date().toISOString();
-  const git = await repositoryChanges();
+  const policy = kind === 'checkpoint' ? capturePolicy(config.scope?.capture) : null;
+  const git = await repositoryChanges(kind === 'checkpoint' ? { policy, scopeOnly: true } : {});
   const identity = await repositoryIdentity(git);
   const projectFiles = git.files.filter((item) => !CONTINUITY_OWNED_PATHS.some((pattern) => matchGlob(item.path, pattern)));
   const active = activeFeatures(state).map((item) => ({ id: item.id, title: utf8Projection(sanitize(item.title), 200), description: utf8Projection(sanitize(item.description), 2000) }));
@@ -2406,8 +2844,10 @@ async function buildCheckpoint(kind) {
       branch: identity.branch ? sanitize(identity.branch) : identity.branch,
       clean: git.available && projectFiles.length === 0,
       worktreeHash: git.available ? stableHash(projectFiles) : null,
+      captureMode: git.captureMode ?? 'content-v1',
+      ...(policy ? { capturePolicy: policy } : {}),
       changedFileCount: projectFiles.length,
-      changedFiles: projectFiles.slice(0, 100).map((item) => ({ path: sanitize(item.path), status: item.status, hash: item.hash }))
+      changedFiles: projectFiles.slice(0, 100).map((item) => ({ path: sanitize(item.path), status: item.status, hash: item.hash, ...(item.fingerprint ? { fingerprint: item.fingerprint } : {}) }))
     }
   };
   if (Buffer.byteLength(JSON.stringify(packet)) > 24576) throw new Error('Checkpoint exceeds the 24 KiB aggregate UTF-8 budget; narrow entries or changed paths. Previous state is unchanged.');
@@ -2435,7 +2875,7 @@ function renderProgress(checkpoint, phase, generation) {
 
 function freshWorkerPrompt(handoff) {
   const command = `node .harness/run.mjs resume ${handoff.id}`;
-  return `Delegate without inherited implementation history: Codex fork_turns="none"; Claude a fresh non-fork Agent. Act as one fresh bounded repository worker for parked handoff ${handoff.id}. Before any edits, run exactly: \`${command}\`. Non-Codex hosts append their own unique --worker-id to resume and EVERY mutation (claim, add, start, block, unblock, check, verify, migrate, checkpoint, handoff); use the native Claude identity delivered only to this child by the reviewed SubagentStart hook, or a fresh unique manual attestation. Never use session_id or another worker's ID. Then run node .harness/run.mjs bootstrap --json for bounded active feature and checkpoint projections; read AGENTS.md, .harness/config.json and task-relevant routes in .harness/docs-map.md. Never dump .harness/features.json or baseline blobs into context. Complete only the active bounded work and return concisely to the persistent development orchestrator.`;
+  return `Delegate without inherited implementation history: Codex fork_turns="none"; Claude a fresh non-fork Agent. Act as one fresh bounded repository worker for parked handoff ${handoff.id}. Before any edits, run exactly: \`${command}\`. Non-Codex hosts append their own unique --worker-id to resume and EVERY mutation (claim, add, start, block, unblock, check, verify, migrate, checkpoint, handoff); use the native Claude identity delivered only to this child by the reviewed SubagentStart hook, or a fresh unique manual attestation. Never use session_id or another worker's ID. Then run node .harness/run.mjs bootstrap --validate --json for bounded active feature and checkpoint projections; read AGENTS.md, .harness/config.json and task-relevant routes in .harness/docs-map.md. Never dump .harness/features.json or baseline blobs into context. Complete only the active bounded work and return concisely to the persistent development orchestrator.`;
 }
 
 function renderWorkingHandoff(continuity, consumedHandoff = null) {
@@ -2635,8 +3075,9 @@ Codex fork_turns="none"; Claude fresh non-fork Agent.`);
 
 Usage:
   node .harness/run.mjs session [--json]
+  node .harness/run.mjs context [--observe] [--tool-calls N] [--output-chars N] [--transcript PATH] [--json]
   node .harness/run.mjs claim [--worker-id ID]
-  node .harness/run.mjs bootstrap [ID] [--json]
+  node .harness/run.mjs bootstrap [ID] [--validate] [--integrity] [--json]
   node .harness/run.mjs migrate [--worker-id ID]
   node .harness/run.mjs recover --expected-owner ID --reason TEXT --confirmed-terminated [--worker-id ID]
   node .harness/run.mjs resume HANDOFF_ID [--accept-drift] [--json]

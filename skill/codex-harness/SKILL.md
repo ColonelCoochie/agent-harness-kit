@@ -35,14 +35,11 @@ Normal completion and user-input boundaries use reasoned checkpoints and return 
    node <project-dir>/.harness/run.mjs session --json
    ```
 
-   A fresh worker claims unowned working state with `claim`, or runs the exact delegated `resume HANDOFF_ID` when parked; otherwise return the pending ID to the orchestrator without loading its packet. Codex uses its own `CODEX_THREAD_ID`; other hosts append their own unique `--worker-id ID` to claim/resume and every mutation. Then run `bootstrap --json` (optionally with a selected feature ID). Do not read full feature arrays, continuity packets, progress history, or baseline blobs at startup. A fresh user chat/task is the fallback only when the host cannot delegate subagents. If the old controller lacks claim/bootstrap, use the [conditional legacy upgrade](references/operations.md#legacy-controller-upgrade).
+   A fresh worker claims unowned working state with `claim`, or runs the exact delegated `resume HANDOFF_ID` when parked; otherwise return the pending ID to the orchestrator without loading its packet. Codex uses its own `CODEX_THREAD_ID`; other hosts append their own unique `--worker-id ID` to claim/resume and every mutation. Then run `bootstrap --validate --json` (optionally with a selected feature ID). Do not read full feature arrays, continuity packets, progress history, or baseline blobs at startup. A fresh user chat/task is the fallback only when the host cannot delegate subagents. If the old controller lacks claim/bootstrap, use the [conditional legacy upgrade](references/operations.md#legacy-controller-upgrade).
 7. Read `.harness/config.json` and task-relevant routes in `.harness/docs-map.md`, then run startup and structural checks:
 
    ```bash
-   node <project-dir>/.harness/run.mjs doctor
-   node <project-dir>/.harness/run.mjs status
-   node <project-dir>/.harness/run.mjs next
-   node <skill-dir>/scripts/harness.mjs audit <project-dir>
+      node <skill-dir>/scripts/harness.mjs audit <project-dir>
    ```
 
 8. Add concrete features whose behavior fits a bounded worker. Pair every observable `--criterion` with a `--command`, and declare scope with `--allow`, including any configuration or instruction merges. Start the feature before making those changes.
@@ -55,6 +52,18 @@ Normal completion and user-input boundaries use reasoned checkpoints and return 
 14. Use `sync` to upgrade runtimes and fill legacy defaults without replacing project facts, product runtime, user instructions, or disabled agent surfaces. For controllers without claim/bootstrap or with active legacy baselines, read [legacy controller upgrade](references/operations.md#legacy-controller-upgrade) first. Canonical runtime-v5 docs-map and loop assets upgrade only by explicit predecessor identity; customized copies receive reviewable runtime-v6 additions instead of automatic merges.
 15. Preview upgrades with `sync PROJECT --preview --json`. Bind apply with `--expect-plan HASH`; customized enabled runtime/hooks block all writes unless a reviewed `--replace-reviewed PATH=RAW_SHA256` explicitly selects a known executable path. Preserve custom changes through deliberate merge review before whole-file replacement. Never authorize replacement of evidence, baseline blobs, instructions or disabled adapters.
 16. Before reporting completion, require passing evidence, a reproducible fresh-worker reconstruction path, and compact orchestrator routing.
+
+Before each bounded batch or delegation, run `node .harness/run.mjs context --observe --json`; inspect pressure at least every ten tools or five minutes. On hosts without native hooks, include `--tool-calls N --output-chars N` since the prior observation. At worker pressure, persist a bounded handoff and yield; exit 75 means the runtime already rotated and did not run the requested mutation. The persistent parent keeps its own accounting and uses supported host compaction without claiming or transferring a live child. Keep outputs within configured limits and query redacted logs narrowly. Read [context and output budgets](references/operations.md#context-and-output-budgets) for policy defaults, adapters, and host limits.
+
+Use proportionate review: the bounded worker protocol and configured gates are required, while extra plans, review rounds and process accounting are optional unless project policy requires them. The same owner can correct a reversible local command or test error within scope; do not transfer workers after every shell error. Respect attempt budgets and reconcile unknown external outcomes before an authorized retry. Never retry an executed command with another credential or automatically repeat deployment.
+
+Ordinary `doctor` authenticates baseline blobs and passing evidence without reading current dirty-file contents. Use `doctor --integrity` for an explicit full content snapshot. Opt-in `scope.capture.metadataRoots` plus approved `metadataExtensions` can reduce routine generated-output reads; the frozen feature policy retains original baseline content digests and labels later metadata fingerprints. Code, scripts, JSON and unknown types remain fully hashed. Full handoff/resume and exact deployment digests remain mandatory. Read [generated output capture](references/operations.md#generated-output-capture) before configuring it.
+
+## Verified native hook update policy
+
+Keep the first local/native trust review explicit. `agent-harness hook-policy enable ABSOLUTE_KIT_ROOT --project ABSOLUTE_PROJECT_ROOT` authorizes one reviewed canonical kit source and enrolled projects. Use `hook-policy status --json` to inspect it and `hook-policy disable` to stop future automatic approval. On that trusted source, `init` and `sync` support `--enroll-hooks`; only verified exact canonical hook definitions can update automatically. Project trust and custom hook review remain independent.
+
+Stable v3 launchers validate the project control plane independently and admit reviewed repair of every managed executable and bootstrap manifest. Keep released v1 and v2 launchers immutable with their original repair grammar. Exact authenticated predecessor groups migrate automatically; preserved custom groups need explicit review and update to gain v3 repair admission. For damaged installed code, run `node ABSOLUTE_KIT_ROOT/bin/agent-harness.mjs repair ABSOLUTE_PROJECT_ROOT --preview`, then bind apply with `--expect-plan SHA256` and any narrowly reviewed replacements. Non-Codex children append their own `--worker-id ID`; native `CODEX_THREAD_ID` cannot be replaced. Repair preserves pending handoffs and never requests native approval. Read [hook update and source recovery](references/operations.md#verified-native-hook-updates) before operating policy or recovery.
 
 ## Commands
 
@@ -72,11 +81,8 @@ Use the checked-in controller for day-to-day work:
 node .harness/run.mjs session --json
 # Fresh worker: claim unowned working state, or use the exact delegated resume instead.
 node .harness/run.mjs claim
-node .harness/run.mjs bootstrap --json
+node .harness/run.mjs bootstrap --validate --json
 # Read config.json and task-relevant routes in docs-map.md before these checks.
-node .harness/run.mjs doctor
-node .harness/run.mjs status
-node .harness/run.mjs next
 node .harness/run.mjs add feat-001 --title "Behavior" --description "Observable outcome" --criterion "The behavior works" --command "npm test" --allow "src/**"
 node .harness/run.mjs start feat-001
 node .harness/run.mjs check quick
@@ -156,7 +162,7 @@ Do not call a harness ready until:
 
 ## Bounded worker startup and ownership
 
-Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim`, or runs the exact delegated pending resume command. Then run `node .harness/run.mjs bootstrap --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
+Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim`, or runs the exact delegated pending resume command. Then run `node .harness/run.mjs bootstrap --validate --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
 
 The harness binds mutations to host `CODEX_THREAD_ID`, not shared `CODEX_SESSION_ID`. Other hosts must supply `--worker-id` on mutations as an explicit attestation. Normal worker_yield and needs_input revoke the owner; a retired worker cannot reclaim or resume. This is cooperative CLI enforcement, not protection against direct file edits or forged environments. The orchestrator cannot claim a child worker's ID.
 

@@ -29,7 +29,7 @@ try {
         ? 'Existing worker ' + result.owner.id + ' owns repository mutations. Keep the orchestrator routing only; inspect or await that worker. Do not claim, resume or replace its ownership.'
         : result.action === 'await_user'
           ? 'Keep the orchestrator in this chat and obtain the recorded user decision before delegating work.'
-          : 'Delegate ' + fresh + '. It runs node .harness/run.mjs claim' + (platform === 'claude' ? ' --worker-id <identity delivered by SubagentStart to the new child>; append that identity on every mutation' : '') + ', then bootstrap --json before edits.';
+          : 'Delegate ' + fresh + '. It runs node .harness/run.mjs claim' + (platform === 'claude' ? ' --worker-id <identity delivered by SubagentStart to the new child>; append that identity on every mutation' : '') + ', then bootstrap --validate --json before edits.';
     console.log(JSON.stringify({ continue: true, hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'Repository development continuity after compaction. ' + route + ' Never resume work in the compacted implementation context. Keep product runtime independent of .harness/.' } }));
   }
 } catch (error) {

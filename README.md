@@ -36,6 +36,37 @@ Preview an upgrade with `node bin/agent-harness.mjs sync /path/to/project --prev
 
 Sync records installed canonical runtime and enabled hook adapter hashes in `.harness/managed-files.json`. Exact bundled predecessors and inventory entries matching the actual bytes can upgrade automatically. An unknown or customized enabled executable blocks the entire apply. After reviewing a particular replacement, use repeatable `--replace-reviewed .harness/run.mjs=RAW_SHA256` (or one of the three enabled `.harness/hooks/*.mjs` adapter paths), together with the replacement preview's `--expect-plan` hash. This replaces that complete file with the reusable source; custom changes require a deliberate merge before that review. Stale hashes fail without durable writes. Instructions, modified review additions, evidence and baseline blobs are never eligible for this override.
 
+## Verified native hook updates
+
+After reviewing the kit source location and initial local/native hook trust, explicitly authorize that canonical kit and enroll each project:
+
+```sh
+agent-harness hook-policy enable ABSOLUTE_KIT_ROOT --project ABSOLUTE_PROJECT_ROOT
+agent-harness hook-policy status --json
+agent-harness init ABSOLUTE_PROJECT_ROOT --enroll-hooks
+agent-harness sync ABSOLUTE_PROJECT_ROOT --enroll-hooks
+agent-harness hook-policy disable
+```
+
+The enabled policy allows `init`/`sync` to verify and automatically approve exact canonical kit hook definitions for enrolled projects. It never grants project trust or approves custom hooks. Existing custom definitions and review additions remain subject to local review. Disabling the policy stops future automatic approvals; it does not revoke earlier native approvals. Enrollment requires the same trusted kit location. The `agent-harness` CLI and `codex-harness` alias require Node.js 20+ and no npm dependencies.
+
+Canonical definition updates recognize complete prior hook groups through a source-owned, SHA-pinned identity manifest. Sync replaces a single exact predecessor at the same group index, then verifies the new definition before updating native trust. Customized fields and duplicate old/new groups require review. Release maintainers retain authenticated predecessor identities from the verified source, update the manifest pin deliberately, and run the full source suite; project inventories and installed helpers cannot authorize old definitions.
+
+Stable versioned v3 launchers independently check the installed control plane before dispatching to project adapters and admit reviewed repair of every managed executable and bootstrap manifest. Released v1 and v2 launchers remain immutable migration predecessors with their original repair grammar. Exact authenticated predecessor groups migrate automatically; customized groups are preserved and require explicit review and update to gain v3 repair admission. If the control plane is damaged, recovery uses the approved source directly, without loading broken installed code:
+
+```sh
+node ABSOLUTE_KIT_ROOT/bin/agent-harness.mjs repair ABSOLUTE_PROJECT_ROOT --preview
+node ABSOLUTE_KIT_ROOT/bin/agent-harness.mjs repair ABSOLUTE_PROJECT_ROOT --expect-plan SHA256
+```
+
+Review each requested replacement and bind apply to the preview plan. Repair preserves pending transfers and does not approve native hooks. Non-Codex workers append their own `--worker-id ID` to both commands; a matching nonretired owner is required when ownership exists. The native `CODEX_THREAD_ID` remains authoritative, and a conflicting explicit ID is rejected.
+
+## Hook diagnosis and repair
+
+Native Codex session headers are read through the complete first JSONL record with a 1 MiB byte bound. Incomplete and oversized records fail separately; transcript identity, filename and project checks still apply.
+
+An internal context-hook fault warns on a genuine user prompt and blocks ordinary tools. Independent recovery remains available: run `node .harness/repair.mjs health --json`, then `node .harness/repair.mjs sync --preview --json`. Review a broken managed file's raw SHA256 and preview with `--replace-reviewed PATH=RAW_SHA256`; apply with that preview's `--expect-plan SHA256`. Repair calls the install-recorded reusable source CLI without loading installed hooks or runtime. It preserves worker ownership, parked handoffs, feature state and evidence. A malformed host hooks JSON file requires external terminal repair and local review; sync leaves a review addition.
+
 ## Quick start
 
 The controller has zero npm dependencies and requires Node.js 20 or newer. Feature scope also requires Git and a repository with an existing commit (`HEAD`) before `start`; initialization can scaffold a project before that commit exists. The harness never creates Git commits. Create the initial commit as normal project setup; see [repository prerequisites](skill/codex-harness/references/operations.md#repository-prerequisites) for the optional empty local commit case.
@@ -49,7 +80,7 @@ node bin/agent-harness.mjs init /path/to/project \
 node /path/to/project/.harness/run.mjs session --json
 # Fresh worker: claim unowned working state, or run the exact delegated resume instead.
 node /path/to/project/.harness/run.mjs claim
-node /path/to/project/.harness/run.mjs bootstrap --json
+node /path/to/project/.harness/run.mjs bootstrap --validate --json
 # Read config.json and task-relevant routes in docs-map.md before these checks.
 node /path/to/project/.harness/run.mjs doctor
 node /path/to/project/.harness/run.mjs status
@@ -59,6 +90,10 @@ node /path/to/project/.harness/run.mjs next
 Omit `--agents` to scaffold all three coding-agent surfaces. Select only the surfaces safe for the repository; for example, omit a root Claude adapter when an in-product Claude SDK could load it as product prompt context.
 
 The generic scaffold deliberately leaves `verification.full` unconfigured. Set it to the project's real completion command before expecting `doctor` to pass; the failure is a setup gate, not a broken installation.
+
+Ordinary `doctor` checks Git availability and authenticates stored baseline/evidence records without hashing the dirty worktree. `doctor --integrity` adds a full current dirty-file content snapshot. Large generated outputs may explicitly use frozen, labelled metadata fingerprints during routine scope checks through `scope.capture.metadataRoots` and `metadataExtensions`; source, scripts and JSON always keep content hashes. Baseline start, true transfers and deployment input digests retain full content checks. See [capture policy and proportionate verification](skill/codex-harness/references/operations.md#generated-output-capture).
+
+Bounded worker ownership, scope, verification and worker yield are required. Extra review rounds and process accounting depend on the task's risk and project policy. The same worker may fix a reversible local command or test error within scope; unknown external outcomes require reconciliation before retry, and credentials and deployments never receive automatic retries.
 
 The startup example uses Codex's own `CODEX_THREAD_ID`. Workers on other hosts append their own unique `--worker-id ID` to `claim` or the delegated `resume` and every later mutation. An older installed controller without `claim` or `bootstrap` needs the [conditional legacy upgrade](skill/codex-harness/references/operations.md#legacy-controller-upgrade) before using these commands.
 
@@ -126,14 +161,11 @@ Every mutating worker inspects continuity before changing files:
 node .harness/run.mjs session --json
 # Claim only unowned working state; a parked transfer uses its exact delegated resume.
 node .harness/run.mjs claim
-node .harness/run.mjs bootstrap --json
+node .harness/run.mjs bootstrap --validate --json
 # Read config.json and task-relevant routes in docs-map.md.
-node .harness/run.mjs doctor
-node .harness/run.mjs status
-node .harness/run.mjs next
 ```
 
-If the phase is `awaiting_resume`, the orchestrator delegates the exact command printed by `session` to a fresh worker. That worker runs it in place of `claim`, then runs bounded `bootstrap --json`, reads config and task-relevant docs, and completes `doctor`, `status`, and `next`:
+If the phase is `awaiting_resume`, the orchestrator delegates the exact command printed by `session` to a fresh worker. That worker runs it in place of `claim`, then runs bounded `bootstrap --validate --json`, reads config and task-relevant docs, and completes `doctor`, `status`, and `next`:
 
 ```bash
 node .harness/run.mjs resume HANDOFF_ID
@@ -171,6 +203,18 @@ While a transfer is parked, the runtime rejects feature and verification mutatio
 This is development orchestration only. Any in-product agent, scheduler, loop, or orchestrator remains wholly application-owned and independent of `.harness/`.
 
 Generated Codex and Claude `PreCompact` command hooks have a 600-second timeout so the bounded repository capture can finish; `SessionStart` and `SubagentStart` keep 30 seconds. Both hosts measure these timeouts in seconds ([Codex hooks](https://learn.chatgpt.com/docs/hooks), [Claude hook fields](https://code.claude.com/docs/en/hooks#common-fields)). Initialization and sync upgrade only exact generated 30-second entries and canonical pending additions. Custom timeouts, wrappers, matching policies, added options, unrelated hooks, and edited additions remain preserved for review.
+
+## Proactive context and output limits
+
+Run `node .harness/run.mjs context --observe --json` before each bounded work batch or delegation. It accounts for the actual actor without claiming a child owner's state. Inspection without `--observe` is read-only. Hosts without hooks can report work since the last observation with `--tool-calls N --output-chars N`; `--transcript PATH` enables bounded, metadata-only telemetry when the host exposes a compatible transcript. Prompt bodies are never persisted in context state.
+
+Default worker limits are 20 minutes, 48 harness mutations, 80 tool calls, or 120,000 returned characters. The orchestrator has separate two-hour, 160-call and 160,000-character budgets. Token pressure uses 65% of a known context window with 24,000 tokens reserved; missing or stale telemetry also triggers conservative byte-growth and work limits. Configure these under `context` in `.harness/config.json`.
+
+An owned mutation at pressure writes one automatic handoff and exits 75 before executing the requested mutation. Yield immediately and give the exact printed resume command to the orchestrator, which delegates a fresh worker without inherited history. Check pressure at least every ten tools or five minutes; persist a deliberate handoff at a bounded milestone before reaching a limit. Parent pressure advises supported host compaction and never transfers a live child. New Codex configurations use `model_auto_compact_token_limit = 80000` and scope `"total"`; existing custom values win. Unsupported TOML forms receive a reviewable `.harness/codex-context-config.addition.toml` instead of an unsafe edit.
+
+`check` and `verify` display at most 6,000 result characters per command and 16,000 per run by default, plus concise status and log paths. Redacted stream logs live under `.harness/logs/`. With redaction enabled, an unsafe oversized span produces an explicit omission marker and suppresses the remainder of that stream from display, logs, and evidence excerpts; a later newline does not restart capture. Stdout and stderr are handled independently, and original byte counts and truncation remain recorded. Read only the needed lines. Reviewed context hooks can replace oversized Codex tool feedback after the tool completes; Claude receives feedback that does not guarantee removal of the original result. Never repeat completed side effects because output was limited.
+
+Review and trust changed project hooks locally. Native dispatch, identity delivery, and result suppression need validation on the actual host. The goal circuit recognizes repeated interrupted internal goal turns in available transcript metadata and stops that continuation without requesting another Stop continuation; it does not cancel native goal state. Tools and schedulers that bypass hooks cannot be intercepted. Reconcile host goal state before restarting a stopped loop; the CLI does not invoke an unsupported compaction or cancellation API.
 
 ## Multiple API keys and Anthropic
 
@@ -278,7 +322,7 @@ Pending additions remain stable across repeated syncs and are reported by `audit
 - Command environments are allowlisted; provider keys are injected only by explicit request.
 - Secret-bearing environment values and common token formats are redacted before persistence.
 - State mutations, continuity transitions, and credential rotation are serialized with a recoverable lock.
-- Reasoned checkpoints keep normal results and user-input pauses in the persistent chat; worker transfers preserve dirty work and park harness mutations until an ID-bound fresh-worker resume. Their drift hashes exclude only continuity files those commands rewrite, so durable feature state, evidence, credential state, configuration, runtime, docs, quality, and loop files remain authenticated.
+- Reasoned checkpoints keep normal results and user-input pauses in the persistent chat; worker transfers preserve dirty work and park harness mutations until an ID-bound fresh-worker resume. Their drift hashes exclude continuity files those commands rewrite and transient context/log files; durable feature state, evidence, credential state, configuration, runtime, docs, quality, and loop files remain authenticated.
 - A reviewed Codex `PreCompact` hook persists a worker packet and permits compaction on success; persistence failure remains fail-closed. Claude Code can opt into the same adapter.
 - `passing` is terminal; regressions become new features.
 - The development-harness controller is checked in and works on Windows, macOS, and Linux.
@@ -288,7 +332,7 @@ See [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md), [ANALYSIS.md
 
 ## Bounded worker startup and ownership
 
-Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim` (non-Codex workers append their own unique `--worker-id`), or runs the exact delegated pending resume command with its own identity. Then run `node .harness/run.mjs bootstrap --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
+Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim` (non-Codex workers append their own unique `--worker-id`), or runs the exact delegated pending resume command with its own identity. Then run `node .harness/run.mjs bootstrap --validate --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
 
 The harness binds mutations to host `CODEX_THREAD_ID`, not shared `CODEX_SESSION_ID`. Other hosts must supply `--worker-id` on mutations as an explicit attestation. Normal worker_yield and needs_input revoke the owner; a retired worker cannot reclaim or resume. This is cooperative CLI enforcement, not protection against direct file edits or forged environments. The orchestrator cannot claim a child worker's ID.
 

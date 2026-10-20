@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import path from 'node:path';
+import { enableHookPolicy, disableHookPolicy, readHookPolicy } from './lib/hook-policy.mjs';
+import { repairHarness } from './lib/source-repair.mjs';
 import {
   auditHarness,
   formatAudit,
@@ -13,9 +15,10 @@ const rawArgv = process.argv.slice(2);
 const args = parseArgs(rawArgv);
 const command = args._[0] ?? (args.help ? 'help' : null);
 const COMMAND_OPTIONS = Object.freeze({
-  init: new Set(['target', 'name', 'purpose', 'commands', 'agents', 'force', 'wipLimit', 'maxAttempts', 'maxRepeatedFailures', 'commandTimeoutMs']),
+  init: new Set(['target', 'name', 'purpose', 'commands', 'agents', 'force', 'wipLimit', 'maxAttempts', 'maxRepeatedFailures', 'commandTimeoutMs', 'enrollHooks']),
   audit: new Set(['target', 'json', 'minScore']),
-  sync: new Set(['target', 'preview', 'json', 'replaceReviewed', 'expectPlan'])
+  sync: new Set(['target', 'preview', 'json', 'replaceReviewed', 'expectPlan', 'deferHostConfig', 'enrollHooks']),
+  'hook-policy': new Set(['json', 'project'])
 });
 const COMMAND_HELP = Object.freeze({
   init: `Agent Harness Kit
@@ -23,7 +26,8 @@ const COMMAND_HELP = Object.freeze({
 Usage:
   agent-harness init [project] [--name NAME] [--purpose TEXT] [--commands cmd,cmd] [--agents codex,claude,github-copilot] [--force]
 
-Scaffold a project harness while preserving existing user-owned instruction files.`,
+Scaffold a project harness while preserving existing user-owned instruction files.
+--enroll-hooks explicitly enrolls this project in an already enabled hook-update policy.`,
   audit: `Agent Harness Kit
 
 Usage:
@@ -39,12 +43,43 @@ Preview or apply a guarded managed update. Unknown executable copies block the e
 --preview performs only reads. --replace-reviewed is repeatable and permits replacement
 only of enabled .harness/run.mjs or .harness/hooks/*.mjs paths with matching raw SHA256.
 --expect-plan binds apply to the deterministic reviewed plan hash. Customized instructions
-and notes remain reviewable additions; project facts and historical evidence are preserved.`
+and notes remain reviewable additions; project facts and historical evidence are preserved.
+--enroll-hooks explicitly enrolls this project in an already enabled hook-update policy.`,
+  repair: `Agent Harness Kit
+
+Usage:
+  node ABSOLUTE_KIT_ROOT/bin/agent-harness.mjs repair [ABSOLUTE_PROJECT_ROOT] --preview [--json] [--replace-reviewed PATH=SHA256]
+  node ABSOLUTE_KIT_ROOT/bin/agent-harness.mjs repair [ABSOLUTE_PROJECT_ROOT] --expect-plan SHA256 [--json] [--replace-reviewed PATH=SHA256] [--worker-id ID]
+
+Restore generated control plane code using the enrolled source policy and reviewed plan.
+Repair preserves pending transfers and never approves native hooks. Non-Codex workers
+attest their own --worker-id; it cannot replace a different native CODEX_THREAD_ID.`,
+  'hook-policy': `Agent Harness Kit
+
+Usage:
+  agent-harness hook-policy enable ABSOLUTE_KIT_ROOT [--project ABSOLUTE_PROJECT_ROOT] [--json]
+  agent-harness hook-policy disable [--json]
+  agent-harness hook-policy status [--json]
+
+Explicitly authorize future verified canonical hook updates from this kit location.
+Only explicitly enrolled projects are eligible. Existing custom hooks and project trust stay unchanged.`
 });
 
 try {
-  if (helpRequested(rawArgv) || !command || command === 'help') {
+  if (rawArgv[0] === 'repair') {
+    const { result, json } = await repairHarness(rawArgv.slice(1));
+    console.log(json ? JSON.stringify(result, null, 2) : `${result.blocked ? 'BLOCKED' : 'REPAIR'} ${result.target}; plan ${result.planHash}`);
+  } else if (helpRequested(rawArgv) || !command || command === 'help') {
     printHelp(command === 'help' ? args._[1] : command);
+  } else if (command === 'hook-policy') {
+    validateCommandOptions(command, args, rawArgv);
+    const action = args._[1];
+    let result;
+    if (action === 'enable') result = await enableHookPolicy({ sourceRoot: args._[2], projects: args.project ? [args.project] : [] });
+    else if (action === 'disable') { await disableHookPolicy(); result = { enabled: false }; }
+    else if (action === 'status') result = await readHookPolicy() ?? { enabled: false };
+    else throw new Error('hook-policy requires enable, disable, or status.');
+    console.log(args.json ? JSON.stringify(result, null, 2) : `Canonical hook-update policy ${result.enabled ? 'enabled' : 'disabled'}.`);
   } else if (command === 'init') {
     validateCommandOptions(command, args, rawArgv);
     const target = path.resolve(args._[1] || args.target || process.cwd());
@@ -71,7 +106,7 @@ try {
       if (split < 0 || Object.hasOwn(replacements, relative)) throw new Error('Each --replace-reviewed needs one unique PATH=SHA256.');
       replacements[relative] = hash;
     }
-    const result = await syncHarness(target, { preview: Boolean(args.preview), replacements, expectedPlanHash: args.expectPlan });
+    const result = await syncHarness(target, { preview: Boolean(args.preview), replacements, expectedPlanHash: args.expectPlan, deferHostConfig: Boolean(args.deferHostConfig), enrollHooks: Boolean(args.enrollHooks) });
     if (args.json) console.log(JSON.stringify(result, null, 2));
     else if (args.preview) {
       console.log(`Sync preview ${result.planHash}${result.blocked ? ' BLOCKED' : ''}`);

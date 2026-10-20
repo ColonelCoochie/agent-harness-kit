@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 53,
+  "revision": 155,
   "features": [
     {
       "id": "harness-self-host",
@@ -1609,6 +1609,2720 @@
       },
       "lastVerification": {
         "at": "2026-10-14T03:53:34.733Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "capture-policy-performance-001",
+      "title": "Bound artifact capture and routine verification work",
+      "description": "Explicit artifact capture policy preserves source scope and historical integrity while routine checks avoid repeated generated-content hashing and redundant captures.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          "tests/**",
+          "README.md",
+          "AGENTS.md",
+          "CHANGELOG.md",
+          ".harness/run.mjs",
+          ".harness/config.json",
+          ".harness/managed-files.json",
+          ".harness/loops/**",
+          ".harness/*.addition.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Capture policy and scope integrity regressions pass",
+          "command": "node --test tests/harness-artifacts.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-15T05-24-29-805Z-capture-policy-performance-001.json",
+        ".harness/evidence/2026-10-15T05-29-32-854Z-capture-policy-performance-001.json"
+      ],
+      "blocker": null,
+      "attempts": 2,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-15T05:15:16.855Z",
+      "updatedAt": "2026-10-15T05:29:32.854Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "c639c610df6ead11712c31b13ed25e9d5bb632fe5a7acbe997e983df354651df",
+        "hash": "7cb59734e87d670893b620402beec230aa946e139bf1317d5e27c8cd9e6f96c6",
+        "snapshot": {
+          "id": "capture-policy-performance-001",
+          "title": "Bound artifact capture and routine verification work",
+          "description": "Explicit artifact capture policy preserves source scope and historical integrity while routine checks avoid repeated generated-content hashing and redundant captures.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              "tests/**",
+              "README.md",
+              "AGENTS.md",
+              "CHANGELOG.md",
+              ".harness/run.mjs",
+              ".harness/config.json",
+              ".harness/managed-files.json",
+              ".harness/loops/**",
+              ".harness/*.addition.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Capture policy and scope integrity regressions pass",
+              "command": "node --test tests/harness-artifacts.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-15T05:15:19.312Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/c0224437e1ddd6795bcba3c75bb3589bcc1bd9520eadd9c51508265499640e82.json",
+        "sha256": "c0224437e1ddd6795bcba3c75bb3589bcc1bd9520eadd9c51508265499640e82",
+        "bytes": 810,
+        "baselineHash": "c639c610df6ead11712c31b13ed25e9d5bb632fe5a7acbe997e983df354651df"
+      },
+      "lastVerification": {
+        "at": "2026-10-15T05:29:32.854Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "proactive-context-001",
+      "title": "Proactive worker and orchestrator context budgets",
+      "description": "Rotate bounded development workers and stop stale goal loops before context exhaustion while capping command output and preserving supported host routing.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/**",
+          "tests/**",
+          "AGENTS.md",
+          "README.md",
+          "CHANGELOG.md",
+          ".harness/**",
+          ".codex/hooks.json",
+          ".claude/settings.json",
+          "CLAUDE.md",
+          ".github/copilot-instructions.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Pressure and output budget regression coverage passes",
+          "command": "node --test tests/harness-context.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-15T22-16-52-640Z-proactive-context-001.json",
+        ".harness/evidence/2026-10-15T22-21-26-120Z-proactive-context-001.json"
+      ],
+      "blocker": null,
+      "attempts": 2,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-15T22:05:14.277Z",
+      "updatedAt": "2026-10-15T22:21:26.120Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "ac65a00c4d7586a48363c4ab432d2bc894070a08a39816e95a0a4db4d6f38bcb",
+        "hash": "dee3b9e51cd48d6b68812f9e3faffebddc5edfb519f5efc203bad4481514c065",
+        "snapshot": {
+          "id": "proactive-context-001",
+          "title": "Proactive worker and orchestrator context budgets",
+          "description": "Rotate bounded development workers and stop stale goal loops before context exhaustion while capping command output and preserving supported host routing.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/**",
+              "tests/**",
+              "AGENTS.md",
+              "README.md",
+              "CHANGELOG.md",
+              ".harness/**",
+              ".codex/hooks.json",
+              ".claude/settings.json",
+              "CLAUDE.md",
+              ".github/copilot-instructions.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Pressure and output budget regression coverage passes",
+              "command": "node --test tests/harness-context.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-15T22:05:15.868Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/a1910a16a6beb3d4f32c93e9073fb253ca287814e7d8ec4381ccbcd7eb316daf.json",
+        "sha256": "a1910a16a6beb3d4f32c93e9073fb253ca287814e7d8ec4381ccbcd7eb316daf",
+        "bytes": 3924,
+        "baselineHash": "ac65a00c4d7586a48363c4ab432d2bc894070a08a39816e95a0a4db4d6f38bcb"
+      },
+      "lastVerification": {
+        "at": "2026-10-15T22:21:26.120Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "context-rollout-001",
+      "title": "Context rollout",
+      "description": "Apply verified context controls to all eleven installed harnesses.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          ".codex/config.toml",
+          "scripts/verify-context-rollout.mjs",
+          ".harness/context-rollout-report.json"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "All installations pass bounded checks",
+          "command": "node scripts/verify-context-rollout.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-15T22-42-06-306Z-context-rollout-001.json",
+        ".harness/evidence/2026-10-15T22-46-44-152Z-context-rollout-001.json"
+      ],
+      "blocker": null,
+      "attempts": 2,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-15T22:23:37.914Z",
+      "updatedAt": "2026-10-15T22:46:44.152Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "a7d08e63d9008ff83ce500b30d169bba1960dc193c7025335927d0ff1614e936",
+        "hash": "2e5f765003ef0b722f608b8124a50e242c86a77d58c115156a4f6ac590cc84f1",
+        "snapshot": {
+          "id": "context-rollout-001",
+          "title": "Context rollout",
+          "description": "Apply verified context controls to all eleven installed harnesses.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              ".codex/config.toml",
+              "scripts/verify-context-rollout.mjs",
+              ".harness/context-rollout-report.json"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "All installations pass bounded checks",
+              "command": "node scripts/verify-context-rollout.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-15T22:23:46.195Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/af650dccc5ce0f7c3450e19e7b458120fbcc7efa8cb24fdb182038b3a1f5c798.json",
+        "sha256": "af650dccc5ce0f7c3450e19e7b458120fbcc7efa8cb24fdb182038b3a1f5c798",
+        "bytes": 7229,
+        "baselineHash": "a7d08e63d9008ff83ce500b30d169bba1960dc193c7025335927d0ff1614e936"
+      },
+      "lastVerification": {
+        "at": "2026-10-15T22:46:44.152Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "live-host-e2e-001",
+      "title": "Verify live native hooks rotation and compaction",
+      "description": "Run a bounded real model task in an isolated workspace; record observed hook dispatch, worker transfer, output suppression and actual host compaction with honest capability limits.",
+      "dependencies": [],
+      "status": "blocked",
+      "requiredLayers": [
+        "full",
+        "e2e"
+      ],
+      "scope": {
+        "allow": [
+          "scripts/live-host-e2e/**",
+          "scripts/verify-live-host-e2e.mjs",
+          ".harness/live-host-e2e-report.json",
+          "scratch/live-host-e2e/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Captured live run report authenticates native evidence and meaningful task verification without invented events",
+          "command": "node scripts/verify-live-host-e2e.mjs"
+        }
+      ],
+      "evidence": [],
+      "blocker": "Verification preflight failed: frozen contract requires full and e2e layers, but .harness/config.json e2e has no commands. Manual proof acceptance passes; configured source gate did not execute. Preserve contract and use a correctly scoped successor/config maintenance feature.",
+      "attempts": 0,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-15T23:06:39.864Z",
+      "updatedAt": "2026-10-16T00:41:29.297Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "1a2343db870859825cbdf24ad438c1e23cbc3afb8ee29e001f6ea2256fea5041",
+        "hash": "635d4e433f338f3e4bb5f20b6a572b57bcc9a9fad120d76d30ed43e4ccfe2693",
+        "snapshot": {
+          "id": "live-host-e2e-001",
+          "title": "Verify live native hooks rotation and compaction",
+          "description": "Run a bounded real model task in an isolated workspace; record observed hook dispatch, worker transfer, output suppression and actual host compaction with honest capability limits.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "scripts/live-host-e2e/**",
+              "scripts/verify-live-host-e2e.mjs",
+              ".harness/live-host-e2e-report.json",
+              "scratch/live-host-e2e/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Captured live run report authenticates native evidence and meaningful task verification without invented events",
+              "command": "node scripts/verify-live-host-e2e.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "e2e"
+          ]
+        },
+        "frozenAt": "2026-10-15T23:06:41.100Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/e01d540cacb2b7dcf32b7c24454c896e40a06d513aeb992095f81b91bf33bd43.json",
+        "sha256": "e01d540cacb2b7dcf32b7c24454c896e40a06d513aeb992095f81b91bf33bd43",
+        "bytes": 8000,
+        "baselineHash": "1a2343db870859825cbdf24ad438c1e23cbc3afb8ee29e001f6ea2256fea5041"
+      }
+    },
+    {
+      "id": "native-transcript-identity-001",
+      "title": "Bind native Codex hooks to own rollout identity",
+      "description": "Resolve absent per-hook thread environment from bounded own rollout metadata, preserving parent and worker ownership boundaries.",
+      "dependencies": [],
+      "status": "blocked",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/**",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "skill/codex-harness/references/**",
+          "tests/**",
+          "README.md",
+          "AGENTS.md",
+          ".harness/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Native hooks bind valid own transcripts and reject malformed or conflicting identities; source and generated adapters remain synchronized.",
+          "command": "node --test tests/harness-native-identity.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-15T23-40-26-787Z-native-transcript-identity-001.json"
+      ],
+      "blocker": "Superseded by native-hook-recovery-001: complete native-hook fault recovery necessarily updates Codex and Claude host hook configuration outside the original immutable scope.",
+      "attempts": 1,
+      "repeatedFailures": 1,
+      "lastFailureFingerprint": "00bc9fa74c82953c99892158b0f6e813ef6fd85c4c569fa1fd8f8060d36bb681",
+      "createdAt": "2026-10-15T23:22:50.086Z",
+      "updatedAt": "2026-10-15T23:41:40.953Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "bc5d834161610daf45bf9de52da3433ba3d260cc3977a9129a7afd9b9f7b2170",
+        "hash": "6d18dd07909c7ab7d826d1323e2865ec22be525e92946fd1b91e36c79ac4f0d8",
+        "snapshot": {
+          "id": "native-transcript-identity-001",
+          "title": "Bind native Codex hooks to own rollout identity",
+          "description": "Resolve absent per-hook thread environment from bounded own rollout metadata, preserving parent and worker ownership boundaries.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/**",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "skill/codex-harness/references/**",
+              "tests/**",
+              "README.md",
+              "AGENTS.md",
+              ".harness/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Native hooks bind valid own transcripts and reject malformed or conflicting identities; source and generated adapters remain synchronized.",
+              "command": "node --test tests/harness-native-identity.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-15T23:22:50.547Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/fda1d89dd9c568f10c42036086c486d9462c2dc069632d9e59da1cdc7dd7070f.json",
+        "sha256": "fda1d89dd9c568f10c42036086c486d9462c2dc069632d9e59da1cdc7dd7070f",
+        "bytes": 36291,
+        "baselineHash": "bc5d834161610daf45bf9de52da3433ba3d260cc3977a9129a7afd9b9f7b2170"
+      },
+      "lastVerification": {
+        "at": "2026-10-15T23:40:26.787Z",
+        "pass": false
+      }
+    },
+    {
+      "id": "native-hook-recovery-001",
+      "title": "Recover native hook faults and accept complete session headers",
+      "description": "Read bounded complete native session headers and keep genuine repair prompts plus independent scoped health/sync available through broken generated hooks without weakening worker ownership.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/**",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "skill/codex-harness/references/**",
+          "tests/**",
+          "README.md",
+          "AGENTS.md",
+          ".harness/**",
+          ".codex/hooks.json",
+          ".claude/settings.json"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Bounded native headers validate correctly and broken hooks preserve autonomous health-preview-apply recovery plus state and owner boundaries.",
+          "command": "node --test tests/harness-native-identity.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-15T23-45-45-250Z-native-hook-recovery-001.json",
+        ".harness/evidence/2026-10-15T23-48-31-207Z-native-hook-recovery-001.json"
+      ],
+      "blocker": null,
+      "attempts": 2,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-15T23:41:55.069Z",
+      "updatedAt": "2026-10-15T23:48:31.207Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "693aeec42bbd05a13f2cf8c5759a1365d9e0c9870981edfc6424ce282152dea9",
+        "hash": "9438c91b1815efc31f30174a99637f445df9dd253f28692c823693e74d5f44ef",
+        "snapshot": {
+          "id": "native-hook-recovery-001",
+          "title": "Recover native hook faults and accept complete session headers",
+          "description": "Read bounded complete native session headers and keep genuine repair prompts plus independent scoped health/sync available through broken generated hooks without weakening worker ownership.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/**",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "skill/codex-harness/references/**",
+              "tests/**",
+              "README.md",
+              "AGENTS.md",
+              ".harness/**",
+              ".codex/hooks.json",
+              ".claude/settings.json"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Bounded native headers validate correctly and broken hooks preserve autonomous health-preview-apply recovery plus state and owner boundaries.",
+              "command": "node --test tests/harness-native-identity.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-15T23:41:55.850Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/7cddae367940a850412a2b66f59dc5c19a40d92b2f09c7fa84255ebc0e7a4c34.json",
+        "sha256": "7cddae367940a850412a2b66f59dc5c19a40d92b2f09c7fa84255ebc0e7a4c34",
+        "bytes": 38238,
+        "baselineHash": "693aeec42bbd05a13f2cf8c5759a1365d9e0c9870981edfc6424ce282152dea9"
+      },
+      "lastVerification": {
+        "at": "2026-10-15T23:48:31.207Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-launcher-recovery-001",
+      "title": "Keep repair independent of native adapters",
+      "description": "Resolve installed repair root when runtime entrypoint is missing and route exact local recovery before adapter execution.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "tests/harness-native-identity.test.mjs",
+          ".harness/**",
+          ".codex/hooks.json",
+          ".claude/settings.json"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Native launchers allow exact independent repair health/sync under damaged runtime and adapter fixtures",
+          "command": "node --test tests/harness-native-identity.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T00-13-59-487Z-native-launcher-recovery-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T00:08:20.379Z",
+      "updatedAt": "2026-10-16T00:13:59.488Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "42da7084dd82de381f837257613684bf6baed630272e2e4d06eae2f82fc8b164",
+        "hash": "8b8bdf4064438e06ccd5fc603a9fca1f301e9e62f810479caf730e14d12a9f9d",
+        "snapshot": {
+          "id": "native-launcher-recovery-001",
+          "title": "Keep repair independent of native adapters",
+          "description": "Resolve installed repair root when runtime entrypoint is missing and route exact local recovery before adapter execution.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "tests/harness-native-identity.test.mjs",
+              ".harness/**",
+              ".codex/hooks.json",
+              ".claude/settings.json"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Native launchers allow exact independent repair health/sync under damaged runtime and adapter fixtures",
+              "command": "node --test tests/harness-native-identity.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-16T00:08:20.848Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/2120472a5c721c5a949737fc046135a71ee7d08d57c1be8e7e4e16dc5b9395f2.json",
+        "sha256": "2120472a5c721c5a949737fc046135a71ee7d08d57c1be8e7e4e16dc5b9395f2",
+        "bytes": 38596,
+        "baselineHash": "42da7084dd82de381f837257613684bf6baed630272e2e4d06eae2f82fc8b164"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T00:13:59.488Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "live-host-e2e-verification-002",
+      "title": "Configure and verify authenticated live native E2E",
+      "description": "Transparent successor of blocked live-host-e2e-001: configure its missing e2e layer with the authenticated existing native-proof verifier, then run the complete cumulative source gate. Preserve original contracts, baselines and failed preflight.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full",
+        "e2e"
+      ],
+      "scope": {
+        "allow": [
+          ".harness/config.json",
+          "scripts/live-host-e2e/**",
+          "scripts/verify-live-host-e2e.mjs",
+          ".harness/live-host-e2e-report.json",
+          "scratch/live-host-e2e/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Authenticated real native E2E proof and all configured source verification layers pass",
+          "command": "node scripts/verify-live-host-e2e.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T00-44-43-798Z-live-host-e2e-verification-002.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T00:41:50.476Z",
+      "updatedAt": "2026-10-16T00:44:43.798Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "215549013f0f4fface80310d87f2d62e76b9d59fc35c0caeaead79527a252fcd",
+        "hash": "cb0c2109d48238262a1c587937d441da9d7b0489d3f29fce5165c838d689eed7",
+        "snapshot": {
+          "id": "live-host-e2e-verification-002",
+          "title": "Configure and verify authenticated live native E2E",
+          "description": "Transparent successor of blocked live-host-e2e-001: configure its missing e2e layer with the authenticated existing native-proof verifier, then run the complete cumulative source gate. Preserve original contracts, baselines and failed preflight.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              ".harness/config.json",
+              "scripts/live-host-e2e/**",
+              "scripts/verify-live-host-e2e.mjs",
+              ".harness/live-host-e2e-report.json",
+              "scratch/live-host-e2e/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Authenticated real native E2E proof and all configured source verification layers pass",
+              "command": "node scripts/verify-live-host-e2e.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "e2e"
+          ]
+        },
+        "frozenAt": "2026-10-16T00:41:52.830Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/f108e79a0be445b70720276e8c643b9bba1fa15efe8de2a698a08148a120fab4.json",
+        "sha256": "f108e79a0be445b70720276e8c643b9bba1fa15efe8de2a698a08148a120fab4",
+        "bytes": 50909,
+        "baselineHash": "215549013f0f4fface80310d87f2d62e76b9d59fc35c0caeaead79527a252fcd"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T00:44:43.798Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-hook-rollout-002",
+      "title": "Install repaired launchers and reviewed native hook trust",
+      "description": "Review and apply verified repair to all 11 idle manifest roots while preserving state and trusting exact native hook hashes. Live owners remain pending.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "scripts/native-hook-rollout.mjs",
+          "scripts/verify-native-hook-rollout.mjs",
+          ".harness/native-hook-rollout/**",
+          ".harness/native-hook-rollout-report.json"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "All 11 manifest targets have current generated hook launchers plus enabled trusted native definitions with preserved state and authenticated installation checks",
+          "command": "node scripts/verify-native-hook-rollout.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T01-08-51-867Z-native-hook-rollout-002.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T00:46:45.449Z",
+      "updatedAt": "2026-10-16T01:08:51.868Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "d9044425b125a11e05b515c8d237f9ff73e9e8ef38ef37a02a70bf693c6e7a21",
+        "hash": "872ab7d60616f962decf3fe09d7c9bc582021b1a9b7820fd8531b6b5c6312ae2",
+        "snapshot": {
+          "id": "native-hook-rollout-002",
+          "title": "Install repaired launchers and reviewed native hook trust",
+          "description": "Review and apply verified repair to all 11 idle manifest roots while preserving state and trusting exact native hook hashes. Live owners remain pending.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "scripts/native-hook-rollout.mjs",
+              "scripts/verify-native-hook-rollout.mjs",
+              ".harness/native-hook-rollout/**",
+              ".harness/native-hook-rollout-report.json"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "All 11 manifest targets have current generated hook launchers plus enabled trusted native definitions with preserved state and authenticated installation checks",
+              "command": "node scripts/verify-native-hook-rollout.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-16T00:46:46.265Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/0026c0a130ec1ca44bb14a3fcea295141d7ed971c423b94ffe22ae354f215d7a.json",
+        "sha256": "0026c0a130ec1ca44bb14a3fcea295141d7ed971c423b94ffe22ae354f215d7a",
+        "bytes": 50992,
+        "baselineHash": "d9044425b125a11e05b515c8d237f9ff73e9e8ef38ef37a02a70bf693c6e7a21"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T01:08:51.868Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-hook-update-policy",
+      "title": "Verified automatic native hook updates",
+      "description": "Persist explicit canonical kit hook-update preauthorization, stable independent launchers, and verify exact native definitions before trusting on init/sync.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          "bin/**",
+          "tests/**",
+          "README.md",
+          "CHANGELOG.md",
+          ".harness/**",
+          ".codex/hooks.json",
+          ".claude/**",
+          "AGENTS.md",
+          "CLAUDE.md",
+          ".github/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Opt-in policy authorizes only canonical verified enrolled targets and preserves custom hooks; commands remain stable across runtime changes.",
+          "command": "node --test tests/harness-hook-approval.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T02-13-05-545Z-native-hook-update-policy.json",
+        ".harness/evidence/2026-10-16T02-20-01-319Z-native-hook-update-policy.json",
+        ".harness/evidence/2026-10-16T02-44-29-753Z-native-hook-update-policy.json",
+        ".harness/evidence/2026-10-16T03-09-08-918Z-native-hook-update-policy.json",
+        ".harness/evidence/2026-10-16T03-19-02-841Z-native-hook-update-policy.json"
+      ],
+      "blocker": null,
+      "attempts": 5,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T01:17:06.011Z",
+      "updatedAt": "2026-10-16T03:19:02.842Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "233da197f2cbeb3691978e9932a469b33d3ac90975077a8c8cd111a95d24603f",
+        "hash": "96aefc3f631be9b10578f93c35950520afe6695c54cadf0a4178317f9e2ff299",
+        "snapshot": {
+          "id": "native-hook-update-policy",
+          "title": "Verified automatic native hook updates",
+          "description": "Persist explicit canonical kit hook-update preauthorization, stable independent launchers, and verify exact native definitions before trusting on init/sync.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              "bin/**",
+              "tests/**",
+              "README.md",
+              "CHANGELOG.md",
+              ".harness/**",
+              ".codex/hooks.json",
+              ".claude/**",
+              "AGENTS.md",
+              "CLAUDE.md",
+              ".github/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Opt-in policy authorizes only canonical verified enrolled targets and preserves custom hooks; commands remain stable across runtime changes.",
+              "command": "node --test tests/harness-hook-approval.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-16T01:17:08.458Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/b963ae47f81d3b3da0c73ae21549034f6b2340d93b7e20953f4c0d2e76ef8bd2.json",
+        "sha256": "b963ae47f81d3b3da0c73ae21549034f6b2340d93b7e20953f4c0d2e76ef8bd2",
+        "bytes": 155784,
+        "baselineHash": "233da197f2cbeb3691978e9932a469b33d3ac90975077a8c8cd111a95d24603f"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T03:19:02.842Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-hook-auto-update-e2e-001",
+      "title": "Isolated native canonical hook auto-update proof",
+      "description": "Prove real native approvals survive runtime-only sync and update exact changed canonical definitions in isolated Codex home; record durable authenticated observations.",
+      "dependencies": [
+        "native-hook-update-policy"
+      ],
+      "status": "blocked",
+      "requiredLayers": [
+        "full",
+        "e2e"
+      ],
+      "scope": {
+        "allow": [
+          ".harness/**",
+          "scripts/native-hook-auto-update-e2e.mjs",
+          "scripts/verify-native-hook-auto-update-e2e.mjs"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Initial six exact native canonical hooks are trusted; ordinary runtime sync preserves approvals; ordinary canonical template sync refreshes the native trusted hash; unrelated trust and real global config are preserved; real V2 native dispatch is observed or explicitly limited.",
+          "command": "node scripts/verify-native-hook-auto-update-e2e.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T04-30-44-253Z-native-hook-auto-update-e2e-001.json"
+      ],
+      "blocker": "All three isolated native proof phases and strengthened report verifier passed. Configured verification failed before commands because separately completed canonical source repair changed README.md, native hook predecessor identities, operations.md, core.mjs and hook-policy tests outside this feature's immutable scope. Preserve repair and historical scope/evidence; route an explicitly scoped successor or supported reconciliation before further verification. Evidence: .harness/evidence/2026-10-16T04-30-44-253Z-native-hook-auto-update-e2e-001.json.",
+      "attempts": 1,
+      "repeatedFailures": 1,
+      "lastFailureFingerprint": "66e74769d166bcd620ce4107244bb93d4f88b54b4479aa095e24eb4b9f13619f",
+      "createdAt": "2026-10-16T03:24:55.364Z",
+      "updatedAt": "2026-10-16T04:31:06.376Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "ebbcd6507207beaa5939e7d62a11d7dcb6dd848daee4415ef053d631ea73f6f6",
+        "hash": "6af8eac5b8ccdd6c10dc8a2836fca88c5b334c143f769c0c56d22d1a81ac5ccd",
+        "snapshot": {
+          "id": "native-hook-auto-update-e2e-001",
+          "title": "Isolated native canonical hook auto-update proof",
+          "description": "Prove real native approvals survive runtime-only sync and update exact changed canonical definitions in isolated Codex home; record durable authenticated observations.",
+          "dependencies": [
+            "native-hook-update-policy"
+          ],
+          "scope": {
+            "allow": [
+              ".harness/**",
+              "scripts/native-hook-auto-update-e2e.mjs",
+              "scripts/verify-native-hook-auto-update-e2e.mjs"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Initial six exact native canonical hooks are trusted; ordinary runtime sync preserves approvals; ordinary canonical template sync refreshes the native trusted hash; unrelated trust and real global config are preserved; real V2 native dispatch is observed or explicitly limited.",
+              "command": "node scripts/verify-native-hook-auto-update-e2e.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "e2e"
+          ]
+        },
+        "frozenAt": "2026-10-16T03:24:57.585Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/d4bad3eea8b3e26e907635333a3af8d612e30d8aa0a679f5a92c223c7e473ef1.json",
+        "sha256": "d4bad3eea8b3e26e907635333a3af8d612e30d8aa0a679f5a92c223c7e473ef1",
+        "bytes": 289776,
+        "baselineHash": "ebbcd6507207beaa5939e7d62a11d7dcb6dd848daee4415ef053d631ea73f6f6"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T04:30:44.253Z",
+        "pass": false
+      }
+    },
+    {
+      "id": "canonical-hook-transition-001",
+      "title": "Authenticated canonical hook definition transitions",
+      "description": "Allow verified canonical source evolution from authenticated previously approved definitions while rejecting custom and duplicate hooks.",
+      "dependencies": [
+        "native-hook-update-policy"
+      ],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "skill/codex-harness/scripts/lib/hook-policy.mjs",
+          "skill/codex-harness/assets/**",
+          "tests/harness-hook-policy.test.mjs",
+          "README.md",
+          "skill/codex-harness/references/operations.md",
+          ".harness/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Verified old canonical definitions upgrade automatically; unauthenticated/custom/duplicate transitions retain review and failed helper security remains.",
+          "command": "node --test tests/harness-hook-policy.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T04-11-51-756Z-canonical-hook-transition-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T04:00:56.665Z",
+      "updatedAt": "2026-10-16T04:11:51.756Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "899bfeda1ce553cd21909856ebe181e2ec1be1d4f4c958815c3d7990dd769a8f",
+        "hash": "4c27f670e5eaad8e8cfb6bb91ed398fec6f75dc95106b2622c9dee266a231cd2",
+        "snapshot": {
+          "id": "canonical-hook-transition-001",
+          "title": "Authenticated canonical hook definition transitions",
+          "description": "Allow verified canonical source evolution from authenticated previously approved definitions while rejecting custom and duplicate hooks.",
+          "dependencies": [
+            "native-hook-update-policy"
+          ],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "skill/codex-harness/scripts/lib/hook-policy.mjs",
+              "skill/codex-harness/assets/**",
+              "tests/harness-hook-policy.test.mjs",
+              "README.md",
+              "skill/codex-harness/references/operations.md",
+              ".harness/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Verified old canonical definitions upgrade automatically; unauthenticated/custom/duplicate transitions retain review and failed helper security remains.",
+              "command": "node --test tests/harness-hook-policy.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-16T04:00:59.149Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/1f774eb41a6457edeb89a585574cee22a94d6ae9a46014c6ccd934ef90044c76.json",
+        "sha256": "1f774eb41a6457edeb89a585574cee22a94d6ae9a46014c6ccd934ef90044c76",
+        "bytes": 295575,
+        "baselineHash": "899bfeda1ce553cd21909856ebe181e2ec1be1d4f4c958815c3d7990dd769a8f"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T04:11:51.756Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-hook-auto-update-e2e-002",
+      "title": "Final repaired source and isolated native auto-update certification",
+      "description": "Certify current completed canonical transition source repairs and authenticated three-stage isolated native auto-update proof. Historical feature 001 remains blocked with its immutable contract and attempt history. This distinct final source certification freezes a current supported baseline and performs no external phase reruns.",
+      "dependencies": [
+        "canonical-hook-transition-001",
+        "native-hook-update-policy"
+      ],
+      "status": "blocked",
+      "requiredLayers": [
+        "full",
+        "e2e"
+      ],
+      "scope": {
+        "allow": [
+          "README.md",
+          "skill/codex-harness/assets/migrations/native-hooks-v2/codex-group-identities.json",
+          "skill/codex-harness/references/operations.md",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "tests/harness-hook-policy.test.mjs",
+          "scripts/native-hook-auto-update-e2e.mjs",
+          "scripts/verify-native-hook-auto-update-e2e.mjs",
+          ".harness/native-hook-auto-update-e2e-report.json",
+          ".harness/native-hook-auto-update-e2e/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Current repaired source passes configured syntax and full tests and structural audit and live-host evidence checks; preserved isolated native proof authenticates six exact trusted definitions at all three stages with exact hash transitions and unchanged real global configuration.",
+          "command": "node scripts/verify-native-hook-auto-update-e2e.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T04-36-48-244Z-native-hook-auto-update-e2e-002.json"
+      ],
+      "blocker": "Final current-source configured gate passed 8 syntax checks plus structural audit 97/100 and full suite 207 pass / 2 skipped / 0 fail with no scope violations. Existing e2e command node scripts/verify-live-host-e2e.mjs failed at line 23 comparing preserved historical isolated installed hook JSON against current .codex/hooks.json after the separately verified canonical source repair. Acceptance did not run in this gate; authenticated isolated native auto-update report verifier passed independently. Preserve immutable 001 and 002 baselines and attempts; reconcile the stale live-host verifier in a separately authorized source scope. Evidence .harness/evidence/2026-10-16T04-36-48-244Z-native-hook-auto-update-e2e-002.json.",
+      "attempts": 1,
+      "repeatedFailures": 1,
+      "lastFailureFingerprint": "5a485ea7fd32a0e6610e5830de94ded733bb845f4829f4c8bc0642cd4d5d3ed0",
+      "createdAt": "2026-10-16T04:33:22.654Z",
+      "updatedAt": "2026-10-16T04:37:24.522Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "4deed7b4955e5236a6e7944002241d8e22b6ba6d959f4ffbba575f951919923c",
+        "hash": "97424588a2d2a47d031e3392898c18ca79ad294b8546da772a46e6b18799e74f",
+        "snapshot": {
+          "id": "native-hook-auto-update-e2e-002",
+          "title": "Final repaired source and isolated native auto-update certification",
+          "description": "Certify current completed canonical transition source repairs and authenticated three-stage isolated native auto-update proof. Historical feature 001 remains blocked with its immutable contract and attempt history. This distinct final source certification freezes a current supported baseline and performs no external phase reruns.",
+          "dependencies": [
+            "canonical-hook-transition-001",
+            "native-hook-update-policy"
+          ],
+          "scope": {
+            "allow": [
+              "README.md",
+              "skill/codex-harness/assets/migrations/native-hooks-v2/codex-group-identities.json",
+              "skill/codex-harness/references/operations.md",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "tests/harness-hook-policy.test.mjs",
+              "scripts/native-hook-auto-update-e2e.mjs",
+              "scripts/verify-native-hook-auto-update-e2e.mjs",
+              ".harness/native-hook-auto-update-e2e-report.json",
+              ".harness/native-hook-auto-update-e2e/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Current repaired source passes configured syntax and full tests and structural audit and live-host evidence checks; preserved isolated native proof authenticates six exact trusted definitions at all three stages with exact hash transitions and unchanged real global configuration.",
+              "command": "node scripts/verify-native-hook-auto-update-e2e.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "e2e"
+          ]
+        },
+        "frozenAt": "2026-10-16T04:33:24.680Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/c576b5cab8a7ea9b983ea447703e8aaf446f71faf910464e2f748dc5cf4afc1c.json",
+        "sha256": "c576b5cab8a7ea9b983ea447703e8aaf446f71faf910464e2f748dc5cf4afc1c",
+        "bytes": 299822,
+        "baselineHash": "4deed7b4955e5236a6e7944002241d8e22b6ba6d959f4ffbba575f951919923c"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T04:36:48.245Z",
+        "pass": false
+      }
+    },
+    {
+      "id": "native-hook-v2-live-001",
+      "title": "V2 actual-host fixture lifecycle and historical proof reconciliation",
+      "description": "Preserve V1 authentication across source evolution and prove reviewed V2 native lifecycle in a disposable fixture.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full",
+        "e2e"
+      ],
+      "scope": {
+        "allow": [
+          ".codex/hooks.json",
+          "scripts/native-hook-v2-live-e2e.mjs",
+          "scripts/verify-native-hook-v2-live-e2e.mjs",
+          "scripts/live-host-e2e/native-client.mjs",
+          "scripts/verify-live-host-e2e.mjs",
+          "scripts/native-hook-rollout.mjs",
+          "scripts/verify-native-hook-rollout.mjs",
+          "scripts/verify-context-rollout.mjs",
+          ".harness/native-hook-v2/**",
+          ".harness/native-hook-v2-live-e2e-report.json"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Authenticated historical V1 artifacts remain unchanged and validate across canonical source evolution",
+          "command": "node scripts/verify-live-host-e2e.mjs"
+        },
+        {
+          "id": "ac-2",
+          "description": "Actual V2 hooks dispatch with genuine automatic compaction plus fresh native resume and verification plus guarded temporary enrollment cleanup after confirmed termination",
+          "command": "node scripts/verify-native-hook-v2-live-e2e.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T06-22-30-833Z-native-hook-v2-live-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T04:39:53.954Z",
+      "updatedAt": "2026-10-16T06:22:30.833Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "4deed7b4955e5236a6e7944002241d8e22b6ba6d959f4ffbba575f951919923c",
+        "hash": "320bb6e442703a9ea97c9cfd1fbd87eaf2fd942ec9eca2edee8c7d58553e61b4",
+        "snapshot": {
+          "id": "native-hook-v2-live-001",
+          "title": "V2 actual-host fixture lifecycle and historical proof reconciliation",
+          "description": "Preserve V1 authentication across source evolution and prove reviewed V2 native lifecycle in a disposable fixture.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              ".codex/hooks.json",
+              "scripts/native-hook-v2-live-e2e.mjs",
+              "scripts/verify-native-hook-v2-live-e2e.mjs",
+              "scripts/live-host-e2e/native-client.mjs",
+              "scripts/verify-live-host-e2e.mjs",
+              "scripts/native-hook-rollout.mjs",
+              "scripts/verify-native-hook-rollout.mjs",
+              "scripts/verify-context-rollout.mjs",
+              ".harness/native-hook-v2/**",
+              ".harness/native-hook-v2-live-e2e-report.json"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Authenticated historical V1 artifacts remain unchanged and validate across canonical source evolution",
+              "command": "node scripts/verify-live-host-e2e.mjs"
+            },
+            {
+              "id": "ac-2",
+              "description": "Actual V2 hooks dispatch with genuine automatic compaction plus fresh native resume and verification plus guarded temporary enrollment cleanup after confirmed termination",
+              "command": "node scripts/verify-native-hook-v2-live-e2e.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "e2e"
+          ]
+        },
+        "frozenAt": "2026-10-16T04:39:56.179Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/164b634c68abfd8a349f0c97079d5b2b7e244b297dd6c0e2ade7a09bcb6b08ef.json",
+        "sha256": "164b634c68abfd8a349f0c97079d5b2b7e244b297dd6c0e2ade7a09bcb6b08ef",
+        "bytes": 299906,
+        "baselineHash": "4deed7b4955e5236a6e7944002241d8e22b6ba6d959f4ffbba575f951919923c"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T06:22:30.833Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-hook-v2-rollout-001",
+      "title": "Guarded V2 native rollout across eleven authorized installations",
+      "description": "Preserve historical contracts and artifacts; capture immutable baselines and apply canonical V2 only with fresh real ownership guards and full source gates; preserve custom configuration while setting maxAttempts 5 and repeat limit 2; authenticate current all-eleven installations and fresh isolated proof.",
+      "dependencies": [],
+      "status": "blocked",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "scripts/**",
+          ".harness/**",
+          ".codex/hooks.json",
+          ".codex/config.toml",
+          ".claude/settings.json",
+          "AGENTS.md",
+          "CLAUDE.md",
+          ".github/copilot-instructions.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Historical actual V1 lifecycle proof remains authenticated",
+          "command": "node scripts/verify-live-host-e2e.mjs"
+        },
+        {
+          "id": "ac-2",
+          "description": "Preexisting actual V2 lifecycle proof remains authenticated",
+          "command": "node scripts/verify-native-hook-v2-live-e2e.mjs"
+        },
+        {
+          "id": "ac-3",
+          "description": "Fresh isolated three-phase proof authenticates unchanged real global configuration",
+          "command": "node scripts/verify-native-hook-auto-update-e2e.mjs --report .harness/native-hook-auto-update-v2-post-rollout-e2e-report.json"
+        },
+        {
+          "id": "ac-4",
+          "description": "Current all-eleven installations and native trust and policy and custom preservation and immutable historical evidence authenticate",
+          "command": "node scripts/verify-native-hook-rollout-v2.mjs --report .harness/native-hook-rollout-v2-report.json"
+        }
+      ],
+      "evidence": [],
+      "blocker": "Reverse immutable verificationBudget contracts require canonical compatibility before exact-runtime sync and native approval; preserve historical evidence and original rollout scope.",
+      "attempts": 0,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T06:28:53.230Z",
+      "updatedAt": "2026-10-16T06:58:09.661Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "d21bf5cb313f2916de844639fdebf820e71b98e5a9f0a9a432edb13bed138669",
+        "hash": "ec9fef500da4945cca37d24228447ed770a0a6864ddfd7eee70133dee920a0ae",
+        "snapshot": {
+          "id": "native-hook-v2-rollout-001",
+          "title": "Guarded V2 native rollout across eleven authorized installations",
+          "description": "Preserve historical contracts and artifacts; capture immutable baselines and apply canonical V2 only with fresh real ownership guards and full source gates; preserve custom configuration while setting maxAttempts 5 and repeat limit 2; authenticate current all-eleven installations and fresh isolated proof.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "scripts/**",
+              ".harness/**",
+              ".codex/hooks.json",
+              ".codex/config.toml",
+              ".claude/settings.json",
+              "AGENTS.md",
+              "CLAUDE.md",
+              ".github/copilot-instructions.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Historical actual V1 lifecycle proof remains authenticated",
+              "command": "node scripts/verify-live-host-e2e.mjs"
+            },
+            {
+              "id": "ac-2",
+              "description": "Preexisting actual V2 lifecycle proof remains authenticated",
+              "command": "node scripts/verify-native-hook-v2-live-e2e.mjs"
+            },
+            {
+              "id": "ac-3",
+              "description": "Fresh isolated three-phase proof authenticates unchanged real global configuration",
+              "command": "node scripts/verify-native-hook-auto-update-e2e.mjs --report .harness/native-hook-auto-update-v2-post-rollout-e2e-report.json"
+            },
+            {
+              "id": "ac-4",
+              "description": "Current all-eleven installations and native trust and policy and custom preservation and immutable historical evidence authenticate",
+              "command": "node scripts/verify-native-hook-rollout-v2.mjs --report .harness/native-hook-rollout-v2-report.json"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-16T06:28:55.255Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/a9c8e8686d80c9c5180dd5ab6e48da07313922cfd5f1b3b85fb8d969f4f050fc.json",
+        "sha256": "a9c8e8686d80c9c5180dd5ab6e48da07313922cfd5f1b3b85fb8d969f4f050fc",
+        "bytes": 336070,
+        "baselineHash": "d21bf5cb313f2916de844639fdebf820e71b98e5a9f0a9a432edb13bed138669"
+      }
+    },
+    {
+      "id": "native-budget-contract-compat-001",
+      "title": "Canonical compatibility for immutable legacy verification budgets",
+      "description": "Preserve exact legacy budget contract hashes and authenticated revision/evidence history while enforcing the permanent global attempt ceiling for future verification; archive original canonical bytes and preserve historical proofs before fresh native attestation.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "tests/harness-budget-compat.test.mjs",
+          "tests/harness.test.mjs",
+          "README.md",
+          "skill/codex-harness/references/operations.md",
+          "scripts/**",
+          ".harness/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Legacy budgets authenticate without rewriting contract or evidence and future attempts remain globally bounded",
+          "command": "node --test tests/harness-budget-compat.test.mjs"
+        },
+        {
+          "id": "ac-2",
+          "description": "Original source and historical report bytes remain authenticated through an immutable source transition manifest",
+          "command": "node scripts/verify-source-budget-compat.mjs"
+        },
+        {
+          "id": "ac-3",
+          "description": "Historical actual V1 lifecycle proof remains authenticated",
+          "command": "node scripts/verify-live-host-e2e.mjs"
+        },
+        {
+          "id": "ac-4",
+          "description": "Historical actual V2 lifecycle proof authenticates its archived source and artifacts",
+          "command": "node scripts/verify-native-hook-v2-live-e2e.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T07-50-00-223Z-native-budget-contract-compat-001.json",
+        ".harness/evidence/2026-10-16T08-03-56-213Z-native-budget-contract-compat-001.json"
+      ],
+      "blocker": null,
+      "attempts": 2,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T06:58:52.263Z",
+      "updatedAt": "2026-10-16T08:03:56.214Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "034c6fbfcfc373d6d3e31b2c6a68f497982682b69041f4eacd1733538e555fe0",
+        "hash": "53f2d20dd84705bb0b40925bd3af48d22843f33dc0d7b6fc90e87e6d56b13f7d",
+        "snapshot": {
+          "id": "native-budget-contract-compat-001",
+          "title": "Canonical compatibility for immutable legacy verification budgets",
+          "description": "Preserve exact legacy budget contract hashes and authenticated revision/evidence history while enforcing the permanent global attempt ceiling for future verification; archive original canonical bytes and preserve historical proofs before fresh native attestation.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "tests/harness-budget-compat.test.mjs",
+              "tests/harness.test.mjs",
+              "README.md",
+              "skill/codex-harness/references/operations.md",
+              "scripts/**",
+              ".harness/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Legacy budgets authenticate without rewriting contract or evidence and future attempts remain globally bounded",
+              "command": "node --test tests/harness-budget-compat.test.mjs"
+            },
+            {
+              "id": "ac-2",
+              "description": "Original source and historical report bytes remain authenticated through an immutable source transition manifest",
+              "command": "node scripts/verify-source-budget-compat.mjs"
+            },
+            {
+              "id": "ac-3",
+              "description": "Historical actual V1 lifecycle proof remains authenticated",
+              "command": "node scripts/verify-live-host-e2e.mjs"
+            },
+            {
+              "id": "ac-4",
+              "description": "Historical actual V2 lifecycle proof authenticates its archived source and artifacts",
+              "command": "node scripts/verify-native-hook-v2-live-e2e.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-16T06:58:56.440Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/0ea4cc5c99b7c62ba8f6807cdeef0009559eaa4e34e1347bc7d898277f63d3a1.json",
+        "sha256": "0ea4cc5c99b7c62ba8f6807cdeef0009559eaa4e34e1347bc7d898277f63d3a1",
+        "bytes": 705850,
+        "baselineHash": "034c6fbfcfc373d6d3e31b2c6a68f497982682b69041f4eacd1733538e555fe0"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T08:03:56.214Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-hook-v2-live-002",
+      "title": "Fresh selected actual V2 native lifecycle proof",
+      "description": "Authenticate the new SOURCE compatibility authority and genuine complete native lifecycle in a fresh exclusive selected report.",
+      "dependencies": [
+        "native-budget-contract-compat-001"
+      ],
+      "status": "passing",
+      "requiredLayers": [
+        "full",
+        "architecture",
+        "quick"
+      ],
+      "scope": {
+        "allow": [
+          "scripts/**",
+          ".harness/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Fresh selected native lifecycle report authenticates the pinned SOURCE gate and all native lifecycle assertions.",
+          "command": "node scripts/verify-native-hook-v2-live-e2e.mjs --report .harness/native-hook-v2-live-002-e2e-report.json"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T08-36-31-265Z-native-hook-v2-live-002.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T07:37:05.110Z",
+      "updatedAt": "2026-10-16T08:36:31.265Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "a346ce17492d8304b59651b6cdc6a36525443e63a78ce091e788fa8c6831a9ea",
+        "hash": "a2434d089350981b3b31a43e7cf5816ce4d8720f3cb9bd0e01ec7b8b2e7ed14a",
+        "snapshot": {
+          "id": "native-hook-v2-live-002",
+          "title": "Fresh selected actual V2 native lifecycle proof",
+          "description": "Authenticate the new SOURCE compatibility authority and genuine complete native lifecycle in a fresh exclusive selected report.",
+          "dependencies": [
+            "native-budget-contract-compat-001"
+          ],
+          "scope": {
+            "allow": [
+              "scripts/**",
+              ".harness/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Fresh selected native lifecycle report authenticates the pinned SOURCE gate and all native lifecycle assertions.",
+              "command": "node scripts/verify-native-hook-v2-live-e2e.mjs --report .harness/native-hook-v2-live-002-e2e-report.json"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "architecture",
+            "quick"
+          ]
+        },
+        "frozenAt": "2026-10-16T08:07:54.234Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/aad8809a010374ed8630f5ac08c825a3d9463c3ff1299200f9364bb04ff2139a.json",
+        "sha256": "aad8809a010374ed8630f5ac08c825a3d9463c3ff1299200f9364bb04ff2139a",
+        "bytes": 710351,
+        "baselineHash": "a346ce17492d8304b59651b6cdc6a36525443e63a78ce091e788fa8c6831a9ea"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T08:36:31.265Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-hook-v2-rollout-002",
+      "title": "Guarded V2 rollout of all eleven managed roots",
+      "description": "Guardedly deploy the authenticated SOURCE runtime to all eleven exact roots, preserve baseline contracts and history, and prove fresh isolated three-phase behavior before sealing production evidence.",
+      "dependencies": [
+        "native-hook-v2-live-002"
+      ],
+      "status": "blocked",
+      "requiredLayers": [
+        "full",
+        "architecture",
+        "quick"
+      ],
+      "scope": {
+        "allow": [
+          "scripts/**",
+          ".harness/**",
+          "skill/codex-harness/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Direct V2 production report proves all eleven exact roots with guarded preservation and fresh isolated three-phase native behavior.",
+          "command": "node scripts/verify-native-hook-rollout-v2.mjs --report .harness/native-hook-v2-rollout-002-report.json"
+        },
+        {
+          "id": "ac-2",
+          "description": "The V1 rollout verifier explicitly authenticates the selected superseding V2 production report.",
+          "command": "node scripts/verify-native-hook-rollout.mjs --superseding-report .harness/native-hook-v2-rollout-002-report.json"
+        }
+      ],
+      "evidence": [],
+      "blocker": "Actual Windows timeout trace proves taskkill stalled and descendant remained alive after command return; SOURCE97 and historical proof are preserved. Superseded by windows-command-containment-001 and fresh source/native/rollout authority.",
+      "attempts": 0,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T07:37:25.010Z",
+      "updatedAt": "2026-10-16T10:48:57.686Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "6df0c99494668a5cc54ad41892b9d853933b3785d38c3f7b1780c79ea12ec474",
+        "hash": "9a149a651ee4465140276a9827c48b01e6a473eba05891ae83145ef12b56bd09",
+        "snapshot": {
+          "id": "native-hook-v2-rollout-002",
+          "title": "Guarded V2 rollout of all eleven managed roots",
+          "description": "Guardedly deploy the authenticated SOURCE runtime to all eleven exact roots, preserve baseline contracts and history, and prove fresh isolated three-phase behavior before sealing production evidence.",
+          "dependencies": [
+            "native-hook-v2-live-002"
+          ],
+          "scope": {
+            "allow": [
+              "scripts/**",
+              ".harness/**",
+              "skill/codex-harness/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Direct V2 production report proves all eleven exact roots with guarded preservation and fresh isolated three-phase native behavior.",
+              "command": "node scripts/verify-native-hook-rollout-v2.mjs --report .harness/native-hook-v2-rollout-002-report.json"
+            },
+            {
+              "id": "ac-2",
+              "description": "The V1 rollout verifier explicitly authenticates the selected superseding V2 production report.",
+              "command": "node scripts/verify-native-hook-rollout.mjs --superseding-report .harness/native-hook-v2-rollout-002-report.json"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "architecture",
+            "quick"
+          ]
+        },
+        "frozenAt": "2026-10-16T08:39:40.218Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/964ddeb1edf8aa8b2bbc5efa71b1a07db0cf95b93826abf83d26276f6e82827c.json",
+        "sha256": "964ddeb1edf8aa8b2bbc5efa71b1a07db0cf95b93826abf83d26276f6e82827c",
+        "bytes": 720225,
+        "baselineHash": "6df0c99494668a5cc54ad41892b9d853933b3785d38c3f7b1780c79ea12ec474"
+      }
+    },
+    {
+      "id": "windows-command-containment-001",
+      "title": "Windows command process containment",
+      "description": "Create Windows command trees inside a Job Object before execution, bound timeout cleanup, and require actual descendant regression plus fresh SOURCE authority.",
+      "dependencies": [
+        "native-budget-contract-compat-001"
+      ],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/**",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "tests/harness-hardening.test.mjs",
+          "scripts/*windows-containment*",
+          ".harness/**",
+          "SECURITY.md",
+          "README.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Meaningful started-descendant timeout regression passes",
+          "command": "node --test tests/harness-hardening.test.mjs"
+        },
+        {
+          "id": "ac-2",
+          "description": "Fresh Windows SOURCE authority authenticates successor and preserved predecessor",
+          "command": "node scripts/verify-source-windows-containment.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T11-46-16-580Z-windows-command-containment-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T10:48:58.031Z",
+      "updatedAt": "2026-10-16T11:46:16.580Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "287f0e5a1c16324b8c48515dc73192115b6b5c59eeb5649ccf089380cf82c8d1",
+        "hash": "6ca18c2f286fc76069a2ee8b4b228c5335cfc7abaf10c9facd29b7e54ea29837",
+        "snapshot": {
+          "id": "windows-command-containment-001",
+          "title": "Windows command process containment",
+          "description": "Create Windows command trees inside a Job Object before execution, bound timeout cleanup, and require actual descendant regression plus fresh SOURCE authority.",
+          "dependencies": [
+            "native-budget-contract-compat-001"
+          ],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/**",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "tests/harness-hardening.test.mjs",
+              "scripts/*windows-containment*",
+              ".harness/**",
+              "SECURITY.md",
+              "README.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Meaningful started-descendant timeout regression passes",
+              "command": "node --test tests/harness-hardening.test.mjs"
+            },
+            {
+              "id": "ac-2",
+              "description": "Fresh Windows SOURCE authority authenticates successor and preserved predecessor",
+              "command": "node scripts/verify-source-windows-containment.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-16T10:49:21.345Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/9dc536869ad7a2732aec55f8398acf1c6ea999331c355e2ef3b15a6403c9f6d2.json",
+        "sha256": "9dc536869ad7a2732aec55f8398acf1c6ea999331c355e2ef3b15a6403c9f6d2",
+        "bytes": 3526961,
+        "baselineHash": "287f0e5a1c16324b8c48515dc73192115b6b5c59eeb5649ccf089380cf82c8d1"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T11:46:16.580Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-hook-v2-live-003",
+      "title": "Fresh Windows containment native lifecycle proof",
+      "description": "Authenticate the sealed Windows SOURCE authority and genuine complete native lifecycle in a fresh exclusive selected report.",
+      "dependencies": [
+        "windows-command-containment-001"
+      ],
+      "status": "blocked",
+      "requiredLayers": [
+        "full",
+        "architecture",
+        "quick"
+      ],
+      "scope": {
+        "allow": [
+          "scripts/*windows-containment*",
+          ".harness/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Fresh selected native lifecycle report authenticates the sealed Windows SOURCE gate and all native lifecycle assertions.",
+          "command": "node scripts/verify-live003-windows-containment-e2e.mjs --report .harness/native-hook-v2-live-003-e2e-report.json"
+        }
+      ],
+      "evidence": [],
+      "blocker": "Failed v3 preparation reconciled and cleaned; immutable SOURCE68 preserved. Performance source renewal precedes a fresh LIVE004 authority.",
+      "attempts": 0,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T11:52:33.270Z",
+      "updatedAt": "2026-10-16T13:35:23.096Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "a99e210700d7f46c88df10b3db5e1db52c5e9cf8464ea4b561475c14821dfdd7",
+        "hash": "1674cd5f2f4c51d5ea7976203e6bc55be6e9c56f0e2fc44ce17f9edb2a7aebf1",
+        "snapshot": {
+          "id": "native-hook-v2-live-003",
+          "title": "Fresh Windows containment native lifecycle proof",
+          "description": "Authenticate the sealed Windows SOURCE authority and genuine complete native lifecycle in a fresh exclusive selected report.",
+          "dependencies": [
+            "windows-command-containment-001"
+          ],
+          "scope": {
+            "allow": [
+              "scripts/*windows-containment*",
+              ".harness/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Fresh selected native lifecycle report authenticates the sealed Windows SOURCE gate and all native lifecycle assertions.",
+              "command": "node scripts/verify-live003-windows-containment-e2e.mjs --report .harness/native-hook-v2-live-003-e2e-report.json"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "architecture",
+            "quick"
+          ]
+        },
+        "frozenAt": "2026-10-16T11:53:13.980Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/417021c393fac5f17e2e52f1952c05f38297fa1b643ed461ad2de125e700a575.json",
+        "sha256": "417021c393fac5f17e2e52f1952c05f38297fa1b643ed461ad2de125e700a575",
+        "bytes": 3541448,
+        "baselineHash": "a99e210700d7f46c88df10b3db5e1db52c5e9cf8464ea4b561475c14821dfdd7"
+      }
+    },
+    {
+      "id": "context-performance-001",
+      "title": "Verified context accounting and combined worker startup",
+      "description": "Count confirmed delivered Codex replacement output and share full validation with bounded bootstrap then renew SOURCE for native follow-up.",
+      "dependencies": [
+        "windows-command-containment-001"
+      ],
+      "status": "passing",
+      "requiredLayers": [
+        "full",
+        "architecture",
+        "quick"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          "tests/**",
+          "scripts/*context-performance*",
+          ".harness/**",
+          "AGENTS.md",
+          "README.md"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Authenticate archived SOURCE68 and exact source delta with preserved history and successor grant.",
+          "command": "node scripts/verify-source-context-performance.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T14-07-45-556Z-context-performance-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T13:35:41.329Z",
+      "updatedAt": "2026-10-16T14:07:45.556Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "24c3ef953d7d8a6f5ead05cf5ea8787941eb48409a92452c8003694f4dd2e86d",
+        "hash": "af7f15e817b600f64c5534368d50e74a700822831693135da82f216b6a12dc71",
+        "snapshot": {
+          "id": "context-performance-001",
+          "title": "Verified context accounting and combined worker startup",
+          "description": "Count confirmed delivered Codex replacement output and share full validation with bounded bootstrap then renew SOURCE for native follow-up.",
+          "dependencies": [
+            "windows-command-containment-001"
+          ],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              "tests/**",
+              "scripts/*context-performance*",
+              ".harness/**",
+              "AGENTS.md",
+              "README.md"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Authenticate archived SOURCE68 and exact source delta with preserved history and successor grant.",
+              "command": "node scripts/verify-source-context-performance.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "architecture",
+            "quick"
+          ]
+        },
+        "frozenAt": "2026-10-16T13:37:33.173Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/be300cdee4bd1505b334b4dbfe154b94fab119ed49ebbae19fb96ec68e43487e.json",
+        "sha256": "be300cdee4bd1505b334b4dbfe154b94fab119ed49ebbae19fb96ec68e43487e",
+        "bytes": 4026219,
+        "baselineHash": "24c3ef953d7d8a6f5ead05cf5ea8787941eb48409a92452c8003694f4dd2e86d"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T14:07:45.556Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-hook-v2-live-004",
+      "title": "Fresh context performance native lifecycle proof",
+      "description": "Authenticate the sealed context performance SOURCE and genuine complete native lifecycle in a fresh exclusive selected report.",
+      "dependencies": [
+        "context-performance-001"
+      ],
+      "status": "passing",
+      "requiredLayers": [
+        "full",
+        "architecture",
+        "quick"
+      ],
+      "scope": {
+        "allow": [
+          "scripts/*context-performance*",
+          ".harness/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Fresh selected native lifecycle report authenticates the sealed context performance SOURCE gate and all native lifecycle assertions.",
+          "command": "node scripts/verify-live004-context-performance-e2e.mjs --report .harness/native-hook-v2-live-004-e2e-report.json"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-16T17-07-34-296Z-native-hook-v2-live-004.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T14:53:00.203Z",
+      "updatedAt": "2026-10-16T17:07:34.296Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "2768cafc3d2cc765a640efde89be6d88fb6459a6ed4c9bce32c0220b083b4c34",
+        "hash": "c34c905333893d3362fcf5520ffd00db988fb44d95716d020fbeaf2f8aedce69",
+        "snapshot": {
+          "id": "native-hook-v2-live-004",
+          "title": "Fresh context performance native lifecycle proof",
+          "description": "Authenticate the sealed context performance SOURCE and genuine complete native lifecycle in a fresh exclusive selected report.",
+          "dependencies": [
+            "context-performance-001"
+          ],
+          "scope": {
+            "allow": [
+              "scripts/*context-performance*",
+              ".harness/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Fresh selected native lifecycle report authenticates the sealed context performance SOURCE gate and all native lifecycle assertions.",
+              "command": "node scripts/verify-live004-context-performance-e2e.mjs --report .harness/native-hook-v2-live-004-e2e-report.json"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "architecture",
+            "quick"
+          ]
+        },
+        "frozenAt": "2026-10-16T14:54:43.373Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/39f61f36fff2ac87b5fd98d34770618914e04d83d39ccd220e314b1ea60018ca.json",
+        "sha256": "39f61f36fff2ac87b5fd98d34770618914e04d83d39ccd220e314b1ea60018ca",
+        "bytes": 4032069,
+        "baselineHash": "2768cafc3d2cc765a640efde89be6d88fb6459a6ed4c9bce32c0220b083b4c34"
+      },
+      "lastVerification": {
+        "at": "2026-10-16T17:07:34.296Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "native-hook-v2-rollout-004",
+      "title": "Guarded context performance rollout of all eleven managed roots",
+      "description": "Deploy the authenticated context performance SOURCE runtime to all eleven exact roots and preserve historical contracts and evidence with fresh isolated three-phase behavior.",
+      "dependencies": [
+        "native-hook-v2-live-004"
+      ],
+      "status": "passing",
+      "requiredLayers": [
+        "full",
+        "architecture",
+        "quick"
+      ],
+      "scope": {
+        "allow": [
+          "scripts/*context-performance*",
+          ".harness/**",
+          "skill/codex-harness/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Fresh production evidence authenticates all eleven complete installed runtimes with preserved history and canonical definition trust and isolated three-phase proof.",
+          "command": "node scripts/verify-rollout004-context-performance.mjs --report .harness/native-hook-v2-rollout-004-report.json"
+        },
+        {
+          "id": "ac-2",
+          "description": "Supersession evidence authenticates historical rollout contracts and predecessor failure roles against the fresh production proof.",
+          "command": "node scripts/verify-rollout004-context-performance-supersession.mjs --report .harness/native-hook-v2-rollout-004-report.json"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-17T17-49-45-191Z-native-hook-v2-rollout-004.json",
+        ".harness/evidence/2026-10-17T18-37-43-389Z-native-hook-v2-rollout-004.json"
+      ],
+      "blocker": null,
+      "attempts": 2,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-16T18:51:46.587Z",
+      "updatedAt": "2026-10-17T18:37:43.389Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "c762983b9e1be5bcbb1ecfc16197d4902369a47eb75b883e05ba52f955397739",
+        "hash": "52a667d9d0ce011981b836559505739be3c7b82c7d696986fd76afd5f965b3d0",
+        "snapshot": {
+          "id": "native-hook-v2-rollout-004",
+          "title": "Guarded context performance rollout of all eleven managed roots",
+          "description": "Deploy the authenticated context performance SOURCE runtime to all eleven exact roots and preserve historical contracts and evidence with fresh isolated three-phase behavior.",
+          "dependencies": [
+            "native-hook-v2-live-004"
+          ],
+          "scope": {
+            "allow": [
+              "scripts/*context-performance*",
+              ".harness/**",
+              "skill/codex-harness/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Fresh production evidence authenticates all eleven complete installed runtimes with preserved history and canonical definition trust and isolated three-phase proof.",
+              "command": "node scripts/verify-rollout004-context-performance.mjs --report .harness/native-hook-v2-rollout-004-report.json"
+            },
+            {
+              "id": "ac-2",
+              "description": "Supersession evidence authenticates historical rollout contracts and predecessor failure roles against the fresh production proof.",
+              "command": "node scripts/verify-rollout004-context-performance-supersession.mjs --report .harness/native-hook-v2-rollout-004-report.json"
+            }
+          ],
+          "requiredLayers": [
+            "full",
+            "architecture",
+            "quick"
+          ]
+        },
+        "frozenAt": "2026-10-16T18:53:04.432Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/6fc9993ea85ee207618204813837a98f5812eb868fa68504f6fb0e713d9c84ba.json",
+        "sha256": "6fc9993ea85ee207618204813837a98f5812eb868fa68504f6fb0e713d9c84ba",
+        "bytes": 4069827,
+        "baselineHash": "c762983b9e1be5bcbb1ecfc16197d4902369a47eb75b883e05ba52f955397739"
+      },
+      "lastVerification": {
+        "at": "2026-10-17T18:37:43.389Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "fix-nine-live-integration",
+      "title": "Integrate nine reviewed fixes into live harness",
+      "description": "Apply reviewed source fixes, regenerate managed runtime, migrate exact authenticated native predecessor groups, and preserve completed rollout artifacts and all unrelated changes.",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          ".gitattributes",
+          ".github/workflows/test.yml",
+          "README.md",
+          "SECURITY.md",
+          "package.json",
+          "scripts/rollout004-context-performance-authority.mjs",
+          "scripts/rollout004-context-performance-gate.mjs",
+          "scripts/rollout004-context-performance-isolated.mjs",
+          "scripts/rollout004-context-performance-isolated.test.mjs",
+          "scripts/rollout004-context-performance.mjs",
+          "scripts/rollout004-review-regressions.test.mjs",
+          "scripts/source-context-performance-authority.mjs",
+          "scripts/source-windows-containment-authority.mjs",
+          "scripts/test-rollout.mjs",
+          "scripts/verify-rollout004-context-performance.mjs",
+          "skill/codex-harness/SKILL.md",
+          "skill/codex-harness/assets/hook-recovery.mjs",
+          "skill/codex-harness/assets/migrations/native-hooks-v3/group-identities.json",
+          "skill/codex-harness/assets/native-hook-bootstrap-v3.json",
+          "skill/codex-harness/assets/native-hook-identity.mjs",
+          "skill/codex-harness/assets/project-runtime.mjs",
+          "skill/codex-harness/assets/repair.mjs",
+          "skill/codex-harness/assets/windows-command.mjs",
+          "skill/codex-harness/references/operations.md",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "skill/codex-harness/scripts/lib/hook-bootstrap.mjs",
+          "skill/codex-harness/scripts/lib/hook-policy.mjs",
+          "tests/harness-context.test.mjs",
+          "tests/harness-continuity.test.mjs",
+          "tests/harness-hardening.test.mjs",
+          "tests/harness-hook-approval.test.mjs",
+          "tests/harness-hook-policy.test.mjs",
+          "tests/harness-hook-timeout.test.mjs",
+          "tests/harness-native-identity.test.mjs",
+          "tests/harness-runtime-redaction.test.mjs",
+          "tests/harness-source-repair.test.mjs",
+          "tests/harness.test.mjs",
+          ".harness/**",
+          ".claude/settings.json",
+          ".codex/hooks.json",
+          ".codex/config.toml"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Fixture rollout and hardening regressions pass with exact live g126 authority lineage preserved",
+          "command": "node scripts/test-rollout.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-17T19-00-21-853Z-fix-nine-live-integration.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-17T18:43:41.888Z",
+      "updatedAt": "2026-10-17T19:00:21.854Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "bcad8b258411a4166b4231f4b3456be796abafb54148b8e6906cc7b30e3e3228",
+        "hash": "9d4977923516a5626fe9a824ef4c62302f40a6fc0cd55501dbe4ccd202c8cc8b",
+        "snapshot": {
+          "id": "fix-nine-live-integration",
+          "title": "Integrate nine reviewed fixes into live harness",
+          "description": "Apply reviewed source fixes, regenerate managed runtime, migrate exact authenticated native predecessor groups, and preserve completed rollout artifacts and all unrelated changes.",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              ".gitattributes",
+              ".github/workflows/test.yml",
+              "README.md",
+              "SECURITY.md",
+              "package.json",
+              "scripts/rollout004-context-performance-authority.mjs",
+              "scripts/rollout004-context-performance-gate.mjs",
+              "scripts/rollout004-context-performance-isolated.mjs",
+              "scripts/rollout004-context-performance-isolated.test.mjs",
+              "scripts/rollout004-context-performance.mjs",
+              "scripts/rollout004-review-regressions.test.mjs",
+              "scripts/source-context-performance-authority.mjs",
+              "scripts/source-windows-containment-authority.mjs",
+              "scripts/test-rollout.mjs",
+              "scripts/verify-rollout004-context-performance.mjs",
+              "skill/codex-harness/SKILL.md",
+              "skill/codex-harness/assets/hook-recovery.mjs",
+              "skill/codex-harness/assets/migrations/native-hooks-v3/group-identities.json",
+              "skill/codex-harness/assets/native-hook-bootstrap-v3.json",
+              "skill/codex-harness/assets/native-hook-identity.mjs",
+              "skill/codex-harness/assets/project-runtime.mjs",
+              "skill/codex-harness/assets/repair.mjs",
+              "skill/codex-harness/assets/windows-command.mjs",
+              "skill/codex-harness/references/operations.md",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "skill/codex-harness/scripts/lib/hook-bootstrap.mjs",
+              "skill/codex-harness/scripts/lib/hook-policy.mjs",
+              "tests/harness-context.test.mjs",
+              "tests/harness-continuity.test.mjs",
+              "tests/harness-hardening.test.mjs",
+              "tests/harness-hook-approval.test.mjs",
+              "tests/harness-hook-policy.test.mjs",
+              "tests/harness-hook-timeout.test.mjs",
+              "tests/harness-native-identity.test.mjs",
+              "tests/harness-runtime-redaction.test.mjs",
+              "tests/harness-source-repair.test.mjs",
+              "tests/harness.test.mjs",
+              ".harness/**",
+              ".claude/settings.json",
+              ".codex/hooks.json",
+              ".codex/config.toml"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Fixture rollout and hardening regressions pass with exact live g126 authority lineage preserved",
+              "command": "node scripts/test-rollout.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-17T18:44:19.971Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/1fa6c33e8c67b67451450bc2d21889e2a66f1b765eab2ce884e07db2ba370405.json",
+        "sha256": "1fa6c33e8c67b67451450bc2d21889e2a66f1b765eab2ce884e07db2ba370405",
+        "bytes": 6289826,
+        "baselineHash": "bcad8b258411a4166b4231f4b3456be796abafb54148b8e6906cc7b30e3e3228"
+      },
+      "lastVerification": {
+        "at": "2026-10-17T19:00:21.854Z",
+        "pass": true
+      }
+    },
+    {
+      "id": "fix-nine-rollout-001",
+      "title": "Reviewed rollout of nine integrated fixes to eleven managed projects",
+      "description": "Apply the reviewed integrated v3 source to the exact eleven managed roots through new ordered plans and immutable receipts while preserving approvals history and five-attempt limits.",
+      "dependencies": [
+        "fix-nine-live-integration"
+      ],
+      "status": "active",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "scripts/fix-nine-rollout*.mjs",
+          "scripts/verify-fix-nine-rollout.mjs",
+          "tests/fix-nine-rollout.test.mjs",
+          ".harness/fix-nine-rollout-001/**",
+          ".harness/fix-nine-rollout-001-report.json"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "The new report authenticates the ordered eleven targets and reviewed source and plans and each apply and audit and preserved history and native trust and successful final gate.",
+          "command": "node scripts/verify-fix-nine-rollout.mjs --report .harness/fix-nine-rollout-001-report.json"
+        },
+        {
+          "id": "ac-2",
+          "description": "Portable rollout regressions pass without external services or credentials.",
+          "command": "node scripts/test-rollout.mjs"
+        }
+      ],
+      "evidence": [],
+      "blocker": null,
+      "attempts": 0,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-17T19:52:57.769Z",
+      "updatedAt": "2026-10-17T20:25:31.095Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "88fde5f9dfeb3182556cbba6f14243302710290cd152169a222d8a1e27fee1de",
+        "hash": "9f79ad7bfa995f6ff1bf151bdb23f0bab7c80f43ac3647c4953d84402cc6167b",
+        "snapshot": {
+          "id": "fix-nine-rollout-001",
+          "title": "Reviewed rollout of nine integrated fixes to eleven managed projects",
+          "description": "Apply the reviewed integrated v3 source to the exact eleven managed roots through new ordered plans and immutable receipts while preserving approvals history and five-attempt limits.",
+          "dependencies": [
+            "fix-nine-live-integration"
+          ],
+          "scope": {
+            "allow": [
+              "scripts/fix-nine-rollout*.mjs",
+              "scripts/verify-fix-nine-rollout.mjs",
+              "tests/fix-nine-rollout.test.mjs",
+              ".harness/fix-nine-rollout-001/**",
+              ".harness/fix-nine-rollout-001-report.json"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "The new report authenticates the ordered eleven targets and reviewed source and plans and each apply and audit and preserved history and native trust and successful final gate.",
+              "command": "node scripts/verify-fix-nine-rollout.mjs --report .harness/fix-nine-rollout-001-report.json"
+            },
+            {
+              "id": "ac-2",
+              "description": "Portable rollout regressions pass without external services or credentials.",
+              "command": "node scripts/test-rollout.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-17T19:53:32.880Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/d48b6c915cb77cf29519d5ddd45625a45a9736a1c5150ce92045f8ff04fd4742.json",
+        "sha256": "d48b6c915cb77cf29519d5ddd45625a45a9736a1c5150ce92045f8ff04fd4742",
+        "bytes": 6291659,
+        "baselineHash": "88fde5f9dfeb3182556cbba6f14243302710290cd152169a222d8a1e27fee1de"
+      }
+    },
+    {
+      "id": "source-historical-budget-compat-002",
+      "title": "Authenticate historical owner actors and mode-prefixed evidence receipts",
+      "description": "Preserve signed v2 owner-object revisions and historical evidence4 plan1 mode-prefixed receipts while keeping current and baseline hashes strict and attempt caps unchanged.",
+      "dependencies": [
+        "fix-nine-live-integration"
+      ],
+      "status": "passing",
+      "requiredLayers": [
+        "full"
+      ],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/assets/project-runtime.mjs",
+          "skill/codex-harness/scripts/lib/core.mjs",
+          "tests/harness-budget-compat.test.mjs",
+          ".harness/run.mjs",
+          ".harness/managed-files.json",
+          ".harness/repair-source.json",
+          ".harness/source-historical-budget-compat-002/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "Strict owner and digest compatibility regressions pass in generated runtime and reusable audit.",
+          "command": "node --test tests/harness-budget-compat.test.mjs"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-17T20-21-48-251Z-source-historical-budget-compat-002.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-17T20:01:37.489Z",
+      "updatedAt": "2026-10-17T20:21:48.252Z",
+      "contract": {
+        "version": 2,
+        "scopeBaselineHash": "244ebe03a7b9f61be4b19ae77a07fb71fc10113a03d298ffe84a6c0a3e838279",
+        "hash": "b34a7ee69344429897f2a9bf2d1f17e4cb7937faa43db361ae9bfbd51ec01b12",
+        "snapshot": {
+          "id": "source-historical-budget-compat-002",
+          "title": "Authenticate historical owner actors and mode-prefixed evidence receipts",
+          "description": "Preserve signed v2 owner-object revisions and historical evidence4 plan1 mode-prefixed receipts while keeping current and baseline hashes strict and attempt caps unchanged.",
+          "dependencies": [
+            "fix-nine-live-integration"
+          ],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/assets/project-runtime.mjs",
+              "skill/codex-harness/scripts/lib/core.mjs",
+              "tests/harness-budget-compat.test.mjs",
+              ".harness/run.mjs",
+              ".harness/managed-files.json",
+              ".harness/repair-source.json",
+              ".harness/source-historical-budget-compat-002/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "Strict owner and digest compatibility regressions pass in generated runtime and reusable audit.",
+              "command": "node --test tests/harness-budget-compat.test.mjs"
+            }
+          ],
+          "requiredLayers": [
+            "full"
+          ]
+        },
+        "frozenAt": "2026-10-17T20:02:42.646Z"
+      },
+      "scopeBaselineRef": {
+        "version": 1,
+        "path": ".harness/baselines/e70b23a7003f22df4028af80492748474e4a58f989e369a1ac9885174a62e119.json",
+        "sha256": "e70b23a7003f22df4028af80492748474e4a58f989e369a1ac9885174a62e119",
+        "bytes": 6296916,
+        "baselineHash": "244ebe03a7b9f61be4b19ae77a07fb71fc10113a03d298ffe84a6c0a3e838279"
+      },
+      "lastVerification": {
+        "at": "2026-10-17T20:21:48.252Z",
         "pass": true
       }
     }

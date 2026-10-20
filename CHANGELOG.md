@@ -1,5 +1,13 @@
 # Changelog
 
+- Add separate actor context budgets, bounded incremental metadata-only transcript observations, proactive worker rotation with exit 75, and an interrupted-goal circuit that never requests another Stop continuation.
+- Bound command feedback per result and run, retain redacted stream logs, install reviewable context hooks, and propagate compact-work instructions to every enabled agent surface.
+- Preserve custom Codex compaction settings, add conservative defaults when safe, and defer unsupported TOML syntax to a review addition. Native hook dispatch and scheduler paths that bypass hooks remain host limitations.
+
+- Avoid current dirty-file byte capture during structural doctor checks and reuse the pre-scope repository identity during verification. Authenticate referenced baseline blobs and passing evidence as before; add `doctor --integrity` for an explicit full current content digest.
+- Add opt-in frozen generated-output capture policies with labelled metadata fingerprints, original baseline content digests, complete path/type/ancestor seals, and full source/JSON hashes. Exclude runtime-owned state before scope capture and preserve full transfer and deployment content checks.
+- Clarify required worker ownership and verification versus optional review rounds; allow reversible local corrections within the same bounded worker while preserving attempt budgets and reconciliation of unknown external outcomes.
+
 - Give generated Codex and Claude PreCompact hooks 600 seconds for bounded capture; upgrade exact generated 30-second settings and canonical additions while preserving custom hooks and edited additions.
 - Add bounded directory capture and 1 MiB streaming hashes while preserving historical file and symlink fingerprints.
 - Add read-only deterministic sync previews, managed executable inventories, reviewed raw-hash replacements and complete pre-write plan validation. Unknown enabled executables block mixed upgrades; disabled adapters and edited additions remain preserved.

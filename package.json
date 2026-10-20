@@ -23,7 +23,9 @@
     "codex-harness": "bin/codex-harness.mjs"
   },
   "scripts": {
-    "test": "node --test tests/harness.test.mjs"
+    "test": "npm run test:main && npm run test:rollout",
+    "test:main": "node --test tests/harness.test.mjs",
+    "test:rollout": "node scripts/test-rollout.mjs"
   },
   "engines": {
     "node": ">=20"

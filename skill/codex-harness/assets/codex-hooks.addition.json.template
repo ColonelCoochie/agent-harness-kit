@@ -28,6 +28,56 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": {{CONTEXT_COMMAND}},
+            "timeout": 600,
+            "commandWindows": {{CONTEXT_WINDOWS_COMMAND}}
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": {{CONTEXT_COMMAND}},
+            "timeout": 600,
+            "commandWindows": {{CONTEXT_WINDOWS_COMMAND}}
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": {{CONTEXT_COMMAND}},
+            "timeout": 600,
+            "commandWindows": {{CONTEXT_WINDOWS_COMMAND}}
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": {{CONTEXT_COMMAND}},
+            "timeout": 600,
+            "commandWindows": {{CONTEXT_WINDOWS_COMMAND}}
+          }
+        ]
+      }
     ]
   }
 }
