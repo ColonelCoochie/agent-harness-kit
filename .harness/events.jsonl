@@ -688,3 +688,7 @@
 {"at":"2026-10-20T18:35:54.386Z","type":"feature.started","feature":"doctor-enabled-agents-001","head":"02be43e7d9d2337b9fa4fd66af82c7fb4e2d16e3","preexistingDirty":0}
 {"at":"2026-10-20T18:36:43.416Z","type":"feature.verified","feature":"doctor-enabled-agents-001","pass":true,"evidence":".harness/evidence/2026-10-20T18-36-43-414Z-doctor-enabled-agents-001.json","attempts":1}
 {"at":"2026-10-20T18:36:44.014Z","type":"checkpoint.written","reason":"worker_yield","worker":"claude-v7-4","checkpoint":"checkpoint-2026-10-20T18-36-44-012Z"}
+{"at":"2026-10-20T19:09:02.324Z","type":"worker.claimed","worker":"claude-tier1-1"}
+{"at":"2026-10-20T19:09:02.399Z","type":"feature.added","feature":"verify-dedupe-001"}
+{"at":"2026-10-20T19:09:02.598Z","type":"feature.started","feature":"verify-dedupe-001","head":"334b7635caa7dc50c34befce13aa5cd9bf4fabdd","preexistingDirty":0}
+{"at":"2026-10-20T19:10:20.118Z","type":"feature.verified","feature":"verify-dedupe-001","pass":true,"evidence":".harness/evidence/2026-10-20T19-10-20-114Z-verify-dedupe-001.json","attempts":1}

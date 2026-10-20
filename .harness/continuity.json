@@ -579,5 +579,8 @@
     "driftAccepted": false,
     "drift": []
   },
-  "owner": null
+  "owner": {
+    "id": "claude-tier1-1",
+    "claimedAt": "2026-10-20T19:09:02.322Z"
+  }
 }

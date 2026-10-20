@@ -109,6 +109,20 @@ test('verify pass marks the feature passing, writes evidence and commits only sc
   assert.match(doctor.warnings.join('\n'), /1 passing feature\(s\) have no evidence file on disk.*feat-1/);
 });
 
+test('a command listed by a layer and an acceptance check runs once and covers both', () => {
+  const root = initialized('dedupe');
+  ok(h(root, 'add', 'feat-1', '--title', 'Same command', '--description', 'd', '--criterion', 'suite passes', '--command', 'npm test', '--allow', 'src/**'));
+  ok(h(root, 'start', 'feat-1'));
+  put(root, 'src/mul.mjs', 'export const mul = (a, b) => a * b;\n');
+  const out = ok(h(root, 'verify', 'feat-1'));
+  assert.match(out, /PASS full \+ acceptance\/ac-1: npm test/);
+  assert.equal(out.match(/^PASS /gm).length, 1);
+  const feature = json(path.join(root, '.harness/features.json')).features[0];
+  const evidence = json(path.join(root, feature.evidence.at(-1)));
+  assert.equal(evidence.results.length, 1);
+  assert.deepEqual(evidence.results[0].covers, ['full', 'acceptance/ac-1']);
+});
+
 test('repeated identical failures block the feature', () => {
   const root = initialized('repeat');
   ok(addFeature(root, 'feat-1'));

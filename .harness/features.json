@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 172,
+  "revision": 175,
   "features": [
     {
       "id": "harness-self-host",
@@ -4958,6 +4958,93 @@
         "at": "2026-10-20T18:36:43.415Z",
         "pass": true,
         "evidence": ".harness/evidence/2026-10-20T18-36-43-414Z-doctor-enabled-agents-001.json"
+      }
+    },
+    {
+      "id": "verify-dedupe-001",
+      "title": "Run each verify command once",
+      "description": "verify and check run identical commands (same text and credentials) once, credit the result to every layer or acceptance check that lists it, and record the coverage in evidence",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          ".harness/run.mjs",
+          "tests/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "a command listed in full and acceptance runs once and its result covers both",
+          "command": "npm test"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-20T19-10-20-114Z-verify-dedupe-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-20T19:09:02.397Z",
+      "updatedAt": "2026-10-20T19:10:20.116Z",
+      "contract": {
+        "hash": "b4b3e5711daa3e1fff6c65e22e49891dcf845acbcedee55c6e916508f71ea2ad",
+        "snapshot": {
+          "id": "verify-dedupe-001",
+          "title": "Run each verify command once",
+          "description": "verify and check run identical commands (same text and credentials) once, credit the result to every layer or acceptance check that lists it, and record the coverage in evidence",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              ".harness/run.mjs",
+              "tests/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "a command listed in full and acceptance runs once and its result covers both",
+              "command": "npm test"
+            }
+          ],
+          "requiredLayers": []
+        },
+        "frozenAt": "2026-10-20T19:09:02.479Z"
+      },
+      "baseline": {
+        "version": 2,
+        "head": "334b7635caa7dc50c34befce13aa5cd9bf4fabdd",
+        "branch": "main",
+        "capturedAt": "2026-10-20T19:09:02.596Z",
+        "dirty": {}
+      },
+      "syncedPaths": [
+        ".harness/run.mjs"
+      ],
+      "lastVerification": {
+        "at": "2026-10-20T19:10:20.115Z",
+        "pass": true,
+        "evidence": ".harness/evidence/2026-10-20T19-10-20-114Z-verify-dedupe-001.json"
       }
     }
   ]

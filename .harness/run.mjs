@@ -370,14 +370,32 @@ function pruneLogs(keep = 200) {
 const slug = value => String(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'command';
 const stamp = () => now().replace(/[:.]/g, '-');
 
+const entryLabel = ({ layer, id }) => `${layer}${id ? `/${id}` : ''}`;
+
+// Identical commands (same text and credentials) run once; the result covers every
+// layer or acceptance check that lists them, in first-occurrence order.
+export function dedupeEntries(entries) {
+  const byKey = new Map();
+  const unique = [];
+  for (const item of entries) {
+    const key = stable({ command: commandText(item.entry), credentials: commandCredentials(item.entry).sort() });
+    const existing = byKey.get(key);
+    if (existing) { existing.covers.push(entryLabel(item)); continue; }
+    const copy = { ...item, covers: [entryLabel(item)] };
+    byKey.set(key, copy);
+    unique.push(copy);
+  }
+  return unique;
+}
+
 async function runEntries(entries, config, { failFast = true } = {}) {
   const timeoutMs = config.policies?.commandTimeoutMs ?? 600000;
   const secrets = secretValues(config);
   const results = [];
   mkdirSync(file('logs'), { recursive: true });
-  for (const { layer, entry, id } of entries) {
+  for (const { layer, entry, id, covers } of entries) {
     const text = commandText(entry);
-    const result = { layer, id, command: text, exitCode: null, pass: false, durationMs: 0 };
+    const result = { layer, id, covers: covers ?? [entryLabel({ layer, id })], command: text, exitCode: null, pass: false, durationMs: 0 };
     let credentials;
     try { credentials = selectCredentials(commandCredentials(entry), config); }
     catch (error) {
@@ -401,7 +419,7 @@ async function runEntries(entries, config, { failFast = true } = {}) {
 }
 
 function report(result) {
-  const label = `${result.layer}${result.id ? `/${result.id}` : ''}`;
+  const label = (result.covers ?? [entryLabel(result)]).join(' + ');
   const seconds = (result.durationMs / 1000).toFixed(1);
   if (result.pass) { console.log(`PASS ${label}: ${result.command} (${seconds}s)`); return; }
   console.log(`FAIL ${label}: ${result.command} (exit ${result.exitCode}${result.timedOut ? ', timed out' : ''}, ${seconds}s)${result.log ? ` log: ${result.log}` : ''}`);
@@ -719,7 +737,7 @@ const handlers = {
     const config = loadConfig();
     const layer = args._[1] ?? 'quick';
     if (!LAYERS.includes(layer)) throw new Error(`Unknown layer ${layer}; use one of ${LAYERS.join(', ')}.`);
-    const entries = (config.verification?.[layer] ?? []).map(entry => ({ layer, entry }));
+    const entries = dedupeEntries((config.verification?.[layer] ?? []).map(entry => ({ layer, entry })));
     if (!entries.length) return void console.log(`No ${layer} commands configured.`);
     const results = await runEntries(entries, config, { failFast: false });
     if (results.some(result => !result.pass)) process.exitCode = 1;
@@ -740,10 +758,10 @@ const handlers = {
     const { feature } = prepared;
     const started = Date.now();
     const layers = verificationLayers(config, feature, list(args.layer));
-    const entries = [
+    const entries = dedupeEntries([
       ...layers.flatMap(layer => (config.verification?.[layer] ?? []).map(entry => ({ layer, entry }))),
       ...(feature.acceptance ?? []).filter(item => item.command).map(item => ({ layer: 'acceptance', id: item.id, entry: item.credentials ? { command: item.command, credentials: item.credentials } : item.command }))
-    ];
+    ]);
     if (!entries.length) throw new Error('Nothing to verify: configure verification.full or acceptance commands.');
     const missing = (config.completion?.baseLayers ?? ['full']).filter(layer => !(config.verification?.[layer] ?? []).length);
     const results = await runEntries(entries, config, { failFast: config.verification?.failFast ?? true });
@@ -751,7 +769,7 @@ const handlers = {
     for (const violation of scope.violations) console.log(`SCOPE ${violation}`);
     const failures = [
       ...missing.map(layer => `required layer ${layer} has no configured commands`),
-      ...results.filter(r => !r.pass).map(r => `${r.layer}${r.id ? `/${r.id}` : ''} exit ${r.exitCode}`),
+      ...results.filter(r => !r.pass).map(r => `${r.covers.join(' + ')} exit ${r.exitCode}`),
       ...(results.length < entries.length ? [`${entries.length - results.length} later commands skipped after failure`] : []),
       ...scope.violations
     ];
