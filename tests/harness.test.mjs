@@ -319,6 +319,10 @@ test('sync migrates a v6 project: removes per-tool hooks and leftovers, keeps pr
   put(root, 'src/mul.mjs', 'export const mul = (a, b) => a * b;\n');
   const verified = ok(h(root, 'verify', 'legacy-active'));
   assert.match(verified, /VERIFIED legacy-active/);
+  const committed = git(root, 'show', '--name-only', '--format=', 'HEAD').split('\n');
+  assert.ok(committed.includes('src/mul.mjs'));
+  assert.ok(committed.includes('.harness/run.mjs'),'sync-rewritten runtime is committed with the feature');
+  assert.ok(committed.includes('AGENTS.md'));
 });
 
 test('repository passes its own harness doctor and the suite stays fast', () => {

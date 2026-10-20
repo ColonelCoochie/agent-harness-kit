@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 159,
+  "revision": 163,
   "features": [
     {
       "id": "harness-self-host",
@@ -4612,6 +4612,94 @@
         "at": "2026-10-20T18:20:02.226Z",
         "pass": true,
         "evidence": ".harness/evidence/2026-10-20T18-20-02-225Z-doctor-missing-evidence-001.json"
+      }
+    },
+    {
+      "id": "commit-synced-paths-001",
+      "title": "Commit sync-maintained paths on pass",
+      "description": "Paths rewritten by sync during an active feature are exempt from scope attribution but still committed when the feature passes",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          ".harness/run.mjs",
+          "tests/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "verify commits sync-rewritten harness files with the feature",
+          "command": "npm test"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-20T18-20-24-117Z-commit-synced-paths-001.json",
+        ".harness/evidence/2026-10-20T18-21-23-155Z-commit-synced-paths-001.json"
+      ],
+      "blocker": null,
+      "attempts": 2,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-20T18:20:15.268Z",
+      "updatedAt": "2026-10-20T18:21:23.156Z",
+      "contract": {
+        "hash": "c198fed689972a533bf83ac2c2e9a3c1daea111884af8be1db0afc784e07f841",
+        "snapshot": {
+          "id": "commit-synced-paths-001",
+          "title": "Commit sync-maintained paths on pass",
+          "description": "Paths rewritten by sync during an active feature are exempt from scope attribution but still committed when the feature passes",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              ".harness/run.mjs",
+              "tests/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "verify commits sync-rewritten harness files with the feature",
+              "command": "npm test"
+            }
+          ],
+          "requiredLayers": []
+        },
+        "frozenAt": "2026-10-20T18:20:15.336Z"
+      },
+      "baseline": {
+        "version": 2,
+        "head": "c37b156b235e069b026d318e6e3a5a9a8b16c113",
+        "branch": "main",
+        "capturedAt": "2026-10-20T18:20:15.436Z",
+        "dirty": {}
+      },
+      "syncedPaths": [
+        ".harness/run.mjs"
+      ],
+      "lastVerification": {
+        "at": "2026-10-20T18:21:23.156Z",
+        "pass": true,
+        "evidence": ".harness/evidence/2026-10-20T18-21-23-155Z-commit-synced-paths-001.json"
       }
     }
   ]

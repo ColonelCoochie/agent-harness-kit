@@ -1,0 +1,105 @@
+{
+  "schema": 7,
+  "feature": "commit-synced-paths-001",
+  "contractHash": "c198fed689972a533bf83ac2c2e9a3c1daea111884af8be1db0afc784e07f841",
+  "pass": false,
+  "failures": [
+    "full exit 1",
+    "2 later commands skipped after failure"
+  ],
+  "layers": [
+    "quick",
+    "full",
+    "architecture"
+  ],
+  "startedAt": "2026-10-20T18:20:23.139Z",
+  "durationMs": 978,
+  "repository": {
+    "head": "c37b156b235e069b026d318e6e3a5a9a8b16c113",
+    "branch": "main"
+  },
+  "results": [
+    {
+      "layer": "quick",
+      "command": "node --check bin/agent-harness.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 69,
+      "timedOut": false,
+      "outputBytes": 0,
+      "outputTail": "",
+      "log": ".harness/logs/2026-10-20T18-20-23-211Z-quick.log",
+      "credentials": []
+    },
+    {
+      "layer": "quick",
+      "command": "node --check skill/codex-harness/scripts/harness.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 58,
+      "timedOut": false,
+      "outputBytes": 0,
+      "outputTail": "",
+      "log": ".harness/logs/2026-10-20T18-20-23-270Z-quick.log",
+      "credentials": []
+    },
+    {
+      "layer": "quick",
+      "command": "node --check skill/codex-harness/scripts/lib/core.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 61,
+      "timedOut": false,
+      "outputBytes": 0,
+      "outputTail": "",
+      "log": ".harness/logs/2026-10-20T18-20-23-331Z-quick.log",
+      "credentials": []
+    },
+    {
+      "layer": "quick",
+      "command": "node --check skill/codex-harness/assets/project-runtime.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 62,
+      "timedOut": false,
+      "outputBytes": 0,
+      "outputTail": "",
+      "log": ".harness/logs/2026-10-20T18-20-23-394Z-quick.log",
+      "credentials": []
+    },
+    {
+      "layer": "quick",
+      "command": "node --check skill/codex-harness/assets/precompact.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "durationMs": 57,
+      "timedOut": false,
+      "outputBytes": 0,
+      "outputTail": "",
+      "log": ".harness/logs/2026-10-20T18-20-23-452Z-quick.log",
+      "credentials": []
+    },
+    {
+      "layer": "full",
+      "command": "npm test",
+      "exitCode": 1,
+      "pass": false,
+      "durationMs": 457,
+      "timedOut": false,
+      "outputBytes": 1188,
+      "outputTail": "\n> agent-harness-kit@0.7.0 test\n> node --test tests/harness.test.mjs\n\nTAP version 13\n# file:///C:/Users/Jason/Documents/CoochieHarness/tests/harness.test.mjs:322\n#   const committed = git(root, 'show', '--name-only', '--format=', 'HEAD').split('\n#                                                                                 ^\n# SyntaxError: Invalid or unexpected token\n#     at compileSourceTextModule (node:internal/modules/esm/utils:344:16)\n#     at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:105:18)\n#     at \\#translate (node:internal/modules/esm/loader:534:12)\n#     at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:581:27)\n#     at async ModuleJob._link (node:internal/modules/esm/module_job:154:19)\n# Node.js v22.17.0\n# Subtest: tests\\\\harness.test.mjs\nnot ok 1 - tests\\\\harness.test.mjs\n  ---\n  duration_ms: 42.9479\n  type: 'test'\n  location: 'C:\\\\Users\\\\Jason\\\\Documents\\\\CoochieHarness\\\\tests\\\\harness.test.mjs:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 48.9857\n",
+      "log": ".harness/logs/2026-10-20T18-20-23-910Z-full.log",
+      "credentials": []
+    }
+  ],
+  "scope": {
+    "changed": [
+      "skill/codex-harness/assets/project-runtime.mjs",
+      "tests/harness.test.mjs"
+    ],
+    "synced": [
+      ".harness/run.mjs"
+    ],
+    "violations": []
+  }
+}

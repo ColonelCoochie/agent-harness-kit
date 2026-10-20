@@ -668,3 +668,7 @@
 {"at":"2026-10-20T18:19:08.656Z","type":"feature.added","feature":"doctor-missing-evidence-001"}
 {"at":"2026-10-20T18:19:08.818Z","type":"feature.started","feature":"doctor-missing-evidence-001","head":"b6dc1054af3511b439528afcffacd8ca01cd59d7","preexistingDirty":0}
 {"at":"2026-10-20T18:20:02.228Z","type":"feature.verified","feature":"doctor-missing-evidence-001","pass":true,"evidence":".harness/evidence/2026-10-20T18-20-02-225Z-doctor-missing-evidence-001.json","attempts":1}
+{"at":"2026-10-20T18:20:15.270Z","type":"feature.added","feature":"commit-synced-paths-001"}
+{"at":"2026-10-20T18:20:15.438Z","type":"feature.started","feature":"commit-synced-paths-001","head":"c37b156b235e069b026d318e6e3a5a9a8b16c113","preexistingDirty":0}
+{"at":"2026-10-20T18:20:24.121Z","type":"feature.verified","feature":"commit-synced-paths-001","pass":false,"evidence":".harness/evidence/2026-10-20T18-20-24-117Z-commit-synced-paths-001.json","attempts":1}
+{"at":"2026-10-20T18:21:23.158Z","type":"feature.verified","feature":"commit-synced-paths-001","pass":true,"evidence":".harness/evidence/2026-10-20T18-21-23-155Z-commit-synced-paths-001.json","attempts":2}

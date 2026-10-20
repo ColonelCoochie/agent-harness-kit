@@ -247,7 +247,7 @@ function scopeReport(feature) {
   const synced = feature.syncedPaths ?? [];
   const attributed = changed.filter(relative => !matches(relative, synced));
   const violations = attributed.filter(relative => matches(relative, deny) || !matches(relative, allow)).map(relative => `out of scope: ${relative}`);
-  return { changed: attributed, violations };
+  return { changed: attributed, synced: changed.filter(relative => matches(relative, synced)), violations };
 }
 
 // ------------------------------------------------------------- commands
@@ -794,7 +794,7 @@ const handlers = {
       renderProgress(state, continuity);
       if (pass) {
         console.log(`VERIFIED ${feature.id}: passing (evidence ${rel(evidencePath)}).`);
-        if (config.completion?.commitOnPass !== false) commitFeature(current, scope.changed, rel(evidencePath));
+        if (config.completion?.commitOnPass !== false) commitFeature(current, [...scope.changed, ...(scope.synced ?? [])], rel(evidencePath));
       } else {
         console.log(`NOT VERIFIED ${feature.id}: ${failures.length} failure(s); attempt ${current.attempts}.${current.status === 'blocked' ? ` Blocked: ${current.blocker.reason}` : ''}`);
         process.exitCode = 1;
