@@ -664,3 +664,7 @@
 {"at":"2026-10-20T18:18:04.526Z","type":"feature.blocked","feature":"fix-nine-rollout-001","reason":"Superseded by the v7 lean overhaul: rollout machinery removed; projects migrate with agent-harness sync."}
 {"at":"2026-10-20T18:18:13.546Z","type":"worker.recovered","worker":"01a159f4-14b9-77c2-9ed7-787e9961048b","reason":"v7 migration: previous Codex worker no longer running"}
 {"at":"2026-10-20T18:18:13.719Z","type":"checkpoint.written","reason":"worker_yield","worker":null,"checkpoint":"checkpoint-2026-10-20T18-18-13-717Z"}
+{"at":"2026-10-20T18:19:08.592Z","type":"worker.claimed","worker":"claude-v7-1"}
+{"at":"2026-10-20T18:19:08.656Z","type":"feature.added","feature":"doctor-missing-evidence-001"}
+{"at":"2026-10-20T18:19:08.818Z","type":"feature.started","feature":"doctor-missing-evidence-001","head":"b6dc1054af3511b439528afcffacd8ca01cd59d7","preexistingDirty":0}
+{"at":"2026-10-20T18:20:02.228Z","type":"feature.verified","feature":"doctor-missing-evidence-001","pass":true,"evidence":".harness/evidence/2026-10-20T18-20-02-225Z-doctor-missing-evidence-001.json","attempts":1}

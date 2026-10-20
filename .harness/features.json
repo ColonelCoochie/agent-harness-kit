@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 156,
+  "revision": 159,
   "features": [
     {
       "id": "harness-self-host",
@@ -4525,6 +4525,93 @@
       "lastVerification": {
         "at": "2026-10-17T20:21:48.252Z",
         "pass": true
+      }
+    },
+    {
+      "id": "doctor-missing-evidence-001",
+      "title": "Doctor warns about missing evidence files",
+      "description": "doctor reports passing features whose evidence files are absent (for example after archiving v6 artifacts)",
+      "dependencies": [],
+      "status": "passing",
+      "requiredLayers": [],
+      "scope": {
+        "allow": [
+          "skill/codex-harness/**",
+          ".harness/run.mjs",
+          "tests/**"
+        ],
+        "deny": [
+          ".git/**",
+          ".env",
+          ".env.*",
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/build/**"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "ac-1",
+          "description": "doctor warns when passing evidence files are missing",
+          "command": "npm test"
+        }
+      ],
+      "evidence": [
+        ".harness/evidence/2026-10-20T18-20-02-225Z-doctor-missing-evidence-001.json"
+      ],
+      "blocker": null,
+      "attempts": 1,
+      "repeatedFailures": 0,
+      "lastFailureFingerprint": null,
+      "createdAt": "2026-10-20T18:19:08.654Z",
+      "updatedAt": "2026-10-20T18:20:02.226Z",
+      "contract": {
+        "hash": "6cf1c50cc2057249c309337156cf02d051eca0454764707bd84a8831a075ad9f",
+        "snapshot": {
+          "id": "doctor-missing-evidence-001",
+          "title": "Doctor warns about missing evidence files",
+          "description": "doctor reports passing features whose evidence files are absent (for example after archiving v6 artifacts)",
+          "dependencies": [],
+          "scope": {
+            "allow": [
+              "skill/codex-harness/**",
+              ".harness/run.mjs",
+              "tests/**"
+            ],
+            "deny": [
+              ".git/**",
+              ".env",
+              ".env.*",
+              "**/node_modules/**",
+              "**/dist/**",
+              "**/build/**"
+            ]
+          },
+          "acceptance": [
+            {
+              "id": "ac-1",
+              "description": "doctor warns when passing evidence files are missing",
+              "command": "npm test"
+            }
+          ],
+          "requiredLayers": []
+        },
+        "frozenAt": "2026-10-20T18:19:08.718Z"
+      },
+      "baseline": {
+        "version": 2,
+        "head": "b6dc1054af3511b439528afcffacd8ca01cd59d7",
+        "branch": "main",
+        "capturedAt": "2026-10-20T18:19:08.816Z",
+        "dirty": {}
+      },
+      "syncedPaths": [
+        ".harness/run.mjs"
+      ],
+      "lastVerification": {
+        "at": "2026-10-20T18:20:02.226Z",
+        "pass": true,
+        "evidence": ".harness/evidence/2026-10-20T18-20-02-225Z-doctor-missing-evidence-001.json"
       }
     }
   ]

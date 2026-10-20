@@ -579,5 +579,8 @@
     "driftAccepted": false,
     "drift": []
   },
-  "owner": null
+  "owner": {
+    "id": "claude-v7-1",
+    "claimedAt": "2026-10-20T18:19:08.590Z"
+  }
 }

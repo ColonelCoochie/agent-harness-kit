@@ -951,6 +951,8 @@ export function collectDoctor(config, state, continuity) {
     if (feature.status === 'active' && !featureBaseline(feature)) errors.push(`${feature.id}: active without a scope baseline`);
   }
   for (const feature of state.features) for (const dep of feature.dependencies ?? []) if (!ids.has(dep)) errors.push(`${feature.id}: unknown dependency ${dep}`);
+  const missingEvidence = state.features.filter(f => f.status === 'passing' && (f.evidence ?? []).length && !(f.evidence ?? []).some(e => existsSync(path.join(ROOT, e))));
+  if (missingEvidence.length) warnings.push(`${missingEvidence.length} passing feature(s) have no evidence file on disk (archived or deleted): ${missingEvidence.slice(0, 5).map(f => f.id).join(', ')}${missingEvidence.length > 5 ? ', ...' : ''}`);
   const cycle = findCycle(state.features);
   if (cycle) errors.push(`dependency cycle: ${cycle.join(' -> ')}`);
   const wip = config.policies?.wipLimit ?? 1;

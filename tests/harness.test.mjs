@@ -97,6 +97,10 @@ test('verify pass marks the feature passing, writes evidence and commits only sc
   assert.ok(committed.includes('src/mul.mjs'));
   assert.ok(committed.includes('.harness/features.json'));
   assert.equal(git(root, 'status', '--porcelain'), '');
+  for (const evidencePath of feature.evidence) rmSync(path.join(root, evidencePath));
+  const doctor = JSON.parse(h(root, 'doctor', '--json').out);
+  assert.deepEqual(doctor.errors, []);
+  assert.match(doctor.warnings.join('\n'), /1 passing feature\(s\) have no evidence file on disk.*feat-1/);
 });
 
 test('repeated identical failures block the feature', () => {
