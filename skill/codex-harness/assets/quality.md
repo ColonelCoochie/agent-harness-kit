@@ -1,11 +1,10 @@
 # Quality Ledger
 
-Update this document when verification or review reveals a durable quality signal.
+Record durable quality signals from verification and review.
 
 | Area | Grade | Evidence | Risk | Next improvement |
 |---|---|---|---|---|
-| Harness | Unrated | No representative run yet | Project commands may need tuning | Complete one feature through verification |
-| Worker continuity | Unrated | No worker yield or transfer trial yet | Orchestrator context may grow or routing may stall | Exercise worker yield, needs-input, and transfer paths |
+| Harness | Unrated | No feature verified yet | Commands may need tuning | Take one feature through start -> verify |
 
 ## Simplification candidates
 
@@ -13,4 +12,4 @@ Update this document when verification or review reveals a durable quality signa
 
 ## Promoted review feedback
 
-- None recorded. Add an executable check when the same defect class recurs.
+- None recorded. Turn a recurring defect class into an executable check.

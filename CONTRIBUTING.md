@@ -1,13 +1,13 @@
 # Contributing
 
-Changes should preserve the zero-dependency Node.js 20+ runtime, non-destructive initialization, write-once verification evidence, selective compatibility with Codex, Claude Code, and GitHub Copilot instruction surfaces, and the development-only boundary. Never make product-runtime agents, loops, schedulers, or orchestrators depend on, read, or write `.harness/`; disabled coding-agent adapters must remain absent across `sync`.
+Preserve: the zero-dependency Node.js 20+ runtime, non-destructive `init`, in-place `sync` migration of existing projects, the development-only boundary (product runtime never touches `.harness/`), and selective Codex/Claude/Copilot surfaces.
 
-Run before submitting a change:
+Keep it lean. Before adding a mechanism, name the observed failure it prevents; prefer an executable check over more instruction text, and never add work to every tool call.
+
+Edit the runtime in `skill/codex-harness/assets/project-runtime.mjs` (never `.harness/run.mjs` directly), then refresh this repo's copy with `node bin/agent-harness.mjs sync .`.
 
 ```bash
 npm test
-node --check skill/codex-harness/assets/project-runtime.mjs
-node --check skill/codex-harness/scripts/lib/core.mjs
 ```
 
-Never include live API keys, OAuth tokens, subscription credentials, generated `.env` files, or evidence copied from a private project.
+Never include live API keys, OAuth tokens, `.env` files, or evidence copied from a private project.

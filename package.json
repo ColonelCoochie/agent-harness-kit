@@ -1,7 +1,7 @@
 {
   "name": "agent-harness-kit",
-  "version": "0.6.0",
-  "description": "An evidence-gated repository-development harness for Codex, Claude Code, and GitHub Copilot",
+  "version": "0.7.0",
+  "description": "A lean, zero-dependency repository-development harness for long-running coding goals with Codex, Claude Code, and GitHub Copilot",
   "keywords": [
     "codex",
     "claude-code",
@@ -23,9 +23,7 @@
     "codex-harness": "bin/codex-harness.mjs"
   },
   "scripts": {
-    "test": "npm run test:main && npm run test:rollout",
-    "test:main": "node --test tests/harness.test.mjs",
-    "test:rollout": "node scripts/test-rollout.mjs"
+    "test": "node --test tests/harness.test.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -38,7 +36,6 @@
     "CHANGELOG.md",
     "SECURITY.md",
     "ANALYSIS.md",
-    "REVIEW-2026-07-20.md",
     "LICENSE"
   ]
 }

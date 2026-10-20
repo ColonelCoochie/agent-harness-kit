@@ -2,9 +2,6 @@
 
 # Reuse the canonical skill from this repository; do not duplicate it under another skill root.
 
-# Agent Harness proactive context defaults; custom values are preserved.
-model_auto_compact_token_limit = 80000
-model_auto_compact_token_limit_scope = "total"
 
 [[skills.config]]
 path = "../skill/codex-harness/SKILL.md"

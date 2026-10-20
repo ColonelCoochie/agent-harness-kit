@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.0 (runtime v7): lean overhaul
+
+Keeps the long-running-goal workflow (orchestrator + fresh workers, WIP-limited features with frozen contracts, cumulative verification with evidence, scope checks, checkpoints, handoff/resume) and removes the machinery that slowed every session.
+
+- Removed per-tool hooks (PreToolUse, PostToolUse, UserPromptSubmit, Stop). Each tool call previously spawned three Node processes twice, and a hook error denied the tool.
+- Removed context budgets and forced worker rotation (exit 75), and the 6,000-character tool-result blocking. Workers checkpoint at milestones; hosts compact on their own. `sync` drops the forced 80k-token Codex auto-compaction default.
+- Replaced the eval'd, compressed hook launchers, bootstrap manifests, hook-policy auto-approval, source repair authority and SHA-pinned predecessor manifests with one readable, fail-open PreCompact hook.
+- Removed schema-v4 evidence plan re-hashing, content-addressed baseline blobs, `migrate`, worker retirement attestations and the Windows job-object supervisor. Evidence is a plain per-attempt record, and baselines are stored inline.
+- Checkpoints and handoffs no longer hash the whole dirty worktree (the last v6 handoff here hashed 23,930 files).
+- `verify` now commits the feature's scoped changes on pass (`completion.commitOnPass`), so work no longer piles up uncommitted.
+- Command output is compact (a pass line, or a failure tail), with full logs in `.harness/logs/`.
+- `sync` migrates v6 projects in place. Existing features, evidence, active baselines and pending handoffs keep working. User hooks and project-specific instruction sections are preserved. `--prune` removes ad-hoc `.harness/` artifacts.
+- Runtime 177 KB to 56 KB; `AGENTS.md` harness text 10 KB to 2.5 KB; test suite 4m40s to about 20s.
+
+## 0.6.0 and earlier
+
 - Add separate actor context budgets, bounded incremental metadata-only transcript observations, proactive worker rotation with exit 75, and an interrupted-goal circuit that never requests another Stop continuation.
 - Bound command feedback per result and run, retain redacted stream logs, install reviewable context hooks, and propagate compact-work instructions to every enabled agent surface.
 - Preserve custom Codex compaction settings, add conservative defaults when safe, and defer unsupported TOML syntax to a review addition. Native hook dispatch and scheduler paths that bypass hooks remain host limitations.

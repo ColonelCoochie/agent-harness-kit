@@ -1,13 +1,5 @@
 # GitHub Copilot Instructions
 
-Follow the canonical repository workflow in `AGENTS.md` and inherit its `## Development-Harness Boundary`.
-
-## Orchestrated-Worker Protocol
-
-Protocol marker: `ORCHESTRATED_WORKER_CONTINUITY_V1`.
-
-The persistent development orchestrator keeps the user-facing chat open and delegates bounded repository work to fresh workers when the host supports them. Each mutating worker runs `node .harness/run.mjs session`, reads the small harness state and relevant routed docs, then runs `doctor`, `status`, and `next` before edits. Allow one mutating worker at a time; read-only explorers may run in parallel.
-
-Use `checkpoint --reason worker_yield` for normal completion and `checkpoint --reason needs_input` for a user-input pause. Return a concise result or question and yield. Reserve `handoff` for a true worker transfer; the orchestrator delegates its exact resume command to a fresh worker without consuming the implementation packet. Open a fresh Copilot chat or task only when subagent delegation is unavailable.
-
-Use `.harness/run.mjs` for state changes and require successful `verify` evidence before completion. Product-runtime agents and orchestration remain application-owned and independent of `.harness/`.
+<!-- agent-harness-v7 -->
+Follow the repository workflow in `AGENTS.md`. Use `node .harness/run.mjs` for feature state, verify before completion, and pass `--worker-id ID` on mutations.
+<!-- /agent-harness-v7 -->

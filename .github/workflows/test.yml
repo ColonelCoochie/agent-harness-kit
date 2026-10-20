@@ -22,5 +22,5 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: node --check skill/codex-harness/scripts/lib/core.mjs
       - run: node --check skill/codex-harness/assets/project-runtime.mjs
-      - run: node --check skill/codex-harness/assets/precompact-handoff.mjs
+      - run: node --check skill/codex-harness/assets/precompact.mjs
       - run: npm test

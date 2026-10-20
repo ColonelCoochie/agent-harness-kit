@@ -9,27 +9,20 @@
     "wipLimit": 1,
     "maxAttempts": 5,
     "maxRepeatedFailures": 2,
-    "commandTimeoutMs": 600000,
-    "passingIsTerminal": true,
-    "requireEvidence": true
+    "commandTimeoutMs": 600000
   },
   "verification": {
     "quick": [
       "node --check bin/agent-harness.mjs",
-      "node --check bin/codex-harness.mjs",
       "node --check skill/codex-harness/scripts/harness.mjs",
       "node --check skill/codex-harness/scripts/lib/core.mjs",
       "node --check skill/codex-harness/assets/project-runtime.mjs",
-      "node --check skill/codex-harness/assets/precompact-handoff.mjs",
-      "node --check .harness/run.mjs",
-      "node --check .harness/hooks/precompact-handoff.mjs"
+      "node --check skill/codex-harness/assets/precompact.mjs"
     ],
     "full": [
-      "node --test tests/harness.test.mjs"
+      "npm test"
     ],
-    "e2e": [
-      "node scripts/verify-live-host-e2e.mjs"
-    ],
+    "e2e": [],
     "architecture": [
       "node bin/agent-harness.mjs audit . --min-score 95"
     ],
@@ -43,7 +36,8 @@
       "quick",
       "architecture"
     ],
-    "requireAcceptanceCommands": true
+    "requireAcceptanceCommands": true,
+    "commitOnPass": true
   },
   "execution": {
     "harnessRuntime": {
@@ -57,7 +51,6 @@
     "shutdown": []
   },
   "scope": {
-    "enforcement": "required",
     "defaultAllow": [
       "**/*"
     ],
@@ -68,17 +61,10 @@
       "**/node_modules/**",
       "**/dist/**",
       "**/build/**"
-    ],
-    "capture": {
-      "version": 1,
-      "metadataRoots": [],
-      "metadataExtensions": []
-    }
+    ]
   },
   "continuity": {
-    "mode": "orchestrated_worker",
-    "dirtyWorktree": "record",
-    "blockMutationsAfterHandoff": true
+    "mode": "orchestrated_worker"
   },
   "security": {
     "environmentAllow": [
@@ -152,31 +138,5 @@
     ],
     "router": ".harness/docs-map.md"
   },
-  "context": {
-    "version": 1,
-    "worker": {
-      "maxAgeMs": 3600000,
-      "maxMutations": 48,
-      "maxToolCalls": 80,
-      "maxOutputChars": 120000
-    },
-    "orchestrator": {
-      "maxAgeMs": 7200000,
-      "maxMutations": 48,
-      "maxToolCalls": 160,
-      "maxOutputChars": 160000
-    },
-    "pressureRatio": 0.65,
-    "reserveTokens": 24000,
-    "maxEstimatedTokens": 120000,
-    "maxUnmeasuredBytes": 240000,
-    "staleUsageMs": 300000,
-    "staleGrowthBytes": 48000,
-    "maxInterruptedGoals": 6,
-    "scanBytes": 1048576,
-    "maxLineBytes": 262144,
-    "perResultChars": 6000,
-    "perRunChars": 16000,
-    "codexCodeModeResultSuppressionConfirmed": true
-  }
+  "harnessVersion": 7
 }

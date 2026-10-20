@@ -1,26 +1,40 @@
 # AGENTS.md
 
-Maintain Agent Harness Kit as a zero-dependency Node.js 20+ project skeleton for Codex, Claude Code, and GitHub Copilot.
+Maintain Agent Harness Kit: a lean, zero-dependency Node.js 20+ development harness for long-running coding goals with Codex, Claude Code, and GitHub Copilot.
 
-## Orchestrated-Worker Protocol
+<!-- agent-harness-v7 -->
+## Development harness
 
-Protocol marker: `ORCHESTRATED_WORKER_CONTINUITY_V1`.
+`.harness/` is the repository-development control plane (features, verification, evidence, worker continuity). It is never application runtime: product code must not import, read, or write it. Facts live in `.harness/config.json` (commands, scope, policies) and `.harness/docs-map.md` (where to read more).
 
-The persistent development orchestrator keeps the user-facing chat open. It owns user intent, decisions, concise status, and routing, but delegates repository implementation to fresh bounded workers so implementation context does not accumulate in the orchestrator. Allow only one mutating worker at a time; independent read-only explorers may run in parallel.
+### Long-running goals: orchestrator and workers
 
-Before changing files, a worker runs `node .harness/run.mjs session`, claims or resumes ownership, runs `node .harness/run.mjs bootstrap --validate --json`, reads `.harness/config.json`, and task-relevant routes in `.harness/docs-map.md`, then uses the combined validation and status/next projection. If continuity is `awaiting_resume`, the orchestrator delegates the exact printed `node .harness/run.mjs resume <handoff-id>` command to a fresh worker; the orchestrator must not consume the implementation packet or run the resume itself. A fresh user chat/task is a fallback only when the host cannot delegate subagents.
+- The user-facing chat is the **orchestrator**. It keeps intent, decisions and compact worker results, and routes work. It does not do large implementation itself.
+- Implementation runs in **fresh workers** (Codex `fork_turns="none"`, Claude Code a fresh non-fork Agent) with a self-contained prompt. One mutating worker at a time; read-only explorers may run in parallel.
+- Worker startup: `node .harness/run.mjs session`, then `claim` (or the exact `resume HANDOFF_ID` the orchestrator gave you), then `bootstrap --validate --json`. Read only the docs the active feature needs.
+- Hosts without `CODEX_THREAD_ID` pass the same `--worker-id ID` on `claim`/`resume` and later mutations.
 
-At normal completion, a worker verifies or records the blocker, writes a bounded `checkpoint --reason worker_yield`, returns a concise result, and yields. When user input is required, use `checkpoint --reason needs_input`, return one concise question, and yield. Neither boundary requires `handoff`, `resume`, or a new user chat.
+### Feature loop
 
-Use `handoff --summary ... --next ...` only for a true context or ownership transfer. It writes an ID-bound worker packet and parks harness mutations. The handing-off worker yields, and the orchestrator gives the exact resume command to a fresh worker. A successful reviewed Codex `PreCompact` hook persists the worker packet so the persistent chat may compact and continue routing; hook failure remains fail-closed.
+1. `add ID --title --description --criterion "observable behavior" --command "check" --allow "glob"` (pair each criterion with a command).
+2. `start ID` freezes the contract and records the Git baseline. WIP limit and dependencies are enforced.
+3. Implement within scope. Use `check quick` while working; fix your own reversible test failures without handing off.
+4. `verify ID` runs the configured layers plus acceptance commands and checks scope. A pass marks the feature `passing` and commits its changes. Never hand-edit feature state.
+5. Repeated identical failures or an exhausted attempt budget block the feature: stop and report instead of retrying blindly.
 
-## Development-Harness Boundary
+### Worker boundaries
 
-`.harness/` is the outer repository-development control plane for coding-agent work, verification, and orchestrated worker continuity. It is not application runtime and must not be imported by, deployed with, or used as an orchestration dependency of the product.
+- Normal end: `checkpoint --reason worker_yield --summary "what is true now" --next "next step"`, return a short result, stop.
+- Need a user decision: `checkpoint --reason needs_input ...`, return one question, stop.
+- True context or ownership transfer only: `handoff --summary ... --next ...`. Stop; the orchestrator delegates `resume HANDOFF_ID` to a fresh worker and never runs it itself.
+- After host compaction, rebuild state with `session` and `bootstrap`, not from memory.
 
-Any in-product agent, loop, scheduler, or orchestrator is product-owned runtime. It keeps separate state, configuration, telemetry, and operations and never depends on, reads, or writes `.harness/`. The development harness may build and test that product code only as ordinary feature-scoped code.
+### Harness rules
 
-Work on one active feature by default. Use `.harness/run.mjs` for state changes, keep scope explicit, and allow a feature to become `passing` only through successful `verify` evidence. Keep the development orchestrator distinct from any product-runtime orchestrator: product runtime remains wholly application-owned and independent of `.harness/`.
+- Keep tool output small: read the lines you need; verification prints only failures, and full logs are in `.harness/logs/`.
+- Credentials stay in environment variables and reach a command only when its config entry lists `credentials`. Never retry an executed command with another key, and never auto-retry deployments.
+- Regressions become new features; `passing` is terminal.
+<!-- /agent-harness-v7 -->
 
 ## Repository invariants
 
@@ -32,35 +46,4 @@ When changing the generated runtime, edit the reusable source under `skill/codex
 
 ## Verification
 
-Owned bounded-worker startup, explicit scope, configured verification and reasoned worker yield are required. Extra plans, review rounds and process accounting depend on task risk and project policy. The same worker may correct reversible local command/test errors within scope without a successor for each error; respect attempt budgets and stop for repeated failures or missing authority. Reconcile unknown external outcomes before an authorized retry; never automatically retry credentials or deployment.
-
-Use the active feature's `node .harness/run.mjs verify <feature-id>` gate before completion. The configured ladder runs source syntax checks, the full Node test suite, the structural self-audit, and each feature's acceptance command. For focused manual checks, preserve coverage of initialization, migration, all instruction surfaces, missing-key behavior, round-robin selection, redaction, evidence metadata, and the generated runtime.
-
-
-## Bounded worker startup and ownership
-
-Delegation must never inherit the implementation transcript. Codex uses `fork_turns="none"`; Claude Code uses a fresh non-fork Agent invocation. Other hosts use their fresh-worker mechanism. Run `session --json` for routing only. A fresh worker explicitly claims unowned working state with `node .harness/run.mjs claim`, or runs the exact delegated pending resume command. Then run `node .harness/run.mjs bootstrap --validate --json` (optionally a selected feature ID). This bounded projection replaces reading the full features/continuity/progress files during startup. Read config and task-relevant docs separately. Never dump baseline blobs or historical feature arrays into context.
-
-The harness binds mutations to host `CODEX_THREAD_ID`, not shared `CODEX_SESSION_ID`. Other hosts must supply `--worker-id` on mutations as an explicit attestation. Normal worker_yield and needs_input revoke the owner; a retired worker cannot reclaim or resume. This is cooperative CLI enforcement, not protection against direct file edits or forged environments. The orchestrator cannot claim a child worker's ID.
-
-Use `migrate` once after a runtime update to move legacy inline baselines into immutable content-addressed references without changing historical contracts or evidence. `doctor` authenticates referenced blobs.
-
-PreCompact output systemMessage is UI text only. The SessionStart(compact) adapter emits supported additionalContext with routing; it does not load the transfer packet or resume mutations. Hook behavior is fixture-tested; per-invocation CODEX_THREAD_ID delivery to native hooks still requires host validation. Unknown hook identity with an active owner fails closed; another identified actor leaves that worker unchanged.
-
-For Claude Code, review `.claude/settings.json` or merge the generated `.harness/claude-hooks.addition.json` into existing settings. The read-only SubagentStart hook delivers `claude-agent:<agent_id>` only to that child. The child appends its own `--worker-id` to claim/resume and every mutation, including verify, checkpoint and handoff; it uses a fresh non-fork Agent invocation. Without native identity delivery, each non-Codex child chooses a fresh unique manual worker ID. Automatic hooks cannot infer a manual ID. Shared `session_id` never authorizes worker ownership. Native Claude/Codex hook dispatch still requires a live host smoke test.
-
-Only after the host or operator confirms an abandoned worker has stopped, a distinct actor may run `node .harness/run.mjs recover --expected-owner OLD_ID --reason "Host confirmed termination" --confirmed-terminated` (append its own `--worker-id` on a non-Codex host). Recovery preserves packets and feature state, retires OLD_ID, logs the attestation, and releases ownership for a fresh claim. Never recover a live worker or clear a pending handoff; delegate the exact pending resume instead.
-
-Authoritative stored state remains `.harness/features.json` and `.harness/continuity.json`; access their bounded projections during startup.
-
-<!-- agent-harness-context-v1 -->
-## Proactive context management
-
-Before each bounded work batch and delegation, run `node .harness/run.mjs context --observe --json`. This records the current actor's boundary without claiming a child owner; read-only inspection omits `--observe`. On hosts without native hooks, include estimated calls and returned characters since the previous observation through `--tool-calls N --output-chars N`, and use `--transcript PATH` when host telemetry is available. Keep tool responses concise: select only needed lines, set output limits, and inspect redacted `.harness/logs/` files through narrow queries. Never dump full transcripts, feature arrays, baseline blobs, or large command logs into conversation.
-
-Workers target one implementation milestone per batch and check pressure at least every ten tool calls or five minutes. At pressure, persist `handoff --summary ... --next ...`, return only its exact resume command and a compact result, then stop. The orchestrator immediately delegates that command to a fresh worker (`fork_turns="none"` on Codex); it never runs the resume or absorbs the packet. Automatic mutation gates and reviewed native context hooks provide earlier boundaries when available. Exit 75 means rotation occurred and the requested mutation did not run.
-
-The orchestrator keeps only user intent, decisions, compact worker results and routing. At its own pressure, use supported host compaction with the project auto-compaction defaults and reconstruct from `session --json`; never transfer or recover a live child to free parent context. Repeated interrupted internal goal turns without tool progress trip a circuit breaker: stop that continuation and reconcile host goal state before another run. Never request continuation from a Stop hook to repair pressure.
-
-Hooks require local host review/trust. Native dispatch and identity delivery must be validated on the actual host; tools or goal schedulers that skip hooks cannot be intercepted by this CLI. Missing token telemetry uses conservative byte growth and work budgets, not assumed headroom. Product runtime remains independent of `.harness/`.
-<!-- /agent-harness-context-v1 -->
+Use the active feature's `node .harness/run.mjs verify <feature-id>`. It runs the quick syntax checks, the Node test suite (`npm test`, about 20 seconds) and the structural self-audit, then the feature's acceptance commands. Tests must keep covering init, sync migration from v6, instruction surfaces, scope, verify/commit, continuity, credentials, redaction, timeouts and the PreCompact hook.

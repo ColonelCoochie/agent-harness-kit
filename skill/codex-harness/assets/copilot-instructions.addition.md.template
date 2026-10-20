@@ -1,9 +1,0 @@
-## Project Harness for GitHub Copilot
-
-Inherit and enforce the canonical `## Development-Harness Boundary` from `AGENTS.md`. GitHub Copilot uses `.harness/` only for repository-development work; product-runtime agents and orchestration remain application-owned and independent.
-
-## Orchestrated-Worker Protocol
-
-Protocol marker: `ORCHESTRATED_WORKER_CONTINUITY_V1`.
-
-Follow `AGENTS.md` as the canonical workflow. The persistent development orchestrator keeps the user-facing chat open and delegates bounded repository work to fresh workers when supported. Each worker runs `session`, reads the small harness state and relevant docs, then runs `doctor`, `status`, and `next`. Use reasoned checkpoints for normal results and user-input pauses. Reserve `handoff` for a true worker transfer and delegate its exact resume command to a fresh worker; a new chat or task is only the no-subagent fallback. Require successful `verify` evidence before completion.

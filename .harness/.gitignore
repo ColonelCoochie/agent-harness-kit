@@ -1,0 +1,8 @@
+/native-hook-v2-rollout-004-isolated-failed-g110/
+/native-hook-v2-rollout-004-isolated-failed-g111/
+/native-hook-v2-rollout-004-isolated-failed-g112/
+/native-hook-v2-rollout-004-isolated-failed-g113/
+/native-hook-v2-rollout-004-isolated-failed-g114/
+logs/
+.lock/
+*.tmp
